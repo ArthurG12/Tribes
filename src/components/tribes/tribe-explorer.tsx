@@ -107,7 +107,7 @@ export function TribeExplorer({
         </div>
 
         {/* Search + Format + Beginner filter bar */}
-        <div className="mt-10 rounded-xl border border-primary/20 bg-[#f8faef] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:p-5">
+        <div className="mt-10 rounded-xl border border-primary/20 bg-[#e3e9dc] p-4 shadow-[0_16px_40px_rgba(48,66,45,0.08)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -131,7 +131,7 @@ export function TribeExplorer({
                   className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
                     selectedFormat === fmt
                       ? "bg-foreground text-background"
-                      : "bg-[#e9f0df] text-muted-foreground hover:bg-[#e1ebd3]"
+                      : "bg-[#d8e1cf] text-muted-foreground hover:bg-[#d5dfca]"
                   }`}
                 >
                   {fmt}
@@ -146,8 +146,8 @@ export function TribeExplorer({
                 }}
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
                   onlyBeginners
-                    ? "border-[#82aa4d] bg-[#c8ed75] text-[#193c27]"
-                    : "border-[#b8d39a] bg-[#c8ed75]/10 text-[#527d30] hover:bg-[#c8ed75]/15"
+                    ? "border-[#82996a] bg-[#a9c47c] text-[#344b39]"
+                    : "border-[#bacaa9] bg-[#a9c47c]/10 text-[#536c43] hover:bg-[#a9c47c]/15"
                 }`}
               >
                 <Sparkles className="size-3.5" />
@@ -158,7 +158,7 @@ export function TribeExplorer({
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-3.5 text-xs">
             <span className="font-medium text-muted-foreground">{filteredTribes.length} {filteredTribes.length === 1 ? "tribo encontrada" : "tribos encontradas"}{activeFilterCount > 0 ? ` · ${activeFilterCount} filtros ativos` : " · vitrine completa"}</span>
-            {activeFilterCount > 0 && <button type="button" onClick={() => { setSelectedCategory("todos"); setSelectedFormat("Todos"); setOnlyBeginners(false); setSearchQuery(""); }} className="font-bold text-[#547b30] underline decoration-dotted underline-offset-4 hover:text-[#315b35]">Limpar filtros</button>}
+            {activeFilterCount > 0 && <button type="button" onClick={() => { setSelectedCategory("todos"); setSelectedFormat("Todos"); setOnlyBeginners(false); setSearchQuery(""); }} className="font-bold text-[#526b40] underline decoration-dotted underline-offset-4 hover:text-[#3f6045]">Limpar filtros</button>}
           </div>
 
           {/* Category pills */}
@@ -171,7 +171,7 @@ export function TribeExplorer({
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   selectedCategory === filter.id
                     ? "bg-primary text-primary-foreground shadow-xs"
-                    : "bg-[#f0f5e8] text-muted-foreground hover:bg-white/[0.09] hover:text-foreground"
+                    : "bg-[#e1e8d8] text-muted-foreground hover:bg-white/[0.09] hover:text-foreground"
                 }`}
               >
                 {filter.label}
@@ -214,7 +214,7 @@ export function TribeExplorer({
               return (
                 <article
                   key={tribe.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-[#dce8c8] bg-[#f8faef] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:border-primary/40 hover:shadow-[6px_6px_0_rgba(196,243,106,0.12)]"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-[#c8d3be] bg-[#e3e9dc] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:border-primary/40 hover:shadow-[6px_6px_0_rgba(196,243,106,0.12)]"
                 >
                   <div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -245,13 +245,13 @@ export function TribeExplorer({
                     </div>
 
                     {/* Mini pinned event preview */}
-                    <div className="mt-4 rounded-2xl border border-border/80 border border-[#e2ead5] bg-[#f0f5e8] p-3.5">
+                    <div className="mt-4 rounded-2xl border border-border/80 border border-[#e2ead5] bg-[#e1e8d8] p-3.5">
                       <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
                         <span className="inline-flex items-center gap-1">
                           <Calendar className="size-3.5" />
                           {tribe.nextEvent.dateLabel}
                         </span>
-                        <span className="text-[#648e38]">
+                        <span className="text-[#627c4d]">
                           {spotsLeft} vagas
                         </span>
                       </div>
@@ -266,7 +266,7 @@ export function TribeExplorer({
 
                   <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/60 pt-4">
                     {tribe.beginnerFriendly ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-[#648e38]">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-[#627c4d]">
                         <CheckCircle2 className="size-3.5" />
                         Iniciantes bem-vindos
                       </span>
@@ -320,7 +320,7 @@ export function TribeExplorer({
                   <Badge variant="secondary">{activeTribe.categoryLabel}</Badge>
                   <Badge variant="outline">{activeTribe.format}</Badge>
                   {activeTribe.beginnerFriendly && (
-                    <Badge className="bg-emerald-500/15 text-[#527d30]">
+                    <Badge className="bg-emerald-500/15 text-[#536c43]">
                       Aberto p/ iniciantes
                     </Badge>
                   )}
@@ -356,7 +356,7 @@ export function TribeExplorer({
                       <MapPin className="size-3.5 text-primary" />
                       {activeTribe.nextEvent.locationLabel}
                     </p>
-                    <p className="flex items-center gap-2 font-medium text-[#527d30]">
+                    <p className="flex items-center gap-2 font-medium text-[#536c43]">
                       <Sparkles className="size-3.5" />
                       Custo: {activeTribe.nextEvent.costLabel}
                     </p>
