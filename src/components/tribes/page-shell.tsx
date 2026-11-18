@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { BarChart3 } from "lucide-react";\nimport { TribesMark } from "@/components/tribes/tribes-mark";
+import { BarChart3 } from "lucide-react";
+import { TribesMark } from "@/components/tribes/tribes-mark";
 import { Navbar } from "@/components/tribes/navbar";
 
 export function PageShell({ children }: { children: React.ReactNode }) {
