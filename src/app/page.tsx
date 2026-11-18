@@ -185,10 +185,84 @@ export default function TribesLandingPage() {
           </div>
         </section>
 
+        {/* INTERACTIVE TRIBE EXPLORER */}
+        <div className="relative border-y border-white/[0.07] bg-white/[0.018]">
+          <TribeExplorer
+            onSelectTribeForWaitlist={handleSelectTribeForWaitlist}
+            onExplorerInteract={(interest) => {
+              void trackMvpEvent({
+                event: "explorer_interaction",
+                interests: interest ? [interest] : undefined,
+              });
+            }}
+          />
+        </div>
+
+        {/* COMO FUNCIONA */}
+        <section id="como-funciona" className="py-24 sm:py-28">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <Badge className="mb-3 bg-emerald-500/12 text-cyan-200 hover:bg-emerald-500/15">
+                Simples do convite ao encontro
+              </Badge>
+              <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                Como a Tribes transforma interesses em comunidade real
+              </h2>
+            </div>
+
+            <div className="mt-12 grid gap-6 md:grid-cols-3">
+              <div className="relative rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
+                <span className="font-mono text-xs font-bold text-primary">
+                  PASSO 01
+                </span>
+                <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                  <Compass className="size-6" />
+                </div>
+                <h3 className="mt-4 font-heading text-xl font-bold text-foreground">
+                  Escolha seus hobbies e sua zona
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  Marque o que você curte fazer no tempo livre e veja tribos ativas no seu bairro, campus ou online — com filtro especial para grupos abertos a iniciantes.
+                </p>
+              </div>
+
+              <div className="relative rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
+                <span className="font-mono text-xs font-bold text-primary">
+                  PASSO 02
+                </span>
+                <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                  <CalendarCheck2 className="size-6" />
+                </div>
+                <h3 className="mt-4 font-heading text-xl font-bold text-foreground">
+                  Confirme presença sem bagunça
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  Cada tribo tem seu card fixo de próximo encontro com data, local, custo, limite de vagas e lista automática de confirmação separada do bate-papo.
+                </p>
+              </div>
+
+              <div className="relative rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
+                <span className="font-mono text-xs font-bold text-primary">
+                  PASSO 03
+                </span>
+                <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-emerald-500/15 text-cyan-300">
+                  <HeartHandshake className="size-6" />
+                </div>
+                <h3 className="mt-4 font-heading text-xl font-bold text-foreground">
+                  Apareça, conecte-se e repita
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  Encontros em escala humana, recepção guiada nos primeiros 15 minutos para quebrar o gelo e ritmo recorrente para o grupo continuar vivo.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* PROBLEMA VS SOLUCAO */}
         <section
           id="problema"
-          className="border-y border-border bg-white/[0.025] py-24 sm:py-28"
+          className="relative border-y border-white/[0.07] bg-white/[0.018] py-24 sm:py-28"
         >
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
@@ -281,82 +355,8 @@ export default function TribesLandingPage() {
           </div>
         </section>
 
-        {/* COMO FUNCIONA */}
-        <section id="como-funciona" className="py-20 sm:py-24">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="mx-auto max-w-2xl text-center">
-              <Badge className="mb-3 bg-emerald-500/12 text-cyan-200 hover:bg-emerald-500/15">
-                Simples do convite ao encontro
-              </Badge>
-              <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-                Como a Tribes transforma interesses em comunidade real
-              </h2>
-            </div>
-
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
-              <div className="relative rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
-                <span className="font-mono text-xs font-bold text-primary">
-                  PASSO 01
-                </span>
-                <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-                  <Compass className="size-6" />
-                </div>
-                <h3 className="mt-4 font-heading text-xl font-bold text-foreground">
-                  Escolha seus hobbies e sua zona
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Marque o que você curte fazer no tempo livre e veja tribos ativas no seu bairro, campus ou online — com filtro especial para grupos abertos a iniciantes.
-                </p>
-              </div>
-
-              <div className="relative rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
-                <span className="font-mono text-xs font-bold text-primary">
-                  PASSO 02
-                </span>
-                <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-                  <CalendarCheck2 className="size-6" />
-                </div>
-                <h3 className="mt-4 font-heading text-xl font-bold text-foreground">
-                  Confirme presença sem bagunça
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Cada tribo tem seu card fixo de próximo encontro com data, local, custo, limite de vagas e lista automática de confirmação separada do bate-papo.
-                </p>
-              </div>
-
-              <div className="relative rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
-                <span className="font-mono text-xs font-bold text-primary">
-                  PASSO 03
-                </span>
-                <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-emerald-500/15 text-cyan-300">
-                  <HeartHandshake className="size-6" />
-                </div>
-                <h3 className="mt-4 font-heading text-xl font-bold text-foreground">
-                  Apareça, conecte-se e repita
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Encontros em escala humana, recepção guiada nos primeiros 15 minutos para quebrar o gelo e ritmo recorrente para o grupo continuar vivo.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* INTERACTIVE TRIBE EXPLORER */}
-        <div className="border-t border-border bg-secondary/25">
-          <TribeExplorer
-            onSelectTribeForWaitlist={handleSelectTribeForWaitlist}
-            onExplorerInteract={(interest) => {
-              void trackMvpEvent({
-                event: "explorer_interaction",
-                interests: interest ? [interest] : undefined,
-              });
-            }}
-          />
-        </div>
-
         {/* SEGMENTOS DE CLIENTES (PROPOSTA DE VALOR MULTI-LADOS DO TP3) */}
-        <section id="segmentos" className="border-t border-border py-20 sm:py-24">
+        <section id="segmentos" className="relative py-24 sm:py-28">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
               <Badge variant="outline" className="mb-3 px-3 py-1 text-xs font-semibold">
@@ -522,7 +522,7 @@ export default function TribesLandingPage() {
         </section>
 
         {/* PLANOS / MODELO DE NEGOCIOS */}
-        <section id="planos" className="border-t border-border bg-transparent py-24 sm:py-28">
+        <section id="planos" className="relative border-t border-white/[0.07] bg-transparent py-24 sm:py-28">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
               <Badge className="mb-3 bg-primary/12 text-primary hover:bg-primary/15">
@@ -606,16 +606,6 @@ export default function TribesLandingPage() {
           </div>
         </section>
 
-        {/* WAITLIST CAPTURE */}
-        <WaitlistSection
-          segment={selectedSegment}
-          onSegmentChange={setSelectedSegment}
-          selectedInterests={selectedInterests}
-          onToggleInterest={handleToggleInterest}
-          preselectedPlan={selectedPlan}
-          preselectedTribeName={selectedTribeName}
-        />
-
         {/* FAQ */}
         <section id="faq" className="py-20 sm:py-24">
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
@@ -644,6 +634,16 @@ export default function TribesLandingPage() {
             </div>
           </div>
         </section>
+        {/* WAITLIST CAPTURE */}
+        <WaitlistSection
+          segment={selectedSegment}
+          onSegmentChange={setSelectedSegment}
+          selectedInterests={selectedInterests}
+          onToggleInterest={handleToggleInterest}
+          preselectedPlan={selectedPlan}
+          preselectedTribeName={selectedTribeName}
+        />
+
       </main>
 
       {/* FOOTER */}
