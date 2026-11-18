@@ -40,7 +40,7 @@ export function Navbar({ onCtaClick }: NavbarProps) {
           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white" render={<Link href="/metricas" />}>
             <BarChart3 className="size-4" /> Métricas
           </Button>
-          <Button size="lg" className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-600 px-5 font-semibold text-white shadow-[0_0_24px_rgba(139,92,246,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_34px_rgba(139,92,246,0.48)]" onClick={onCtaClick} render={<a href="#lista-espera" />}>
+          <Button size="lg" className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-600 px-5 font-semibold text-white shadow-[0_0_24px_rgba(139,92,246,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_34px_rgba(139,92,246,0.48)]" onClick={onCtaClick} render={<a href="/lista-de-espera" />}>
             Garantir acesso <ArrowRight className="size-4" />
           </Button>
         </div>
@@ -57,7 +57,7 @@ export function Navbar({ onCtaClick }: NavbarProps) {
             <Link href="/metricas" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-white/[0.05] hover:text-white">
               <BarChart3 className="size-4" /> Painel de Métricas MVP
             </Link>
-            <Button size="lg" className="mt-2 w-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-600 font-semibold text-white" onClick={() => { setMobileOpen(false); onCtaClick?.(); }} render={<a href="#lista-espera" />}>
+            <Button size="lg" className="mt-2 w-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-600 font-semibold text-white" onClick={() => { setMobileOpen(false); onCtaClick?.(); }} render={<a href="/lista-de-espera" />}>
               Entrar na lista de espera <ArrowRight className="size-4" />
             </Button>
           </nav>
