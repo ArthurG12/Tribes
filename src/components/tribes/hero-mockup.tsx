@@ -36,9 +36,9 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
         className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-gradient-to-tr from-[#c4f36a]/20 via-orange-500/10 to-transparent blur-2xl"
       />
 
-      <div className="overflow-hidden rounded-xl border border-[#dce8c8] bg-[#f7faef] shadow-[0_30px_100px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] ">
+      <div className="overflow-hidden rounded-xl border border-[#dce8c8] bg-[#f7faef] shadow-[0_24px_60px_rgba(42,75,35,0.12)] ring-1 ring-white/[0.04] ">
         {/* Top bar of tribe room */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#edf4df] px-4 py-3.5 sm:px-5">
+        <div className="flex items-center justify-between border-b border-[#dce8c8] bg-[#edf4df] px-4 py-3.5 sm:px-5">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/15 font-heading text-sm font-bold text-primary">
               D&D
@@ -55,13 +55,13 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
               </p>
             </div>
           </div>
-          <Badge className="border-emerald-600/20 border border-[#a8c77b] bg-cyan-300/10 text-[#527d30] hover:bg-emerald-500/15">
+          <Badge className="border-emerald-600/20 border border-[#a8c77b] bg-[#e9f4d8] text-[#527d30] hover:bg-[#e3f0d0]">
             Aberto p/ iniciantes
           </Badge>
         </div>
 
         {/* Mode switcher: Pinned Event vs Organized Chat */}
-        <div className="grid grid-cols-2 gap-1 border-b border-white/[0.07] bg-black/20 p-1.5">
+        <div className="grid grid-cols-2 gap-1 border-b border-[#dce8c8] bg-[#e9f0df] p-1.5">
           <button
             type="button"
             onClick={() => {
@@ -196,7 +196,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                 Sempre tive receio de entrar em grupo fechado onde todo mundo já se conhece. O filtro de iniciantes salvou demais!
               </p>
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center justify-between rounded-xl border border-dashed border-[#bfd49f] px-3 py-2 text-[11px] text-muted-foreground">
               <span>Data, mapa e lista de confirmação permanecem fixos na aba ao lado.</span>
               <button
                 type="button"
