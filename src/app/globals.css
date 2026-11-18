@@ -49,49 +49,100 @@
 }
 
 :root {
-  --background: oklch(0.988 0.006 75);
-  --foreground: oklch(0.19 0.02 50);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.19 0.02 50);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.19 0.02 50);
-  --primary: oklch(0.57 0.185 36);
-  --primary-foreground: oklch(0.99 0.005 75);
-  --secondary: oklch(0.955 0.014 75);
-  --secondary-foreground: oklch(0.24 0.025 50);
-  --muted: oklch(0.955 0.012 75);
-  --muted-foreground: oklch(0.46 0.02 50);
-  --accent: oklch(0.94 0.03 158);
-  --accent-foreground: oklch(0.27 0.07 160);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.905 0.014 70);
-  --input: oklch(0.89 0.016 70);
-  --ring: oklch(0.57 0.185 36);
-  --chart-1: oklch(0.57 0.185 36);
-  --chart-2: oklch(0.54 0.135 160);
-  --chart-3: oklch(0.68 0.15 75);
-  --chart-4: oklch(0.48 0.14 265);
-  --chart-5: oklch(0.62 0.17 18);
-  --radius: 0.75rem;
-  --sidebar: oklch(0.985 0.006 75);
-  --sidebar-foreground: oklch(0.19 0.02 50);
-  --sidebar-primary: oklch(0.57 0.185 36);
-  --sidebar-primary-foreground: oklch(0.99 0.005 75);
-  --sidebar-accent: oklch(0.955 0.014 75);
-  --sidebar-accent-foreground: oklch(0.24 0.025 50);
-  --sidebar-border: oklch(0.905 0.014 70);
-  --sidebar-ring: oklch(0.57 0.185 36);
+  color-scheme: dark;
+  --background: oklch(0.13 0.012 285);
+  --foreground: oklch(0.96 0.008 285);
+  --card: oklch(0.18 0.016 285);
+  --card-foreground: oklch(0.96 0.008 285);
+  --popover: oklch(0.19 0.018 285);
+  --popover-foreground: oklch(0.96 0.008 285);
+  --primary: oklch(0.72 0.2 295);
+  --primary-foreground: oklch(0.13 0.012 285);
+  --secondary: oklch(0.22 0.018 285);
+  --secondary-foreground: oklch(0.92 0.01 285);
+  --muted: oklch(0.22 0.018 285);
+  --muted-foreground: oklch(0.69 0.018 285);
+  --accent: oklch(0.27 0.055 295);
+  --accent-foreground: oklch(0.91 0.08 295);
+  --destructive: oklch(0.65 0.2 25);
+  --border: oklch(0.32 0.018 285);
+  --input: oklch(0.29 0.018 285);
+  --ring: oklch(0.72 0.2 295);
+  --chart-1: oklch(0.72 0.2 295);
+  --chart-2: oklch(0.72 0.16 205);
+  --chart-3: oklch(0.78 0.16 145);
+  --chart-4: oklch(0.78 0.16 75);
+  --chart-5: oklch(0.7 0.19 25);
+  --radius: 0.9rem;
+  --sidebar: oklch(0.16 0.014 285);
+  --sidebar-foreground: oklch(0.96 0.008 285);
+  --sidebar-primary: oklch(0.72 0.2 295);
+  --sidebar-primary-foreground: oklch(0.13 0.012 285);
+  --sidebar-accent: oklch(0.22 0.018 285);
+  --sidebar-accent-foreground: oklch(0.92 0.01 285);
+  --sidebar-border: oklch(0.32 0.018 285);
+  --sidebar-ring: oklch(0.72 0.2 295);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    scroll-behavior: smooth;
+    background: var(--background);
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
+    background-image:
+      radial-gradient(ellipse at 12% 0%, oklch(0.28 0.09 295 / 0.2), transparent 34rem),
+      radial-gradient(ellipse at 88% 18%, oklch(0.24 0.07 255 / 0.14), transparent 32rem);
+    background-attachment: fixed;
   }
+
   h1, h2, h3, h4 {
     font-family: var(--font-heading);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.035em;
+  }
+
+  ::selection {
+    color: oklch(0.98 0.005 285);
+    background: oklch(0.55 0.2 295 / 0.65);
+  }
+
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    border: 1px solid oklch(0.8 0.08 295 / 0.18);
+    background: oklch(0.2 0.018 285 / 0.72);
+    box-shadow: 0 18px 60px oklch(0.04 0.015 285 / 0.32), inset 0 1px 0 oklch(1 0 0 / 0.04);
+    backdrop-filter: blur(18px);
+  }
+
+  .neon-glow {
+    box-shadow: 0 0 0 1px oklch(0.72 0.2 295 / 0.22), 0 0 32px oklch(0.62 0.22 295 / 0.18);
+  }
+
+  .text-gradient {
+    background: linear-gradient(110deg, oklch(0.82 0.16 295), oklch(0.72 0.18 255) 55%, oklch(0.8 0.14 330));
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-float {
+    animation: tribes-float 7s ease-in-out infinite;
+  }
+
+  @keyframes tribes-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-9px); }
   }
 }
