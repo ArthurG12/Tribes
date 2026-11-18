@@ -10,9 +10,9 @@ interface NavbarProps {
 }
 
 const NAV_LINKS = [
-  { href: "#problema", label: "Por que Tribes" },
-  { href: "#como-funciona", label: "Como funciona" },
   { href: "#explorar", label: "Explorar tribos" },
+  { href: "#como-funciona", label: "Como funciona" },
+  { href: "#problema", label: "Por que Tribes" },
   { href: "#segmentos", label: "Para quem" },
   { href: "#planos", label: "Planos" },
   { href: "#faq", label: "Dúvidas" },
