@@ -41,7 +41,7 @@ export default async function TribeDetailPage({
               <span className="inline-flex items-center gap-2"><CalendarDays className="size-4 text-primary" />{tribe.weeklyFrequency}</span>
             </div>
 
-            <section className="mt-9 rounded-2xl border border-border bg-card p-5 sm:p-7">
+            <section className="surface-card mt-9 p-5 sm:p-7">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Próximo encontro</p>
@@ -50,12 +50,12 @@ export default async function TribeDetailPage({
                 <Badge variant="outline">{tribe.nextEvent.confirmedCount}/{tribe.nextEvent.maxSpots} confirmados</Badge>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl bg-muted/60 p-4">
+                <div className="rounded-xl border border-border/70 bg-[#f5f8f1] p-4">
                   <CalendarDays className="size-5 text-primary" />
                   <p className="mt-2 text-sm font-semibold text-foreground">{tribe.nextEvent.dateLabel}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{tribe.weeklyFrequency}</p>
                 </div>
-                <div className="rounded-xl bg-muted/60 p-4">
+                <div className="rounded-xl border border-border/70 bg-[#f5f8f1] p-4">
                   <MapPin className="size-5 text-primary" />
                   <p className="mt-2 text-sm font-semibold text-foreground">{tribe.nextEvent.locationLabel}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{tribe.nextEvent.costLabel}</p>
@@ -76,12 +76,12 @@ export default async function TribeDetailPage({
             <section className="mt-8">
               <h2 className="font-heading text-xl font-bold text-foreground">Conheça a comunidade</h2>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="surface-card p-5">
                   <Users className="size-5 text-primary" />
                   <h3 className="mt-3 font-semibold text-foreground">Organização</h3>
                   <p className="mt-1 text-sm text-muted-foreground">Organizada por {tribe.organizerName}. A frequência dos encontros é {tribe.weeklyFrequency.toLowerCase()}.</p>
                 </div>
-                <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="surface-card p-5">
                   {tribe.partnerVenue ? <Store className="size-5 text-primary" /> : <Sparkles className="size-5 text-primary" />}
                   <h3 className="mt-3 font-semibold text-foreground">{tribe.partnerVenue ? "Espaço relacionado" : "Novos membros"}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">{tribe.partnerVenue ?? "A comunidade está aberta para pessoas interessadas em participar e contribuir."}</p>
@@ -96,7 +96,7 @@ export default async function TribeDetailPage({
               </div>
               <div className="mt-4 space-y-3">
                 {tribe.recentMessages.map((message, index) => (
-                  <article key={message.author + index} className="rounded-2xl border border-border bg-card p-4">
+                  <article key={message.author + index} className="surface-card p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-foreground">{message.author} <span className="font-normal text-muted-foreground">· {message.role}</span></p>
                       <span className="text-xs text-muted-foreground">{message.time}</span>
@@ -110,7 +110,7 @@ export default async function TribeDetailPage({
           </div>
 
           <aside className="lg:sticky lg:top-28 lg:self-start">
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="surface-card p-5 shadow-[0_12px_32px_rgba(45,75,40,0.08)]">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Participe</p>
               <h2 className="mt-2 font-heading text-xl font-bold text-foreground">Esse encontro combina com você?</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Registre seu interesse e encontre esta tribo novamente na sua agenda de demonstração.</p>
