@@ -77,11 +77,6 @@ export default function TribesLandingPage() {
         <section className="relative overflow-hidden bg-[#f7faf4] py-14 sm:py-18">
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#eaf2e3] to-transparent" />
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="mb-2 text-center">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Encontre sua comunidade</p>
-              <h2 className="mt-3 font-heading text-3xl font-extrabold text-foreground sm:text-4xl">Explore tribos</h2>
-              <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">Descubra grupos por interesse, conheça as comunidades e encontre seu próximo encontro.</p>
-            </div>
             <TribeExplorer
               onSelectTribeForWaitlist={(tribe) => { window.location.href = "/lista-de-espera?tribo=" + encodeURIComponent(tribe.id); }}
               onExplorerInteract={(interest) => { void trackMvpEvent({ event: "explorer_interaction", interests: interest ? [interest] : undefined }); }}
