@@ -30,15 +30,15 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-lg">
+    <div className="relative mx-auto w-full max-w-xl">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-gradient-to-tr from-primary/15 via-amber-500/10 to-emerald-500/15 blur-2xl"
+        className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-gradient-to-tr from-violet-500/25 via-fuchsia-500/15 to-cyan-400/15 blur-2xl"
       />
 
-      <div className="overflow-hidden rounded-3xl border border-border/90 bg-card shadow-xl ring-1 ring-black/[0.03]">
+      <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#11101a]/90 shadow-[0_30px_100px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] backdrop-blur-xl">
         {/* Top bar of tribe room */}
-        <div className="flex items-center justify-between border-b border-border bg-secondary/50 px-4 py-3.5 sm:px-5">
+        <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.035] px-4 py-3.5 sm:px-5">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/15 font-heading text-sm font-bold text-primary">
               D&D
@@ -48,20 +48,20 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                 <span className="font-heading text-sm font-bold text-foreground">
                   Dados & Dragões Pampulha
                 </span>
-                <ShieldCheck className="size-4 text-emerald-600" />
+                <ShieldCheck className="size-4 text-cyan-300" />
               </div>
               <p className="text-xs text-muted-foreground">
                 Belo Horizonte · 34 membros ativos
               </p>
             </div>
           </div>
-          <Badge className="border-emerald-600/20 bg-emerald-500/12 text-emerald-800 hover:bg-emerald-500/15">
+          <Badge className="border-emerald-600/20 border border-cyan-300/20 bg-cyan-300/10 text-cyan-200 hover:bg-emerald-500/15">
             Aberto p/ iniciantes
           </Badge>
         </div>
 
         {/* Mode switcher: Pinned Event vs Organized Chat */}
-        <div className="grid grid-cols-2 gap-1 border-b border-border bg-muted/40 p-1.5">
+        <div className="grid grid-cols-2 gap-1 border-b border-white/[0.07] bg-black/20 p-1.5">
           <button
             type="button"
             onClick={() => {
@@ -70,7 +70,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
             }}
             className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all ${
               activeTab === "evento"
-                ? "bg-card text-foreground shadow-xs"
+                ? "bg-white/[0.09] text-white shadow-lg shadow-black/20"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -85,7 +85,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
             }}
             className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all ${
               activeTab === "chat"
-                ? "bg-card text-foreground shadow-xs"
+                ? "bg-white/[0.09] text-white shadow-lg shadow-black/20"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -96,7 +96,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
 
         {activeTab === "evento" ? (
           <div className="space-y-4 p-4 sm:p-5">
-            <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
+            <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.12] via-primary/[0.045] to-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] p-4">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
                   <Sparkles className="size-3.5" />
@@ -145,7 +145,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                     key={initials + idx}
                     className={`flex size-8 items-center justify-center rounded-full border-2 border-card text-[11px] font-bold ${
                       initials === "VC"
-                        ? "bg-emerald-600 text-white"
+                        ? "bg-cyan-400 text-slate-950"
                         : "bg-secondary text-secondary-foreground"
                     }`}
                   >
@@ -163,7 +163,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
               >
                 {rsvpConfirmed ? (
                   <>
-                    <CheckCircle2 className="size-4 text-emerald-600" />
+                    <CheckCircle2 className="size-4 text-cyan-300" />
                     Presença confirmada! (Testar clique)
                   </>
                 ) : (
@@ -174,7 +174,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
           </div>
         ) : (
           <div className="space-y-3 p-4 sm:p-5">
-            <div className="rounded-xl bg-muted/60 p-3 text-xs">
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.045] p-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">
                   Marina S. · Organizadora
@@ -185,7 +185,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                 Subi as fichas prontas direto no card do encontro! Assim ninguém precisa rolar 200 mensagens pra achar horário ou endereço.
               </p>
             </div>
-            <div className="rounded-xl bg-muted/60 p-3 text-xs">
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.045] p-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">
                   Lucas T. · 1º encontro na tribo
