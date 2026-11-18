@@ -89,7 +89,7 @@ export function TribeExplorer({
   };
 
   return (
-    <section id="explorar" className="py-24 sm:py-28">
+    <section id="explorar" className="pt-6 pb-20 sm:pt-8 sm:pb-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Badge
