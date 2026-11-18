@@ -205,7 +205,7 @@ export function WaitlistSection({
                   {submittedState.recommendedTribes.map((tribe) => (
                     <div
                       key={tribe.id}
-                      className="rounded-xl border border-[#dce8c8] bg-white/[0.04] p-3"
+                      className="rounded-xl border border-[#dce8c8] bg-[#f4f8ed] p-3"
                     >
                       <p className="font-heading text-sm font-bold text-foreground">
                         {tribe.name}
