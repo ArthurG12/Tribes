@@ -18,8 +18,8 @@ export default function TribesLandingPage() {
       <Navbar />
       <main className="flex-1">
         <section className="relative isolate overflow-hidden py-20 sm:py-28 lg:py-32">
-          <div aria-hidden="true" className="pointer-events-none absolute -top-40 right-[-10%] -z-10 h-[34rem] w-[34rem] rounded-full bg-violet-600/20 blur-[130px]" />
-          <div aria-hidden="true" className="pointer-events-none absolute bottom-[-18rem] left-[-12%] -z-10 h-[34rem] w-[34rem] rounded-full bg-fuchsia-600/10 blur-[130px]" />
+          <div aria-hidden="true" className="pointer-events-none absolute -top-40 right-[-10%] -z-10 h-[34rem] w-[34rem] rounded-full bg-[#c4f36a]/12 blur-[130px]" />
+          <div aria-hidden="true" className="pointer-events-none absolute bottom-[-18rem] left-[-12%] -z-10 h-[34rem] w-[34rem] rounded-full bg-orange-500/10 blur-[130px]" />
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:gap-10">
             <div className="lg:col-span-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-3.5 py-1.5 text-xs font-semibold text-primary">
@@ -57,7 +57,7 @@ export default function TribesLandingPage() {
             </div>
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {destinations.map(({ href, icon: Icon, title, description }) => (
-                <Link key={href} href={href} className="group rounded-3xl border border-white/10 bg-white/[0.035] p-6 transition-all hover:-translate-y-1 hover:border-primary/40 hover:bg-white/[0.06]">
+                <Link key={href} href={href} className="group rounded-xl border border-primary/20 bg-[#172016] p-6 transition-all hover:-translate-y-1 hover:border-primary/60 hover:bg-[#202d1c]">
                   <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary"><Icon className="size-5" /></span>
                   <h3 className="mt-4 font-heading text-lg font-bold text-foreground">{title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
