@@ -42,13 +42,13 @@ export default function TribesLandingPage() {
               <div className="mt-8 grid grid-cols-3 gap-4 border-t border-border/80 pt-6">
                 <div><p className="font-heading text-xl font-extrabold text-foreground sm:text-2xl">9 nichos</p><p className="text-xs text-muted-foreground">mapeados na validação inicial</p></div>
                 <div><p className="font-heading text-xl font-extrabold text-foreground sm:text-2xl">1 clique</p><p className="text-xs text-muted-foreground">para confirmar presença</p></div>
-                <div><p className="font-heading text-xl font-extrabold text-[#648e38] sm:text-2xl">Grátis</p><p className="text-xs text-muted-foreground">para descobrir e participar</p></div>
+                <div><p className="font-heading text-xl font-extrabold text-[#627c4d] sm:text-2xl">Grátis</p><p className="text-xs text-muted-foreground">para descobrir e participar</p></div>
               </div>
             </div>
             <div className="lg:col-span-6"><HeroMockup /></div>
           </div>
         </section>
-        <section className="border-y border-[#dce8c8] bg-[#edf4df] py-16 sm:py-20">
+        <section className="border-y border-[#c8d3be] bg-[#dce4d3] py-16 sm:py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Conheça a Tribes</p>
@@ -57,7 +57,7 @@ export default function TribesLandingPage() {
             </div>
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {destinations.map(({ href, icon: Icon, title, description }) => (
-                <Link key={href} href={href} className="group rounded-xl border border-primary/20 bg-white p-6 transition-all hover:-translate-y-1 hover:border-primary/60 hover:bg-[#f0f6e6]">
+                <Link key={href} href={href} className="group rounded-xl border border-primary/20 bg-white p-6 transition-all hover:-translate-y-1 hover:border-primary/60 hover:bg-[#e1e8d8]">
                   <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary"><Icon className="size-5" /></span>
                   <h3 className="mt-4 font-heading text-lg font-bold text-foreground">{title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
