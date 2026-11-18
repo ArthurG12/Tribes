@@ -119,7 +119,7 @@
 }
 
 @layer utilities {
-  .glass-panel {
+  .surface-card {\n    border: 1px solid var(--border);\n    border-radius: 1.25rem;\n    background: var(--card);\n    box-shadow: 0 8px 24px rgba(45, 75, 40, 0.06);\n    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;\n  }\n\n  .surface-card:hover {\n    border-color: color-mix(in oklab, var(--primary) 35%, var(--border));\n    box-shadow: 0 14px 32px rgba(45, 75, 40, 0.10);\n  }\n\n  .metric-card {\n    border: 1px solid var(--border);\n    border-radius: 1rem;\n    background: var(--card);\n    padding: 1.25rem;\n    box-shadow: 0 4px 16px rgba(45, 75, 40, 0.045);\n  }\n\n  .event-card {\n    border: 1px solid var(--border);\n    border-radius: 1.25rem;\n    background: var(--card);\n    padding: 1.25rem;\n    box-shadow: 0 8px 24px rgba(45, 75, 40, 0.06);\n    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;\n  }\n\n  .event-card:hover {\n    transform: translateY(-2px);\n    border-color: color-mix(in oklab, var(--primary) 35%, var(--border));\n    box-shadow: 0 14px 32px rgba(45, 75, 40, 0.10);\n  }\n\n  .glass-panel {
     border: 1px solid oklch(0.88 0.03 130 / 0.9);
     background: oklch(0.995 0.004 120 / 0.94);
     box-shadow: 0 12px 36px oklch(0.32 0.04 145 / 0.06);
