@@ -155,7 +155,7 @@ export function WaitlistSection({
   return (
     <section
       id="lista-espera"
-      className="relative overflow-hidden border-y border-border bg-gradient-to-b from-primary/[0.07] via-background to-background py-24 sm:py-28"
+      className="relative overflow-hidden border-y border-border bg-[#edf4df] py-24 sm:py-28"
     >
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
@@ -170,15 +170,15 @@ export function WaitlistSection({
           </p>
         </div>
 
-        <div className="mt-10 rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-9">
+        <div className="mt-10 rounded-[2rem] border border-[#dce8c8] bg-[#f4f8ed] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-9">
           {submittedState ? (
             <div className="space-y-6 py-2 text-center">
-              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-cyan-300">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#e9f4d8] text-[#648e38]">
                 <CheckCircle2 className="size-8" />
               </div>
 
               <div>
-                <Badge className="bg-emerald-500/12 text-cyan-200">
+                <Badge className="bg-[#e9f4d8] text-[#527d30]">
                   Convite #{submittedState.queuePosition} reservado
                 </Badge>
                 <h3 className="mt-2 font-heading text-2xl font-extrabold text-foreground">
@@ -197,7 +197,7 @@ export function WaitlistSection({
                 </p>
               </div>
 
-              <div className="mx-auto max-w-xl rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-left">
+              <div className="mx-auto max-w-xl rounded-2xl border border-[#dce8c8] bg-white p-4 text-left">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Tribos compatíveis com o seu perfil no lançamento:
                 </p>
@@ -205,7 +205,7 @@ export function WaitlistSection({
                   {submittedState.recommendedTribes.map((tribe) => (
                     <div
                       key={tribe.id}
-                      className="rounded-xl border border-white/10 bg-white/[0.04] p-3"
+                      className="rounded-xl border border-[#dce8c8] bg-white/[0.04] p-3"
                     >
                       <p className="font-heading text-sm font-bold text-foreground">
                         {tribe.name}
@@ -295,7 +295,7 @@ export function WaitlistSection({
                         className={`flex flex-col items-start rounded-2xl border p-3.5 text-left transition-all ${
                           active
                             ? "border-primary bg-primary/[0.05] ring-2 ring-primary/20"
-                            : "border-white/10 bg-white/[0.025] hover:border-primary/40 hover:bg-primary/[0.04]"
+                            : "border-[#dce8c8] bg-[#f4f8ed] hover:border-primary/40 hover:bg-primary/[0.04]"
                         }`}
                       >
                         <Icon
@@ -368,7 +368,7 @@ export function WaitlistSection({
                         className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all ${
                           selected
                             ? "border-primary bg-primary text-primary-foreground shadow-xs"
-                            : "border-white/10 bg-white/[0.025] text-foreground/80 hover:border-primary/40"
+                            : "border-[#dce8c8] bg-[#f4f8ed] text-foreground/80 hover:border-primary/40"
                         }`}
                       >
                         {cat.label}
@@ -418,7 +418,7 @@ export function WaitlistSection({
 
               <div className="flex flex-col items-center justify-between gap-3 pt-1 sm:flex-row">
                 <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Shield className="size-4 text-emerald-600" />
+                  <Shield className="size-4 text-[#648e38]" />
                   Zero spam · Saia quando quiser com 1 clique
                 </span>
 
