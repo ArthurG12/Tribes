@@ -10,12 +10,12 @@ interface NavbarProps {
 }
 
 const NAV_LINKS = [
-  { href: "#explorar", label: "Explorar tribos" },
-  { href: "#como-funciona", label: "Como funciona" },
-  { href: "#problema", label: "Por que Tribes" },
-  { href: "#segmentos", label: "Para quem" },
-  { href: "#planos", label: "Planos" },
-  { href: "#faq", label: "Dúvidas" },
+  { href: "/explorar", label: "Explorar tribos" },
+  { href: "/como-funciona", label: "Como funciona" },
+  { href: "/sobre", label: "Por que Tribes" },
+  { href: "/para-quem", label: "Para quem" },
+  { href: "/planos", label: "Planos" },
+  { href: "/faq", label: "Dúvidas" },
 ];
 
 export function Navbar({ onCtaClick }: NavbarProps) {
@@ -33,14 +33,14 @@ export function Navbar({ onCtaClick }: NavbarProps) {
         </Link>
         <nav className="hidden items-center gap-5 xl:flex">
           {NAV_LINKS.map((item) => (
-            <a key={item.href} href={item.href} className="text-[13px] font-medium text-muted-foreground transition-colors hover:text-white">{item.label}</a>
+            <Link key={item.href} href={item.href} className="text-[13px] font-medium text-muted-foreground transition-colors hover:text-white">{item.label}</Link>
           ))}
         </nav>
         <div className="hidden items-center gap-3 md:flex">
           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white" render={<Link href="/metricas" />}>
             <BarChart3 className="size-4" /> Métricas
           </Button>
-          <Button size="lg" className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-600 px-5 font-semibold text-white shadow-[0_0_24px_rgba(139,92,246,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_34px_rgba(139,92,246,0.48)]" onClick={onCtaClick} render={<a href="/lista-de-espera" />}>
+          <Button size="lg" className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-600 px-5 font-semibold text-white shadow-[0_0_24px_rgba(139,92,246,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_34px_rgba(139,92,246,0.48)]" onClick={onCtaClick} render={<Link href="/lista-de-espera" />}>
             Garantir acesso <ArrowRight className="size-4" />
           </Button>
         </div>
@@ -57,7 +57,7 @@ export function Navbar({ onCtaClick }: NavbarProps) {
             <Link href="/metricas" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-white/[0.05] hover:text-white">
               <BarChart3 className="size-4" /> Painel de Métricas MVP
             </Link>
-            <Button size="lg" className="mt-2 w-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-600 font-semibold text-white" onClick={() => { setMobileOpen(false); onCtaClick?.(); }} render={<a href="/lista-de-espera" />}>
+            <Button size="lg" className="mt-2 w-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-600 font-semibold text-white" onClick={() => setMobileOpen(false)} render={<a href="/lista-de-espera" />}>
               Entrar na lista de espera <ArrowRight className="size-4" />
             </Button>
           </nav>
