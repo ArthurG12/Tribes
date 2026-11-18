@@ -1,0 +1,12 @@
+import { Check, Store, Users, CalendarCheck2 } from "lucide-react";
+import { PageIntro, PageShell } from "@/components/tribes/page-shell";
+
+const audiences = [
+  { icon: Users, title: "Para membros", subtitle: "Conexão sem pressão", description: "Encontre companhia para seus hobbies, descubra grupos receptivos e saiba exatamente quando e onde será o próximo encontro.", points: ["Comunidades abertas a iniciantes", "Agenda e confirmações em um só lugar", "Pessoas com interesses em comum"] },
+  { icon: CalendarCheck2, title: "Para organizadores", subtitle: "Gestão de comunidades", description: "Organize atividades, concentre informações importantes e acompanhe quem confirmou presença sem cobrar resposta individualmente.", points: ["Encontros recorrentes e eventos", "Limite de vagas e lista de espera", "Mais clareza para participantes"] },
+  { icon: Store, title: "Para espaços parceiros", subtitle: "Comunidades e negócios locais", description: "Conecte cafés, livrarias, quadras e espaços culturais a comunidades que procuram lugares para se reunir.", points: ["Visibilidade para espaços locais", "Oportunidade de receber grupos recorrentes", "Conexão com organizadores da região"] },
+];
+
+export default function AudiencePage() {
+  return <PageShell><PageIntro eyebrow="Um ecossistema conectado" title="Feita para quem participa, organiza e recebe." description="Cada pessoa tem um papel na construção de comunidades mais ativas. A Tribes aproxima esses lados em uma mesma experiência." /><div className="mx-auto max-w-6xl space-y-5 px-4 py-14 sm:px-6">{audiences.map(({icon:Icon,title,subtitle,description,points},i) => <article key={title} className="grid gap-6 rounded-3xl border border-white/10 bg-white/[0.035] p-7 md:grid-cols-[1fr_1.2fr] md:items-center md:p-9"><div><span className="flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary"><Icon className="size-6" /></span><p className="mt-4 text-xs font-bold uppercase tracking-wider text-primary">{subtitle}</p><h2 className="mt-2 font-heading text-2xl font-extrabold text-foreground">{title}</h2><p className="mt-3 text-sm leading-relaxed text-muted-foreground">{description}</p></div><ul className="space-y-3 rounded-2xl border border-border bg-secondary/30 p-6">{points.map(point => <li key={point} className="flex items-start gap-3 text-sm text-foreground"><Check className="mt-0.5 size-4 shrink-0 text-cyan-300" />{point}</li>)}</ul></article>)}</div></PageShell>;
+}
