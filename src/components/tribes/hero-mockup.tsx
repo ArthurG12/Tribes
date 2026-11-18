@@ -36,9 +36,9 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
         className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-gradient-to-tr from-[#c4f36a]/20 via-orange-500/10 to-transparent blur-2xl"
       />
 
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-[#151e14] shadow-[0_30px_100px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] backdrop-blur-xl">
+      <div className="overflow-hidden rounded-xl border border-[#dce8c8] bg-[#f7faef] shadow-[0_30px_100px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] ">
         {/* Top bar of tribe room */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.035] px-4 py-3.5 sm:px-5">
+        <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#edf4df] px-4 py-3.5 sm:px-5">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/15 font-heading text-sm font-bold text-primary">
               D&D
@@ -48,14 +48,14 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                 <span className="font-heading text-sm font-bold text-foreground">
                   Dados & Dragões Pampulha
                 </span>
-                <ShieldCheck className="size-4 text-cyan-300" />
+                <ShieldCheck className="size-4 text-[#6c963b]" />
               </div>
               <p className="text-xs text-muted-foreground">
                 Belo Horizonte · 34 membros ativos
               </p>
             </div>
           </div>
-          <Badge className="border-emerald-600/20 border border-cyan-300/20 bg-cyan-300/10 text-cyan-200 hover:bg-emerald-500/15">
+          <Badge className="border-emerald-600/20 border border-[#a8c77b] bg-cyan-300/10 text-[#527d30] hover:bg-emerald-500/15">
             Aberto p/ iniciantes
           </Badge>
         </div>
@@ -145,7 +145,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                     key={initials + idx}
                     className={`flex size-8 items-center justify-center rounded-full border-2 border-card text-[11px] font-bold ${
                       initials === "VC"
-                        ? "bg-cyan-400 text-slate-950"
+                        ? "bg-[#c8ed75] text-[#193c27]"
                         : "bg-secondary text-secondary-foreground"
                     }`}
                   >
@@ -163,7 +163,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
               >
                 {rsvpConfirmed ? (
                   <>
-                    <CheckCircle2 className="size-4 text-cyan-300" />
+                    <CheckCircle2 className="size-4 text-[#6c963b]" />
                     Presença confirmada! (Testar clique)
                   </>
                 ) : (
@@ -174,7 +174,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
           </div>
         ) : (
           <div className="space-y-3 p-4 sm:p-5">
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.045] p-3 text-xs">
+            <div className="rounded-xl border border-white/[0.06] bg-[#edf4df] p-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">
                   Marina S. · Organizadora
@@ -185,7 +185,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                 Subi as fichas prontas direto no card do encontro! Assim ninguém precisa rolar 200 mensagens pra achar horário ou endereço.
               </p>
             </div>
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.045] p-3 text-xs">
+            <div className="rounded-xl border border-white/[0.06] bg-[#edf4df] p-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">
                   Lucas T. · 1º encontro na tribo
