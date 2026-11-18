@@ -50,38 +50,38 @@
 
 :root {
   color-scheme: light;
-  --background: oklch(0.865 0.025 125);
-  --foreground: oklch(0.34 0.035 145);
-  --card: oklch(0.90 0.018 115);
-  --card-foreground: oklch(0.34 0.035 145);
-  --popover: oklch(0.905 0.018 115);
-  --popover-foreground: oklch(0.34 0.035 145);
-  --primary: oklch(0.66 0.12 128);
-  --primary-foreground: oklch(0.27 0.04 145);
-  --secondary: oklch(0.81 0.035 125);
-  --secondary-foreground: oklch(0.36 0.04 145);
-  --muted: oklch(0.825 0.025 120);
-  --muted-foreground: oklch(0.46 0.03 140);
-  --accent: oklch(0.79 0.055 125);
-  --accent-foreground: oklch(0.35 0.055 140);
-  --destructive: oklch(0.65 0.2 25);
-  --border: oklch(0.76 0.03 130);
-  --input: oklch(0.78 0.03 125);
-  --ring: oklch(0.62 0.11 130);
-  --chart-1: oklch(0.86 0.22 125);
-  --chart-2: oklch(0.72 0.16 55);
-  --chart-3: oklch(0.72 0.16 205);
-  --chart-4: oklch(0.78 0.16 75);
-  --chart-5: oklch(0.7 0.19 25);
+  --background: oklch(0.985 0.008 125);
+  --foreground: oklch(0.27 0.035 145);
+  --card: oklch(0.998 0.003 120);
+  --card-foreground: oklch(0.27 0.035 145);
+  --popover: oklch(0.998 0.003 120);
+  --popover-foreground: oklch(0.27 0.035 145);
+  --primary: oklch(0.48 0.09 140);
+  --primary-foreground: oklch(0.99 0.005 120);
+  --secondary: oklch(0.94 0.025 125);
+  --secondary-foreground: oklch(0.32 0.045 145);
+  --muted: oklch(0.955 0.015 125);
+  --muted-foreground: oklch(0.48 0.025 145);
+  --accent: oklch(0.92 0.04 125);
+  --accent-foreground: oklch(0.30 0.045 145);
+  --destructive: oklch(0.58 0.2 25);
+  --border: oklch(0.89 0.025 130);
+  --input: oklch(0.89 0.025 130);
+  --ring: oklch(0.55 0.10 140);
+  --chart-1: oklch(0.52 0.12 140);
+  --chart-2: oklch(0.66 0.12 95);
+  --chart-3: oklch(0.60 0.10 175);
+  --chart-4: oklch(0.72 0.12 75);
+  --chart-5: oklch(0.58 0.16 35);
   --radius: 0.9rem;
-  --sidebar: oklch(0.845 0.025 120);
-  --sidebar-foreground: oklch(0.34 0.035 145);
-  --sidebar-primary: oklch(0.66 0.12 128);
-  --sidebar-primary-foreground: oklch(0.27 0.04 145);
-  --sidebar-accent: oklch(0.82 0.055 125);
-  --sidebar-accent-foreground: oklch(0.35 0.055 140);
-  --sidebar-border: oklch(0.79 0.03 130);
-  --sidebar-ring: oklch(0.62 0.11 130);
+  --sidebar: oklch(0.97 0.012 125);
+  --sidebar-foreground: oklch(0.27 0.035 145);
+  --sidebar-primary: oklch(0.48 0.09 140);
+  --sidebar-primary-foreground: oklch(0.99 0.005 120);
+  --sidebar-accent: oklch(0.92 0.04 125);
+  --sidebar-accent-foreground: oklch(0.30 0.045 145);
+  --sidebar-border: oklch(0.89 0.025 130);
+  --sidebar-ring: oklch(0.55 0.10 140);
 }
 
 @layer base {
@@ -98,9 +98,8 @@
     @apply bg-background text-foreground font-sans;
     background-color: var(--background);
     background-image:
-      linear-gradient(rgba(190, 220, 130, 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(190, 220, 130, 0.035) 1px, transparent 1px);
-    background-size: 18px 18px;
+      radial-gradient(circle at 12% 0%, rgba(133, 166, 105, 0.08), transparent 28rem),
+      radial-gradient(circle at 90% 18%, rgba(178, 198, 145, 0.07), transparent 26rem);
     background-attachment: fixed;
   }
 
@@ -110,8 +109,8 @@
   }
 
   ::selection {
-    color: oklch(0.98 0.005 285);
-    background: oklch(0.55 0.2 295 / 0.65);
+    color: oklch(0.99 0.005 120);
+    background: oklch(0.43 0.10 140 / 0.75);
   }
 
   a, button {
@@ -121,18 +120,18 @@
 
 @layer utilities {
   .glass-panel {
-    border: 1px solid oklch(0.42 0.06 130 / 0.55);
-    background: oklch(0.16 0.02 145 / 0.96);
-    box-shadow: 8px 8px 0 oklch(0.08 0.02 145 / 0.8);
-    backdrop-filter: none;
+    border: 1px solid oklch(0.88 0.03 130 / 0.9);
+    background: oklch(0.995 0.004 120 / 0.94);
+    box-shadow: 0 12px 36px oklch(0.32 0.04 145 / 0.06);
+    backdrop-filter: blur(14px);
   }
 
   .neon-glow {
-    box-shadow: 3px 3px 0 oklch(0.68 0.07 125 / 0.28);
+    box-shadow: 0 8px 24px oklch(0.42 0.09 140 / 0.12);
   }
 
   .text-gradient {
-    background: linear-gradient(110deg, oklch(0.59 0.11 135), oklch(0.63 0.09 85));
+    background: linear-gradient(110deg, oklch(0.42 0.10 140), oklch(0.56 0.11 105));
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
