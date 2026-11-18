@@ -104,7 +104,7 @@ export function TribeExplorer({
         </div>
 
         {/* Search + Format + Beginner filter bar */}
-        <div className="mt-10 rounded-3xl border border-white/10 bg-white/[0.035] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:p-5">
+        <div className="mt-10 rounded-xl border border-primary/20 bg-[#172016] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -206,7 +206,7 @@ export function TribeExplorer({
               return (
                 <article
                   key={tribe.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/[0.09] bg-gradient-to-b from-white/[0.065] to-white/[0.025] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_24px_70px_rgba(91,33,182,0.18)]"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-white/[0.12] bg-[#172016] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:border-primary/40 hover:shadow-[6px_6px_0_rgba(196,243,106,0.12)]"
                 >
                   <div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
