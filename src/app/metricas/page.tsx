@@ -233,7 +233,7 @@ export default function MetricasMvpPage() {
 
         {/* KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
+          <div className="metric-card">
             <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
               <span>Sessões Visitantes</span>
               <Users className="size-4 text-primary" />
@@ -246,7 +246,7 @@ export default function MetricasMvpPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
+          <div className="metric-card">
             <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
               <span>Interações no Protótipo</span>
               <Compass className="size-4 text-primary" />
@@ -259,7 +259,7 @@ export default function MetricasMvpPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
+          <div className="metric-card">
             <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
               <span>Intenção em Planos</span>
               <MousePointerClick className="size-4 text-primary" />
@@ -273,7 +273,7 @@ export default function MetricasMvpPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-emerald-600/30 bg-emerald-500/[0.06] p-5 shadow-xs">
+          <div className="metric-card border-emerald-600/25 bg-[#f1f7ec]">
             <div className="flex items-center justify-between text-xs font-semibold text-emerald-900">
               <span>Cadastros & Conversão</span>
               <CheckCircle2 className="size-4 text-emerald-700" />
@@ -294,7 +294,7 @@ export default function MetricasMvpPage() {
 
         {/* Segment Breakdown + Interest Demand */}
         <div className="grid gap-6 lg:grid-cols-12">
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-xs lg:col-span-5">
+          <div className="surface-card p-6 lg:col-span-5">
             <h2 className="font-heading text-lg font-bold text-foreground">
               Leads por Segmento de Cliente (BMC)
             </h2>
@@ -362,7 +362,7 @@ export default function MetricasMvpPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-xs lg:col-span-7">
+          <div className="surface-card p-6 lg:col-span-7">
             <h2 className="font-heading text-lg font-bold text-foreground">
               Demanda por Categorias de Interesse
             </h2>
@@ -396,7 +396,7 @@ export default function MetricasMvpPage() {
         </div>
 
         {/* Local Leads Table (Browser-local privacy safe) */}
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-xs">
+        <div className="surface-card p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
