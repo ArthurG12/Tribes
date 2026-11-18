@@ -180,123 +180,11 @@ export function TribeExplorer({
           </div>
         </div>
 
-        {/* Tribe cards grid */}
-        {filteredTribes.length === 0 ? (
-          <div className="mt-8 rounded-3xl border border-dashed border-border bg-card p-10 text-center">
-            <p className="font-heading text-lg font-bold text-foreground">
-              Nenhuma tribo combina com essa busca
-            </p>
-            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Quer fundar ou sugerir essa comunidade na sua região? Entre na lista como organizador ou participante e nós conectamos os primeiros membros!
-            </p>
-            <div className="mt-5 flex flex-wrap justify-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSelectedCategory("todos");
-                  setSelectedFormat("Todos");
-                  setOnlyBeginners(false);
-                  setSearchQuery("");
-                }}
-              >
-                Limpar filtros
-              </Button>
-              <Button render={<Link href="/lista-de-espera" />}>
-                Sugerir nova tribo no lançamento
-                <ArrowRight className="size-4" />
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredTribes.map((tribe) => {
-              const spotsLeft = tribe.nextEvent.maxSpots - tribe.nextEvent.confirmedCount;
-              return (
-                <article
-                  key={tribe.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-[#c8d3be] bg-[#e3e9dc] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:border-primary/40 hover:shadow-[6px_6px_0_rgba(166,214,106,0.16)]"
-                >
-                  <div>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Badge variant="secondary" className="font-medium">
-                        {tribe.categoryLabel}
-                      </Badge>
-                      <span className="rounded-full border border-border px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                        {tribe.format}
-                      </span>
-                    </div>
-
-                    <h3 className="mt-3.5 font-heading text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                      {tribe.name}
-                    </h3>
-                    <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">
-                      {tribe.tagline}
-                    </p>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="size-3.5 text-primary" />
-                        {tribe.neighborhood}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Users className="size-3.5 text-primary" />
-                        {tribe.membersCount} membros
-                      </span>
-                    </div>
-
-                    {/* Mini pinned event preview */}
-                    <div className="mt-4 rounded-2xl border border-border/80 border border-[#e5efd9] bg-[#e1e8d8] p-3.5">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar className="size-3.5" />
-                          {tribe.nextEvent.dateLabel}
-                        </span>
-                        <span className="text-[#627c4d]">
-                          {spotsLeft} vagas
-                        </span>
-                      </div>
-                      <p className="mt-1 line-clamp-1 text-xs font-semibold text-foreground">
-                        {tribe.nextEvent.title}
-                      </p>
-                      <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
-                        {tribe.nextEvent.locationLabel}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/60 pt-4">
-                    {tribe.beginnerFriendly ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-[#627c4d]">
-                        <CheckCircle2 className="size-3.5" />
-                        Iniciantes bem-vindos
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        {tribe.weeklyFrequency}
-                      </span>
-                    )}
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-xl border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground"
-                      onClick={() => handleOpenTribe(tribe)}
-                    >
-                      Ver detalhes
-                    </Button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
-
-
         {filteredTribes.length > 0 && (
-          <div className="mt-16 space-y-12">
+          <div className="mt-8">
             <section className="border-t border-border pt-10">
               <div className="mb-6">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Proposta visual 01</p>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Comunidades</p>
                 <h3 className="mt-1 font-heading text-2xl font-extrabold text-foreground">Identidade de comunidade</h3>
                 <p className="mt-1 text-sm text-muted-foreground">Faixas de cor e detalhes que dão personalidade a cada tribo.</p>
               </div>
@@ -306,7 +194,7 @@ export function TribeExplorer({
                   const accent = accents[index % accents.length];
                   const spotsLeft = tribe.nextEvent.maxSpots - tribe.nextEvent.confirmedCount;
                   return (
-                    <article key={"identity-" + tribe.id} className="group flex flex-col overflow-hidden rounded-2xl border border-[#d7e5ce] bg-white shadow-[0_8px_24px_rgba(45,75,40,0.07)] transition-all hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(45,75,40,0.12)]">
+                    <article key={"identity-" + tribe.id} className="group flex flex-col overflow-hidden rounded-2xl border border-[#d7e5ce] bg-white shadow-[0_8px_24px_rgba(45,75,40,0.07)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_14px_32px_rgba(45,75,40,0.12)]">
                       <div className="h-2" style={{ backgroundColor: accent }} />
                       <div className="flex flex-1 flex-col p-5">
                         <div className="flex items-center justify-between gap-2"><Badge variant="secondary">{tribe.categoryLabel}</Badge><span className="text-[11px] font-semibold text-muted-foreground">{tribe.format}</span></div>
@@ -328,42 +216,7 @@ export function TribeExplorer({
               </div>
             </section>
 
-            <section className="border-t border-border pt-10">
-              <div className="mb-6">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Proposta visual 02</p>
-                <h3 className="mt-1 font-heading text-2xl font-extrabold text-foreground">Cabeçalho ilustrado</h3>
-                <p className="mt-1 text-sm text-muted-foreground">Uma área visual no topo destaca o universo de cada comunidade.</p>
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredTribes.map((tribe, index) => {
-                  const palettes = [
-                    { bg: "from-[#dcebd2] to-[#b9d5a8]", ink: "#47764a", symbol: "✳" },
-                    { bg: "from-[#f2e4cc] to-[#e4c99f]", ink: "#8a6234", symbol: "✦" },
-                    { bg: "from-[#dce8f3] to-[#b7cde2]", ink: "#4e7195", symbol: "◈" },
-                    { bg: "from-[#e9e0f2] to-[#cfc0e3]", ink: "#755d91", symbol: "✧" },
-                    { bg: "from-[#f3dfdf] to-[#e6bfc0]", ink: "#985e62", symbol: "✺" },
-                  ];
-                  const palette = palettes[index % palettes.length];
-                  return (
-                    <article key={"visual-" + tribe.id} className="group flex flex-col overflow-hidden rounded-2xl border border-[#d7e5ce] bg-white shadow-[0_8px_24px_rgba(45,75,40,0.07)] transition-all hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(45,75,40,0.12)]">
-                      <div className={"relative flex h-36 items-center justify-center overflow-hidden bg-gradient-to-br " + palette.bg}>
-                        <span className="absolute -right-3 -top-12 text-[190px] font-black leading-none opacity-[0.10]" style={{ color: palette.ink }}>{palette.symbol}</span>
-                        <div className="relative flex size-20 items-center justify-center rounded-3xl border border-white/60 bg-white/55 text-5xl shadow-sm backdrop-blur-sm" style={{ color: palette.ink }}>{palette.symbol}</div>
-                        <Badge className="absolute left-4 top-4 border-0 bg-white/85 text-[#344b39]">{tribe.categoryLabel}</Badge>
-                        <Badge variant="outline" className="absolute right-4 top-4 border-white/70 bg-white/60 text-[#344b39]">{tribe.format}</Badge>
-                      </div>
-                      <div className="flex flex-1 flex-col p-5">
-                        <h4 className="font-heading text-xl font-bold text-foreground group-hover:text-primary">{tribe.name}</h4>
-                        <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{tribe.tagline}</p>
-                        <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><MapPin className="size-3.5 text-primary" />{tribe.neighborhood}</span><span className="inline-flex items-center gap-1"><Users className="size-3.5 text-primary" />{tribe.membersCount} membros</span></div>
-                        <div className="mt-4 rounded-xl bg-[#f1f6ed] p-3"><p className="text-[11px] font-semibold text-primary">{tribe.nextEvent.dateLabel} · Próximo encontro</p><p className="mt-1 text-sm font-semibold text-foreground">{tribe.nextEvent.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{tribe.nextEvent.locationLabel}</p></div>
-                        <div className="mt-5 flex items-center justify-between gap-2 border-t border-border pt-4"><span className="text-xs text-muted-foreground">{tribe.beginnerFriendly ? "✓ Iniciantes bem-vindos" : tribe.weeklyFrequency}</span><Button size="sm" variant="outline" onClick={() => handleOpenTribe(tribe)}>Ver detalhes <ArrowRight className="size-3.5" /></Button></div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
+            
           </div>
         )}
 
