@@ -419,7 +419,6 @@ export function WaitlistSection({
               <div className="flex flex-col items-center justify-between gap-3 pt-1 sm:flex-row">
                 <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Shield className="size-4 text-[#627c4d]" />
-                  Zero spam · Saia quando quiser com 1 clique
                 </span>
 
                 <Button
