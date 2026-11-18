@@ -41,10 +41,10 @@ export function Navbar({ onCtaClick }: NavbarProps) {
           ))}
         </nav>
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="ghost" size="sm" className="text-[#657260] hover:text-[#3f6045]" render={<Link href="/metricas" />}>
+          <Button variant="ghost" size="sm" className="text-[#657260] hover:text-[#3f6045]" nativeButton={false} render={<Link href="/metricas" />}>
             <BarChart3 className="size-4" /> Métricas
           </Button>
-          <Button size="lg" className="rounded-md bg-[#a9c47c] px-5 font-semibold text-[#344b39] shadow-[4px_4px_0_#91a96a] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#91a96a]" onClick={onCtaClick} render={<Link href="/lista-de-espera" />}>
+          <Button size="lg" className="rounded-md bg-[#a9c47c] px-5 font-semibold text-[#344b39] shadow-[4px_4px_0_#91a96a] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#91a96a]" onClick={onCtaClick} nativeButton={false} render={<Link href="/lista-de-espera" />}>
             Garantir acesso <ArrowRight className="size-4" />
           </Button>
         </div>
@@ -61,7 +61,7 @@ export function Navbar({ onCtaClick }: NavbarProps) {
             <Link href="/metricas" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-[#657260] hover:bg-[#dce5d3] hover:text-[#3f6045]">
               <BarChart3 className="size-4" /> Painel de Métricas MVP
             </Link>
-            <Button size="lg" className="mt-2 w-full rounded-xl bg-[#a9c47c] font-semibold text-[#344b39]" onClick={() => setMobileOpen(false)} render={<Link href="/lista-de-espera" />}>
+            <Button size="lg" className="mt-2 w-full rounded-xl bg-[#a9c47c] font-semibold text-[#344b39]" onClick={() => setMobileOpen(false)} nativeButton={false} render={<Link href="/lista-de-espera" />}>
               Entrar na lista de espera <ArrowRight className="size-4" />
             </Button>
           </nav>
