@@ -75,6 +75,8 @@ export function TribeExplorer({
     });
   }, [selectedCategory, selectedFormat, onlyBeginners, searchQuery]);
 
+  const activeFilterCount = Number(selectedCategory !== "todos") + Number(selectedFormat !== "Todos") + Number(onlyBeginners) + Number(searchQuery.trim().length > 0);
+
   const handleCategoryClick = (cat: "todos" | InterestId) => {
     setSelectedCategory(cat);
     onExplorerInteract(cat === "todos" ? undefined : cat);
@@ -104,13 +106,13 @@ export function TribeExplorer({
         </div>
 
         {/* Search + Format + Beginner filter bar */}
-        <div className="mt-10 rounded-xl border border-primary/20 bg-[#172016] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:p-5">
+        <div className="mt-10 rounded-xl border border-primary/20 bg-[#f8faef] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); onExplorerInteract(); }}
                 placeholder="Buscar por hobby, bairro (ex: Pampulha, Savassi) ou atividade..."
                 className="h-10 rounded-xl pl-9"
               />
@@ -128,7 +130,7 @@ export function TribeExplorer({
                   className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
                     selectedFormat === fmt
                       ? "bg-foreground text-background"
-                      : "bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1]"
+                      : "bg-[#e9f0df] text-muted-foreground hover:bg-[#e1ebd3]"
                   }`}
                 >
                   {fmt}
@@ -143,14 +145,19 @@ export function TribeExplorer({
                 }}
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
                   onlyBeginners
-                    ? "border-cyan-400 bg-cyan-400 text-slate-950"
-                    : "border-emerald-600/30 bg-cyan-400/10 text-cyan-200 hover:bg-cyan-400/15"
+                    ? "border-[#82aa4d] bg-[#c8ed75] text-[#193c27]"
+                    : "border-[#b8d39a] bg-[#c8ed75]/10 text-[#527d30] hover:bg-[#c8ed75]/15"
                 }`}
               >
                 <Sparkles className="size-3.5" />
                 Aberto p/ iniciantes
               </button>
             </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-3.5 text-xs">
+            <span className="font-medium text-muted-foreground">{filteredTribes.length} {filteredTribes.length === 1 ? "tribo encontrada" : "tribos encontradas"}{activeFilterCount > 0 ? ` · ${activeFilterCount} filtros ativos` : " · vitrine completa"}</span>
+            {activeFilterCount > 0 && <button type="button" onClick={() => { setSelectedCategory("todos"); setSelectedFormat("Todos"); setOnlyBeginners(false); setSearchQuery(""); }} className="font-bold text-[#547b30] underline decoration-dotted underline-offset-4 hover:text-[#315b35]">Limpar filtros</button>}
           </div>
 
           {/* Category pills */}
@@ -163,7 +170,7 @@ export function TribeExplorer({
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   selectedCategory === filter.id
                     ? "bg-primary text-primary-foreground shadow-xs"
-                    : "bg-white/[0.045] text-muted-foreground hover:bg-white/[0.09] hover:text-foreground"
+                    : "bg-[#f0f5e8] text-muted-foreground hover:bg-white/[0.09] hover:text-foreground"
                 }`}
               >
                 {filter.label}
@@ -176,7 +183,7 @@ export function TribeExplorer({
         {filteredTribes.length === 0 ? (
           <div className="mt-8 rounded-3xl border border-dashed border-border bg-card p-10 text-center">
             <p className="font-heading text-lg font-bold text-foreground">
-              Ainda não listamos uma tribo com esse filtro exato na vitrine inicial
+              Nenhuma tribo combina com essa busca
             </p>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
               Quer fundar ou sugerir essa comunidade na sua região? Entre na lista como organizador ou participante e nós conectamos os primeiros membros!
@@ -206,7 +213,7 @@ export function TribeExplorer({
               return (
                 <article
                   key={tribe.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-white/[0.12] bg-[#172016] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:border-primary/40 hover:shadow-[6px_6px_0_rgba(196,243,106,0.12)]"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-[#dce8c8] bg-[#f8faef] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:border-primary/40 hover:shadow-[6px_6px_0_rgba(196,243,106,0.12)]"
                 >
                   <div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -237,13 +244,13 @@ export function TribeExplorer({
                     </div>
 
                     {/* Mini pinned event preview */}
-                    <div className="mt-4 rounded-2xl border border-border/80 border border-white/[0.06] bg-white/[0.035] p-3.5">
+                    <div className="mt-4 rounded-2xl border border-border/80 border border-[#e2ead5] bg-[#f0f5e8] p-3.5">
                       <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
                         <span className="inline-flex items-center gap-1">
                           <Calendar className="size-3.5" />
                           {tribe.nextEvent.dateLabel}
                         </span>
-                        <span className="text-cyan-300">
+                        <span className="text-[#648e38]">
                           {spotsLeft} vagas
                         </span>
                       </div>
@@ -258,7 +265,7 @@ export function TribeExplorer({
 
                   <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/60 pt-4">
                     {tribe.beginnerFriendly ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-cyan-300">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-[#648e38]">
                         <CheckCircle2 className="size-3.5" />
                         Iniciantes bem-vindos
                       </span>
@@ -312,7 +319,7 @@ export function TribeExplorer({
                   <Badge variant="secondary">{activeTribe.categoryLabel}</Badge>
                   <Badge variant="outline">{activeTribe.format}</Badge>
                   {activeTribe.beginnerFriendly && (
-                    <Badge className="bg-emerald-500/15 text-cyan-200">
+                    <Badge className="bg-emerald-500/15 text-[#527d30]">
                       Aberto p/ iniciantes
                     </Badge>
                   )}
@@ -348,7 +355,7 @@ export function TribeExplorer({
                       <MapPin className="size-3.5 text-primary" />
                       {activeTribe.nextEvent.locationLabel}
                     </p>
-                    <p className="flex items-center gap-2 font-medium text-cyan-200">
+                    <p className="flex items-center gap-2 font-medium text-[#527d30]">
                       <Sparkles className="size-3.5" />
                       Custo: {activeTribe.nextEvent.costLabel}
                     </p>
