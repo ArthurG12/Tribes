@@ -107,7 +107,7 @@ export function TribeExplorer({
         </div>
 
         {/* Search + Format + Beginner filter bar */}
-        <div className="mt-10 rounded-xl border border-primary/20 bg-[#e3e9dc] p-4 shadow-[0_16px_40px_rgba(48,66,45,0.08)] backdrop-blur-xl sm:p-5">
+        <div className="mt-10 rounded-xl border border-primary/20 bg-[#eaf2e3] p-4 shadow-[0_16px_40px_rgba(48,66,45,0.08)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -131,7 +131,7 @@ export function TribeExplorer({
                   className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
                     selectedFormat === fmt
                       ? "bg-foreground text-background"
-                      : "bg-[#d8e1cf] text-muted-foreground hover:bg-[#d5dfca]"
+                      : "bg-[#e0ebd7] text-muted-foreground hover:bg-[#dce9d1]"
                   }`}
                 >
                   {fmt}
@@ -146,8 +146,8 @@ export function TribeExplorer({
                 }}
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
                   onlyBeginners
-                    ? "border-[#82996a] bg-[#a9c47c] text-[#344b39]"
-                    : "border-[#bacaa9] bg-[#a9c47c]/10 text-[#536c43] hover:bg-[#a9c47c]/15"
+                    ? "border-[#8eaa70] bg-[#b7d58b] text-[#344b39]"
+                    : "border-[#c3d7b5] bg-[#a9c47c]/10 text-[#536c43] hover:bg-[#a9c47c]/15"
                 }`}
               >
                 <Sparkles className="size-3.5" />
@@ -171,7 +171,7 @@ export function TribeExplorer({
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   selectedCategory === filter.id
                     ? "bg-primary text-primary-foreground shadow-xs"
-                    : "bg-[#e1e8d8] text-muted-foreground hover:bg-white/[0.09] hover:text-foreground"
+                    : "bg-[#e8f1e1] text-muted-foreground hover:bg-white/[0.09] hover:text-foreground"
                 }`}
               >
                 {filter.label}
@@ -214,7 +214,7 @@ export function TribeExplorer({
               return (
                 <article
                   key={tribe.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-[#c8d3be] bg-[#e3e9dc] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:border-primary/40 hover:shadow-[6px_6px_0_rgba(196,243,106,0.12)]"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-[#c8d3be] bg-[#e3e9dc] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/60 hover:border-primary/40 hover:shadow-[6px_6px_0_rgba(166,214,106,0.16)]"
                 >
                   <div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -245,7 +245,7 @@ export function TribeExplorer({
                     </div>
 
                     {/* Mini pinned event preview */}
-                    <div className="mt-4 rounded-2xl border border-border/80 border border-[#e2ead5] bg-[#e1e8d8] p-3.5">
+                    <div className="mt-4 rounded-2xl border border-border/80 border border-[#e5efd9] bg-[#e1e8d8] p-3.5">
                       <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
                         <span className="inline-flex items-center gap-1">
                           <Calendar className="size-3.5" />
