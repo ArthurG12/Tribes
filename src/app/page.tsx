@@ -17,7 +17,7 @@ export default function TribesLandingPage() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
-        <section className="relative isolate overflow-hidden py-12 sm:py-16 lg:py-20">
+        <section className="relative isolate overflow-hidden bg-[#f7faf4] py-12 sm:py-16 lg:py-20">
           <div aria-hidden="true" className="pointer-events-none absolute -top-40 right-[-10%] -z-10 h-[34rem] w-[34rem] rounded-full bg-[#c4f36a]/12 blur-[130px]" />
           <div aria-hidden="true" className="pointer-events-none absolute bottom-[-18rem] left-[-12%] -z-10 h-[34rem] w-[34rem] rounded-full bg-orange-500/10 blur-[130px]" />
           <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-12 lg:gap-8">
@@ -48,7 +48,7 @@ export default function TribesLandingPage() {
             <div className="lg:col-span-6"><HeroMockup /></div>
           </div>
         </section>
-        <section className="border-y border-[#c8d3be] bg-[#d3ddca] py-12 sm:py-16">
+        <section className="border-y border-[#dce6d5] bg-[#edf3e8] py-12 sm:py-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Conheça a Tribes</p>
@@ -57,7 +57,7 @@ export default function TribesLandingPage() {
             </div>
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {destinations.map(({ href, icon: Icon, title, description }) => (
-                <Link key={href} href={href} className="group rounded-xl border border-primary/20 bg-[#e5eadf] p-6 transition-all hover:-translate-y-1 hover:border-primary/60 hover:bg-[#dce4d3]">
+                <Link key={href} href={href} className="group rounded-xl border border-primary/20 bg-white p-6 transition-all hover:-translate-y-1 hover:border-primary/60 hover:bg-[#f4f8f0]">
                   <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary"><Icon className="size-5" /></span>
                   <h3 className="mt-4 font-heading text-lg font-bold text-foreground">{title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
