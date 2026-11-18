@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, BarChart3, ArrowRight } from "lucide-react";\nimport { TribesMark } from "@/components/tribes/tribes-mark";
+import { Menu, X, BarChart3, ArrowRight } from "lucide-react";
+import { TribesMark } from "@/components/tribes/tribes-mark";
 import { Button } from "@/components/ui/button";
 
 interface NavbarProps {
