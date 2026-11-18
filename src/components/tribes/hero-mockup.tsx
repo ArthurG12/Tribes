@@ -70,7 +70,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
             }}
             className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all ${
               activeTab === "evento"
-                ? "bg-white/[0.09] text-white shadow-lg shadow-black/20"
+                ? "bg-[#c8ed75] text-[#193c27] shadow-[0_3px_0_#a8cc5a]"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -164,7 +164,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                 {rsvpConfirmed ? (
                   <>
                     <CheckCircle2 className="size-4 text-[#6c963b]" />
-                    Presença confirmada! (Testar clique)
+                    Presença confirmada!
                   </>
                 ) : (
                   "Confirmar presença em 1 clique"
@@ -174,7 +174,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
           </div>
         ) : (
           <div className="space-y-3 p-4 sm:p-5">
-            <div className="rounded-xl border border-white/[0.06] bg-[#edf4df] p-3 text-xs">
+            <div className="rounded-xl border border-[#dce8c8] bg-white p-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">
                   Marina S. · Organizadora
