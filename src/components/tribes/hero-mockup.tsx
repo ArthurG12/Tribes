@@ -33,10 +33,10 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
     <div className="relative mx-auto w-full max-w-xl">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-gradient-to-tr from-violet-500/25 via-fuchsia-500/15 to-cyan-400/15 blur-2xl"
+        className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-gradient-to-tr from-[#c4f36a]/20 via-orange-500/10 to-transparent blur-2xl"
       />
 
-      <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#11101a]/90 shadow-[0_30px_100px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] backdrop-blur-xl">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-[#151e14] shadow-[0_30px_100px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] backdrop-blur-xl">
         {/* Top bar of tribe room */}
         <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.035] px-4 py-3.5 sm:px-5">
           <div className="flex items-center gap-3">
@@ -96,7 +96,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
 
         {activeTab === "evento" ? (
           <div className="space-y-4 p-4 sm:p-5">
-            <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.12] via-primary/[0.045] to-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] p-4">
+            <div className="rounded-2xl border border-primary/35 bg-[#202d1c] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] p-4">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
                   <Sparkles className="size-3.5" />
