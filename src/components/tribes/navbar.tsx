@@ -13,6 +13,7 @@ interface NavbarProps {
 
 const NAV_LINKS = [
   { href: "/explorar", label: "Explorar tribos" },
+  { href: "/minha-agenda", label: "Minha agenda" },
   { href: "/como-funciona", label: "Como funciona" },
   { href: "/sobre", label: "Por que Tribes" },
   { href: "/para-quem", label: "Para quem" },
