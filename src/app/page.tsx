@@ -103,7 +103,9 @@ export default function TribesLandingPage() {
 
       <main className="flex-1">
         {/* HERO SECTION */}
-        <section className="relative isolate overflow-hidden py-20 sm:py-28 lg:py-32">\n          <div aria-hidden="true" className="pointer-events-none absolute -top-40 right-[-10%] -z-10 h-[34rem] w-[34rem] rounded-full bg-violet-600/20 blur-[130px]" />\n          <div aria-hidden="true" className="pointer-events-none absolute bottom-[-18rem] left-[-12%] -z-10 h-[34rem] w-[34rem] rounded-full bg-fuchsia-600/10 blur-[130px]" />
+        <section className="relative isolate overflow-hidden py-20 sm:py-28 lg:py-32">
+          <div aria-hidden="true" className="pointer-events-none absolute -top-40 right-[-10%] -z-10 h-[34rem] w-[34rem] rounded-full bg-violet-600/20 blur-[130px]" />
+          <div aria-hidden="true" className="pointer-events-none absolute bottom-[-18rem] left-[-12%] -z-10 h-[34rem] w-[34rem] rounded-full bg-fuchsia-600/10 blur-[130px]" />
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:gap-10">
             <div className="lg:col-span-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-3.5 py-1.5 text-xs font-semibold text-primary">
