@@ -103,7 +103,7 @@ export default function TribesLandingPage() {
 
       <main className="flex-1">
         {/* HERO SECTION */}
-        <section className="relative overflow-hidden pt-12 pb-20 sm:pt-16 sm:pb-24">
+        <section className="relative isolate overflow-hidden py-20 sm:py-28 lg:py-32">\n          <div aria-hidden="true" className="pointer-events-none absolute -top-40 right-[-10%] -z-10 h-[34rem] w-[34rem] rounded-full bg-violet-600/20 blur-[130px]" />\n          <div aria-hidden="true" className="pointer-events-none absolute bottom-[-18rem] left-[-12%] -z-10 h-[34rem] w-[34rem] rounded-full bg-fuchsia-600/10 blur-[130px]" />
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:gap-10">
             <div className="lg:col-span-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-3.5 py-1.5 text-xs font-semibold text-primary">
@@ -163,7 +163,7 @@ export default function TribesLandingPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="font-heading text-xl font-extrabold text-emerald-700 sm:text-2xl">
+                  <p className="font-heading text-xl font-extrabold text-cyan-300 sm:text-2xl">
                     100% grátis
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -186,7 +186,7 @@ export default function TribesLandingPage() {
         {/* PROBLEMA VS SOLUCAO */}
         <section
           id="problema"
-          className="border-y border-border bg-secondary/40 py-20 sm:py-24"
+          className="border-y border-border bg-white/[0.025] py-24 sm:py-28"
         >
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
@@ -206,7 +206,7 @@ export default function TribesLandingPage() {
 
             {/* 3 Pain cards */}
             <div className="mt-12 grid gap-6 md:grid-cols-3">
-              <div className="rounded-3xl border border-border bg-card p-6 shadow-xs">
+              <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
                 <div className="flex size-11 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
                   <MapPin className="size-5" />
                 </div>
@@ -218,8 +218,8 @@ export default function TribesLandingPage() {
                 </p>
               </div>
 
-              <div className="rounded-3xl border border-border bg-card p-6 shadow-xs">
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-800">
+              <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-violet-400/10 text-violet-200">
                   <MessageCircleOff className="size-5" />
                 </div>
                 <h3 className="mt-4 font-heading text-lg font-bold text-foreground">
@@ -230,7 +230,7 @@ export default function TribesLandingPage() {
                 </p>
               </div>
 
-              <div className="rounded-3xl border border-border bg-card p-6 shadow-xs">
+              <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
                 <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
                   <Users className="size-5" />
                 </div>
@@ -244,7 +244,7 @@ export default function TribesLandingPage() {
             </div>
 
             {/* Comparison Matrix */}
-            <div className="mt-12 overflow-hidden rounded-3xl border border-border bg-card shadow-xs">
+            <div className="mt-12 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] shadow-xs">
               <div className="grid grid-cols-1 border-b border-border bg-muted/50 px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground md:grid-cols-12">
                 <div className="md:col-span-4">O que você precisa</div>
                 <div className="hidden md:col-span-4 md:block">
@@ -269,7 +269,7 @@ export default function TribesLandingPage() {
                       <span>{row.currentTools}</span>
                     </div>
                     <div className="flex items-start gap-2 font-medium text-foreground md:col-span-4">
-                      <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                      <Check className="mt-0.5 size-4 shrink-0 text-cyan-300" />
                       <span>{row.tribes}</span>
                     </div>
                   </div>
@@ -283,7 +283,7 @@ export default function TribesLandingPage() {
         <section id="como-funciona" className="py-20 sm:py-24">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
-              <Badge className="mb-3 bg-emerald-500/12 text-emerald-800 hover:bg-emerald-500/15">
+              <Badge className="mb-3 bg-emerald-500/12 text-cyan-200 hover:bg-emerald-500/15">
                 Simples do convite ao encontro
               </Badge>
               <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
@@ -292,7 +292,7 @@ export default function TribesLandingPage() {
             </div>
 
             <div className="mt-12 grid gap-6 md:grid-cols-3">
-              <div className="relative rounded-3xl border border-border bg-card p-6 shadow-xs">
+              <div className="relative rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
                 <span className="font-mono text-xs font-bold text-primary">
                   PASSO 01
                 </span>
@@ -307,7 +307,7 @@ export default function TribesLandingPage() {
                 </p>
               </div>
 
-              <div className="relative rounded-3xl border border-border bg-card p-6 shadow-xs">
+              <div className="relative rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
                 <span className="font-mono text-xs font-bold text-primary">
                   PASSO 02
                 </span>
@@ -322,11 +322,11 @@ export default function TribesLandingPage() {
                 </p>
               </div>
 
-              <div className="relative rounded-3xl border border-border bg-card p-6 shadow-xs">
+              <div className="relative rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-xs">
                 <span className="font-mono text-xs font-bold text-primary">
                   PASSO 03
                 </span>
-                <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-700">
+                <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-emerald-500/15 text-cyan-300">
                   <HeartHandshake className="size-6" />
                 </div>
                 <h3 className="mt-4 font-heading text-xl font-bold text-foreground">
@@ -385,7 +385,7 @@ export default function TribesLandingPage() {
                 </div>
 
                 <TabsContent value="participantes" className="mt-6">
-                  <div className="grid items-center gap-8 rounded-3xl border border-border bg-card p-6 sm:p-10 md:grid-cols-2">
+                  <div className="grid items-center gap-8 rounded-3xl border border-white/10 bg-white/[0.035] p-6 sm:p-10 md:grid-cols-2">
                     <div>
                       <Badge className="bg-primary/12 text-primary">
                         Conexão sem pressão
@@ -398,15 +398,15 @@ export default function TribesLandingPage() {
                       </p>
                       <ul className="mt-5 space-y-2.5 text-sm">
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-cyan-300" />
                           Selo “Aberto para iniciantes” em tribos receptivas
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-cyan-300" />
                           Ambiente separado de mensagens de trabalho e faculdade
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-cyan-300" />
                           Agenda clara: saiba exatamente quem vai, quanto custa e onde será
                         </li>
                       </ul>
@@ -426,7 +426,7 @@ export default function TribesLandingPage() {
                 </TabsContent>
 
                 <TabsContent value="organizadores" className="mt-6">
-                  <div className="grid items-center gap-8 rounded-3xl border border-border bg-card p-6 sm:p-10 md:grid-cols-2">
+                  <div className="grid items-center gap-8 rounded-3xl border border-white/10 bg-white/[0.035] p-6 sm:p-10 md:grid-cols-2">
                     <div>
                       <Badge className="bg-primary/12 text-primary">
                         Gestão de comunidades
@@ -439,15 +439,15 @@ export default function TribesLandingPage() {
                       </p>
                       <ul className="mt-5 space-y-2.5 text-sm">
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-cyan-300" />
                           RSVP com limite de vagas, fila de espera e lembrete automático
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-cyan-300" />
                           Encontros recorrentes (semanais ou quinzenais) em 30 segundos
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-cyan-300" />
                           Divisão transparente de aluguel de quadra, mesa ou materiais
                         </li>
                       </ul>
@@ -459,7 +459,7 @@ export default function TribesLandingPage() {
                       <div className="mt-3 space-y-2.5 text-xs">
                         <div className="flex items-center justify-between rounded-xl bg-card p-3">
                           <span className="font-semibold">Enquete de horário</span>
-                          <span className="text-emerald-700 font-semibold">Sábado 14h30 venceu (82%)</span>
+                          <span className="text-cyan-300 font-semibold">Sábado 14h30 venceu (82%)</span>
                         </div>
                         <div className="flex items-center justify-between rounded-xl bg-card p-3">
                           <span className="font-semibold">Vagas do encontro</span>
@@ -475,9 +475,9 @@ export default function TribesLandingPage() {
                 </TabsContent>
 
                 <TabsContent value="parceiros" className="mt-6">
-                  <div className="grid items-center gap-8 rounded-3xl border border-border bg-card p-6 sm:p-10 md:grid-cols-2">
+                  <div className="grid items-center gap-8 rounded-3xl border border-white/10 bg-white/[0.035] p-6 sm:p-10 md:grid-cols-2">
                     <div>
-                      <Badge className="bg-emerald-500/15 text-emerald-800">
+                      <Badge className="bg-emerald-500/15 text-cyan-200">
                         Parceiros Locais B2B
                       </Badge>
                       <h3 className="mt-3 font-heading text-2xl font-extrabold text-foreground">
@@ -488,21 +488,21 @@ export default function TribesLandingPage() {
                       </p>
                       <ul className="mt-5 space-y-2.5 text-sm">
                         <li className="flex items-center gap-2.5">
-                          <Store className="size-4 text-emerald-600" />
+                          <Store className="size-4 text-cyan-300" />
                           Ocupação previsível em horários estratégicos com grupos confirmados
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Store className="size-4 text-emerald-600" />
+                          <Store className="size-4 text-cyan-300" />
                           Selo “Point Verificado” na escolha de local pelos organizadores
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Store className="size-4 text-emerald-600" />
+                          <Store className="size-4 text-cyan-300" />
                           Benefícios exclusivos para fidelizar comunidades inteiras
                         </li>
                       </ul>
                     </div>
                     <div className="rounded-2xl border border-border bg-secondary/45 p-6">
-                      <p className="font-mono text-xs font-semibold uppercase text-emerald-800">
+                      <p className="font-mono text-xs font-semibold uppercase text-cyan-200">
                         Exemplos de Points Parceiros
                       </p>
                       <div className="mt-3 grid grid-cols-2 gap-2.5 text-xs font-medium">
@@ -520,7 +520,7 @@ export default function TribesLandingPage() {
         </section>
 
         {/* PLANOS / MODELO DE NEGOCIOS */}
-        <section id="planos" className="border-t border-border bg-background py-20 sm:py-24">
+        <section id="planos" className="border-t border-border bg-transparent py-24 sm:py-28">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
               <Badge className="mb-3 bg-primary/12 text-primary hover:bg-primary/15">
@@ -582,7 +582,7 @@ export default function TribesLandingPage() {
                     <ul className="mt-6 space-y-2.5 border-t border-border pt-5 text-sm">
                       {plan.features.map((feat) => (
                         <li key={feat} className="flex items-start gap-2.5">
-                          <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                          <Check className="mt-0.5 size-4 shrink-0 text-cyan-300" />
                           <span className="text-foreground/90">{feat}</span>
                         </li>
                       ))}
@@ -626,7 +626,7 @@ export default function TribesLandingPage() {
               </p>
             </div>
 
-            <div className="mt-10 rounded-3xl border border-border bg-card px-6 py-2 shadow-xs">
+            <div className="mt-10 rounded-3xl border border-white/10 bg-white/[0.035] px-6 py-2 shadow-xs">
               <Accordion className="w-full">
                 {FAQ_ITEMS.map((item, idx) => (
                   <AccordionItem key={item.question} value={`faq-${idx}`}>
