@@ -312,7 +312,7 @@ export function TribeExplorer({
           if (!open) setActiveTribe(null);
         }}
       >
-        <DialogContent className="w-[calc(100vw-2rem)] max-h-[85dvh] max-w-2xl overflow-x-hidden overflow-y-auto rounded-3xl p-5 sm:p-6">
+        <DialogContent className="w-[min(92vw,900px)] max-w-none max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-3xl p-5 sm:max-w-none sm:p-7">
           {activeTribe && (
             <>
               <DialogHeader>
