@@ -407,6 +407,13 @@ export function TribeExplorer({
                     Continuar explorando
                   </Button>
                   <Button
+                    variant="outline"
+                    className="rounded-xl"
+                    render={<Link href={`/tribos/${activeTribe.id}`} />}
+                  >
+                    Página da tribo <ArrowRight className="size-4" />
+                  </Button>
+                  <Button
                     size="lg"
                     className="rounded-xl font-semibold"
                     onClick={() => {
@@ -415,7 +422,7 @@ export function TribeExplorer({
                       onSelectTribeForWaitlist(chosen);
                     }}
                   >
-                    Participar desta tribo no lançamento
+                    Participar no lançamento
                     <ArrowRight className="size-4" />
                   </Button>
                 </div>
