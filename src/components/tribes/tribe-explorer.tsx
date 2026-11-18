@@ -312,7 +312,7 @@ export function TribeExplorer({
           if (!open) setActiveTribe(null);
         }}
       >
-        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl p-6 sm:max-w-lg">
+        <DialogContent className="w-[calc(100vw-2rem)] max-h-[85dvh] max-w-2xl overflow-x-hidden overflow-y-auto rounded-3xl p-5 sm:p-6">
           {activeTribe && (
             <>
               <DialogHeader>
@@ -333,14 +333,14 @@ export function TribeExplorer({
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="mt-2 space-y-4">
+              <div className="mt-2 min-w-0 space-y-4">
                 <div className="rounded-2xl border border-primary/25 bg-primary/[0.04] p-4">
-                  <div className="flex items-center justify-between text-xs font-semibold text-primary">
+                  <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs font-semibold text-primary">
                     <span className="inline-flex items-center gap-1">
                       <Pin className="size-3.5" />
                       Card de Encontro Fixado
                     </span>
-                    <span className="font-mono">
+                    <span className="font-mono whitespace-normal">
                       {activeTribe.nextEvent.confirmedCount}/{activeTribe.nextEvent.maxSpots} confirmados
                     </span>
                   </div>
@@ -388,18 +388,18 @@ export function TribeExplorer({
                   </p>
                   {activeTribe.recentMessages.map((msg, index) => (
                     <div key={msg.author + index} className="rounded-xl bg-muted/60 p-3 text-xs">
-                      <div className="flex items-center justify-between">
+                      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
                         <span className="font-semibold text-foreground">
                           {msg.author} · <span className="font-normal text-muted-foreground">{msg.role}</span>
                         </span>
-                        <span className="text-[11px] text-muted-foreground">{msg.time}</span>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">{msg.time}</span>
                       </div>
                       <p className="mt-1 text-muted-foreground">{msg.text}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-end">
+                <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:justify-end">
                   <Button
                     variant="outline"
                     onClick={() => setActiveTribe(null)}
@@ -408,14 +408,14 @@ export function TribeExplorer({
                   </Button>
                   <Button
                     variant="outline"
-                    className="rounded-xl"
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl"
                     render={<Link href={`/tribos/${activeTribe.id}`} />}
                   >
                     Página da tribo <ArrowRight className="size-4" />
                   </Button>
                   <Button
                     size="lg"
-                    className="rounded-xl font-semibold"
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold"
                     onClick={() => {
                       const chosen = activeTribe;
                       setActiveTribe(null);
