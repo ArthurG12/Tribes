@@ -63,9 +63,6 @@ export function TribeRsvpButton({ tribeId }: { tribeId: string }) {
           <CircleX className="size-4" /> Cancelar presença
         </Button>
       )}
-      <p className="text-center text-xs leading-relaxed text-muted-foreground">
-        Protótipo: sua confirmação fica salva somente neste navegador e não é enviada a um organizador.
-      </p>
     </div>
   );
 }
