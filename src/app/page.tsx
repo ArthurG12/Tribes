@@ -75,7 +75,7 @@ export default function TribesLandingPage() {
       </main>
       <footer className="border-t border-border bg-card py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-center sm:flex-row sm:text-left">
-          <p className="text-xs text-muted-foreground">tribes. · Conexões reais a partir de interesses em comum · Belo Horizonte, MG</p>
+          <p className="text-xs text-muted-foreground">Tribes · Conexões reais a partir de interesses em comum · Belo Horizonte, MG</p>
           <Link href="/metricas" className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><BarChart3 className="size-4" /> Painel de métricas MVP</Link>
         </div>
       </footer>
