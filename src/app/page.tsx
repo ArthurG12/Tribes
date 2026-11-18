@@ -5,6 +5,8 @@ import { ArrowRight, Compass, Users, CalendarCheck2, Sparkles, BarChart3 } from 
 import { Navbar } from "@/components/tribes/navbar";
 import { HeroMockup } from "@/components/tribes/hero-mockup";
 import { Button } from "@/components/ui/button";
+import { TribeExplorer } from "@/components/tribes/tribe-explorer";
+import { trackMvpEvent } from "@/lib/mvp-tracker";
 
 const destinations = [
   { href: "/explorar", icon: Compass, title: "Explore tribos", description: "Encontre comunidades por interesse e descubra encontros." },
@@ -57,7 +59,7 @@ export default function TribesLandingPage() {
             </div>
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {destinations.map(({ href, icon: Icon, title, description }) => (
-                <Link key={href} href={href} className="surface-card group p-6 hover:-translate-y-1 hover:bg-[#fbfdf9]">
+                <Link key={href} href={href} className="surface-card group bg-white p-6 hover:-translate-y-1 hover:bg-[#fbfdf9]">
                   <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary"><Icon className="size-5" /></span>
                   <h3 className="mt-4 font-heading text-lg font-bold text-foreground">{title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
@@ -69,6 +71,23 @@ export default function TribesLandingPage() {
               <Button variant="outline" render={<Link href="/planos" />}>Ver planos</Button>
               <Button variant="outline" render={<Link href="/sobre" />}>Por que Tribes?</Button>
               <Button variant="outline" render={<Link href="/faq" />}>Perguntas frequentes</Button>
+            </div>
+          </div>
+        </section>
+        <section className="relative overflow-hidden bg-[#f7faf4] py-14 sm:py-18">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#eaf2e3] to-transparent" />
+          <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
+            <div className="mb-2 text-center">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Encontre sua comunidade</p>
+              <h2 className="mt-3 font-heading text-3xl font-extrabold text-foreground sm:text-4xl">Explore tribos</h2>
+              <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">Descubra grupos por interesse, conheça as comunidades e encontre seu próximo encontro.</p>
+            </div>
+            <TribeExplorer
+              onSelectTribeForWaitlist={(tribe) => { window.location.href = "/lista-de-espera?tribo=" + encodeURIComponent(tribe.id); }}
+              onExplorerInteract={(interest) => { void trackMvpEvent({ event: "explorer_interaction", interests: interest ? [interest] : undefined }); }}
+            />
+            <div className="mt-2 text-center">
+              <Button variant="outline" className="rounded-full" render={<Link href="/explorar" />}>Ver página de exploração completa <ArrowRight className="size-4" /></Button>
             </div>
           </div>
         </section>
