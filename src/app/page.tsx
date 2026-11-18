@@ -57,7 +57,7 @@ export default function TribesLandingPage() {
             </div>
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {destinations.map(({ href, icon: Icon, title, description }) => (
-                <Link key={href} href={href} className="group rounded-xl border border-primary/20 bg-white p-6 transition-all hover:-translate-y-1 hover:border-primary/60 hover:bg-[#f4f8f0]">
+                <Link key={href} href={href} className="surface-card group p-6 hover:-translate-y-1 hover:bg-[#fbfdf9]">
                   <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary"><Icon className="size-5" /></span>
                   <h3 className="mt-4 font-heading text-lg font-bold text-foreground">{title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
