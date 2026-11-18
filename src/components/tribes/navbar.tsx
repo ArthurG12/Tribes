@@ -26,10 +26,10 @@ export function Navbar({ onCtaClick }: NavbarProps) {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#c8d3be] bg-[#e3e9dc]/95 shadow-[0_3px_0_rgba(35,65,35,0.04)] backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-[#c8d3be] bg-[#eaf2e3]/95 shadow-[0_3px_0_rgba(35,65,35,0.04)] backdrop-blur-md">
       <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="group flex items-center gap-3 font-heading text-xl font-extrabold tracking-tight text-foreground">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-[#b8cf8d] text-[#344b39] shadow-[3px_3px_0_#93ad68] transition-transform group-hover:rotate-[-5deg] group-hover:scale-105">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-[#c3dc9a] text-[#344b39] shadow-[3px_3px_0_#9dbd70] transition-transform group-hover:rotate-[-5deg] group-hover:scale-105">
             <TribesMark className="size-7" />
           </span>
           <span>Tribes</span>
@@ -37,18 +37,18 @@ export function Navbar({ onCtaClick }: NavbarProps) {
         </Link>
         <nav className="hidden items-center gap-5 xl:flex">
           {NAV_LINKS.map((item) => (
-            <Link key={item.href} href={item.href} className={`relative py-2 text-[13px] font-semibold transition-colors hover:text-[#586f43] ${pathname === item.href ? "text-[#3f6045] after:absolute after:inset-x-0 after:-bottom-[2px] after:h-[3px] after:rounded-full after:bg-[#a9d45a]" : "text-[#66715f]"}`}>{item.label}</Link>
+            <Link key={item.href} href={item.href} className={`relative py-2 text-[13px] font-semibold transition-colors hover:text-[#586f43] ${pathname === item.href ? "text-[#3f6045] after:absolute after:inset-x-0 after:-bottom-[2px] after:h-[3px] after:rounded-full after:bg-[#a6d66a]" : "text-[#66715f]"}`}>{item.label}</Link>
           ))}
         </nav>
         <div className="hidden items-center gap-3 md:flex">
           <Button variant="ghost" size="sm" className="text-[#657260] hover:text-[#3f6045]" nativeButton={false} render={<Link href="/metricas" />}>
             <BarChart3 className="size-4" /> Métricas
           </Button>
-          <Button size="lg" className="rounded-md bg-[#a9c47c] px-5 font-semibold text-[#344b39] shadow-[4px_4px_0_#91a96a] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#91a96a]" onClick={onCtaClick} nativeButton={false} render={<Link href="/lista-de-espera" />}>
+          <Button size="lg" className="rounded-md bg-[#b7d58b] px-5 font-semibold text-[#344b39] shadow-[4px_4px_0_#9dbb75] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#91a96a]" onClick={onCtaClick} nativeButton={false} render={<Link href="/lista-de-espera" />}>
             Garantir acesso <ArrowRight className="size-4" />
           </Button>
         </div>
-        <button type="button" aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"} onClick={() => setMobileOpen((prev) => !prev)} className="inline-flex size-10 items-center justify-center rounded-xl border border-[#c8d3be] bg-white text-foreground transition-colors hover:bg-[#dce4d3] md:hidden">
+        <button type="button" aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"} onClick={() => setMobileOpen((prev) => !prev)} className="inline-flex size-10 items-center justify-center rounded-xl border border-[#c8d3be] bg-white text-foreground transition-colors hover:bg-[#e0ecd7] md:hidden">
           {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
@@ -56,7 +56,7 @@ export function Navbar({ onCtaClick }: NavbarProps) {
         <div className="border-t border-[#c8d3be] bg-[#e3e9dc] px-4 py-4 md:hidden">
           <nav className="mx-auto flex max-w-7xl flex-col gap-1">
             {NAV_LINKS.map((item) => (
-              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#657260] transition-colors hover:bg-[#dce5d3] hover:text-[#3f6045]">{item.label}</Link>
+              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} className="rounded-xl px-3 py-2.5 text-sm font-medium text-[#657260] transition-colors hover:bg-[#e0ecd7] hover:text-[#3f6045]">{item.label}</Link>
             ))}
             <Link href="/metricas" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-[#657260] hover:bg-[#dce5d3] hover:text-[#3f6045]">
               <BarChart3 className="size-4" /> Painel de Métricas MVP
