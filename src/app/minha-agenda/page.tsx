@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, MapPin, Users, ArrowRight, Bookmark, Info } from "lucide-react";
+import { CalendarDays, MapPin, Users, ArrowRight, Bookmark } from "lucide-react";
 import { PageIntro, PageShell } from "@/components/tribes/page-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,11 +37,6 @@ export default function MyAgendaPage() {
         description="Reúna os encontros que você marcou como interesse nas páginas das tribos."
       />
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-        <div className="mt-8 flex items-start gap-3 rounded-2xl border border-[#c8d3be] bg-[#e3e9dc] p-4 text-sm text-[#536c43]">
-          <Info className="mt-0.5 size-5 shrink-0" />
-          <p>Esta é uma demonstração local. As confirmações ficam salvas apenas neste navegador; ainda não existe conta, sincronização ou envio para organizadores.</p>
-        </div>
-
         {!ready ? (
           <div className="mt-8 rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">Carregando sua agenda...</div>
         ) : selectedTribes.length === 0 ? (
