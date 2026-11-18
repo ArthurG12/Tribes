@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Search,
   MapPin,
@@ -200,7 +201,7 @@ export function TribeExplorer({
               >
                 Limpar filtros
               </Button>
-              <Button render={<a href="#lista-espera" />}>
+              <Button render={<Link href="/lista-de-espera" />}>
                 Sugerir nova tribo no lançamento
                 <ArrowRight className="size-4" />
               </Button>
