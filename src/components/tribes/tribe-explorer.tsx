@@ -182,11 +182,11 @@ export function TribeExplorer({
 
         {filteredTribes.length > 0 && (
           <div className="mt-8">
-            <section className="border-t border-border pt-10">
+            <section className="rounded-3xl border border-[#dce8d4] bg-gradient-to-br from-[#f0f6eb] via-[#f8faf5] to-[#edf4e8] px-4 py-7 shadow-[0_12px_36px_rgba(45,75,40,0.055)] sm:px-6 sm:py-8">
               <div className="mb-6">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Comunidades</p>
                 <h3 className="mt-1 font-heading text-2xl font-extrabold text-foreground">Identidade de comunidade</h3>
-                <p className="mt-1 text-sm text-muted-foreground">Faixas de cor e detalhes que dão personalidade a cada tribo.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Conheça comunidades, interesses e próximos encontros.</p>
               </div>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredTribes.map((tribe, index) => {
@@ -194,7 +194,7 @@ export function TribeExplorer({
                   const accent = accents[index % accents.length];
                   const spotsLeft = tribe.nextEvent.maxSpots - tribe.nextEvent.confirmedCount;
                   return (
-                    <article key={"identity-" + tribe.id} className="group flex flex-col overflow-hidden rounded-2xl border border-[#d7e5ce] bg-white shadow-[0_8px_24px_rgba(45,75,40,0.07)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_14px_32px_rgba(45,75,40,0.12)]">
+                    <article key={"identity-" + tribe.id} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#d7e5ce] bg-white shadow-[0_6px_20px_rgba(45,75,40,0.055)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_14px_32px_rgba(45,75,40,0.11)]">
                       <div className="h-2" style={{ backgroundColor: accent }} />
                       <div className="flex flex-1 flex-col p-5">
                         <div className="flex items-center justify-between gap-2"><Badge variant="secondary">{tribe.categoryLabel}</Badge><span className="text-[11px] font-semibold text-muted-foreground">{tribe.format}</span></div>
@@ -204,11 +204,11 @@ export function TribeExplorer({
                           <span className="inline-flex items-center gap-1"><MapPin className="size-3.5 text-primary" />{tribe.neighborhood}</span>
                           <span className="inline-flex items-center gap-1"><Users className="size-3.5 text-primary" />{tribe.membersCount} membros</span>
                         </div>
-                        <div className="mt-4 rounded-xl p-3" style={{ backgroundColor: accent + "16" }}>
-                          <div className="flex items-center justify-between gap-2 text-[11px] font-semibold" style={{ color: accent }}><span className="inline-flex items-center gap-1"><Calendar className="size-3.5" />{tribe.nextEvent.dateLabel}</span><span>{spotsLeft} vagas</span></div>
+                        <div className="mt-4 rounded-xl border border-[#e2eadc] bg-[#f4f7f1] p-3">
+                          <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-[#64814f]"><span className="inline-flex items-center gap-1"><Calendar className="size-3.5" />{tribe.nextEvent.dateLabel}</span><span>{spotsLeft} vagas</span></div>
                           <p className="mt-1 text-sm font-semibold text-foreground">{tribe.nextEvent.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{tribe.nextEvent.locationLabel}</p>
                         </div>
-                        <div className="mt-5 flex items-center justify-between gap-2 border-t border-border pt-4"><span className="text-xs text-muted-foreground">{tribe.beginnerFriendly ? "✓ Iniciantes bem-vindos" : tribe.weeklyFrequency}</span><Button size="sm" variant="outline" onClick={() => handleOpenTribe(tribe)}>Ver detalhes</Button></div>
+                        <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-4"><span className="text-xs text-muted-foreground">{tribe.beginnerFriendly ? "✓ Iniciantes bem-vindos" : tribe.weeklyFrequency}</span><Button size="sm" variant="outline" onClick={() => handleOpenTribe(tribe)}>Ver detalhes</Button></div>
                       </div>
                     </article>
                   );
