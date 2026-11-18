@@ -338,6 +338,7 @@ export function TribeExplorer({
                   <Button
                     variant="outline"
                     className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl"
+                    nativeButton={false}
                     render={<Link href={`/tribos/${activeTribe.id}`} />}
                   >
                     Página da tribo <ArrowRight className="size-4" />
