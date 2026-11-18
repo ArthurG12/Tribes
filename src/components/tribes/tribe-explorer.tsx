@@ -86,7 +86,7 @@ export function TribeExplorer({
   };
 
   return (
-    <section id="explorar" className="py-20 sm:py-24">
+    <section id="explorar" className="py-24 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Badge
@@ -104,7 +104,7 @@ export function TribeExplorer({
         </div>
 
         {/* Search + Format + Beginner filter bar */}
-        <div className="mt-8 rounded-2xl border border-border bg-card p-4 shadow-xs">
+        <div className="mt-10 rounded-3xl border border-white/10 bg-white/[0.035] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -128,7 +128,7 @@ export function TribeExplorer({
                   className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
                     selectedFormat === fmt
                       ? "bg-foreground text-background"
-                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                      : "bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1]"
                   }`}
                 >
                   {fmt}
@@ -143,8 +143,8 @@ export function TribeExplorer({
                 }}
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
                   onlyBeginners
-                    ? "border-emerald-600 bg-emerald-600 text-white"
-                    : "border-emerald-600/30 bg-emerald-500/8 text-emerald-800 hover:bg-emerald-500/15"
+                    ? "border-cyan-400 bg-cyan-400 text-slate-950"
+                    : "border-emerald-600/30 bg-cyan-400/10 text-cyan-200 hover:bg-cyan-400/15"
                 }`}
               >
                 <Sparkles className="size-3.5" />
@@ -163,7 +163,7 @@ export function TribeExplorer({
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   selectedCategory === filter.id
                     ? "bg-primary text-primary-foreground shadow-xs"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                    : "bg-white/[0.045] text-muted-foreground hover:bg-white/[0.09] hover:text-foreground"
                 }`}
               >
                 {filter.label}
@@ -206,7 +206,7 @@ export function TribeExplorer({
               return (
                 <article
                   key={tribe.id}
-                  className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/[0.09] bg-gradient-to-b from-white/[0.065] to-white/[0.025] p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_24px_70px_rgba(91,33,182,0.18)]"
                 >
                   <div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -237,13 +237,13 @@ export function TribeExplorer({
                     </div>
 
                     {/* Mini pinned event preview */}
-                    <div className="mt-4 rounded-2xl border border-border/80 bg-secondary/45 p-3.5">
+                    <div className="mt-4 rounded-2xl border border-border/80 border border-white/[0.06] bg-white/[0.035] p-3.5">
                       <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
                         <span className="inline-flex items-center gap-1">
                           <Calendar className="size-3.5" />
                           {tribe.nextEvent.dateLabel}
                         </span>
-                        <span className="text-emerald-700">
+                        <span className="text-cyan-300">
                           {spotsLeft} vagas
                         </span>
                       </div>
@@ -258,7 +258,7 @@ export function TribeExplorer({
 
                   <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/60 pt-4">
                     {tribe.beginnerFriendly ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-cyan-300">
                         <CheckCircle2 className="size-3.5" />
                         Iniciantes bem-vindos
                       </span>
@@ -312,7 +312,7 @@ export function TribeExplorer({
                   <Badge variant="secondary">{activeTribe.categoryLabel}</Badge>
                   <Badge variant="outline">{activeTribe.format}</Badge>
                   {activeTribe.beginnerFriendly && (
-                    <Badge className="bg-emerald-500/15 text-emerald-800">
+                    <Badge className="bg-emerald-500/15 text-cyan-200">
                       Aberto p/ iniciantes
                     </Badge>
                   )}
@@ -348,7 +348,7 @@ export function TribeExplorer({
                       <MapPin className="size-3.5 text-primary" />
                       {activeTribe.nextEvent.locationLabel}
                     </p>
-                    <p className="flex items-center gap-2 font-medium text-emerald-800">
+                    <p className="flex items-center gap-2 font-medium text-cyan-200">
                       <Sparkles className="size-3.5" />
                       Custo: {activeTribe.nextEvent.costLabel}
                     </p>
