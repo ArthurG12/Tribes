@@ -1,16 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   CalendarDays,
   Clock3,
   Heart,
+  ImagePlus,
   LoaderCircle,
   MapPin,
   MessageCircle,
   Plus,
   Send,
+  X,
   Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +36,8 @@ export default function FeedPage() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerTribe, setComposerTribe] = useState("");
   const [postBody, setPostBody] = useState("");
+  const [postImage, setPostImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState("");
   const [creating, setCreating] = useState(false);
   const [eventMode, setEventMode] = useState(false);
   const [eventTitle, setEventTitle] = useState("");
@@ -79,6 +84,29 @@ export default function FeedPage() {
 
   useEffect(() => { void loadInitial(); }, [loadInitial]);
 
+  function selectPostImage(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    setImageError("");
+    if (!file) return;
+    setPostImage(null);
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setPostImage(null);
+      setImageError("Escolha uma imagem JPEG, PNG ou WebP.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPostImage(null);
+      setImageError("A imagem deve ter no máximo 5 MB.");
+      event.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setPostImage(typeof reader.result === "string" ? reader.result : null);
+    reader.onerror = () => setImageError("Não foi possível ler essa imagem.");
+    reader.readAsDataURL(file);
+  }
+
   async function submitContent(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!composerTribe) return;
@@ -97,9 +125,11 @@ export default function FeedPage() {
         };
         await apiRequest(`/api/tribes/${composerTribe}/events`, { method: "POST", body: JSON.stringify(payload) });
       } else {
-        await apiRequest(`/api/tribes/${composerTribe}/posts`, { method: "POST", body: JSON.stringify({ body: postBody }) });
+        await apiRequest(`/api/tribes/${composerTribe}/posts`, { method: "POST", body: JSON.stringify({ body: postBody, image: postImage ?? undefined }) });
       }
       setPostBody("");
+      setPostImage(null);
+      setImageError("");
       setEventTitle("");
       setEventStartsAt("");
       setEventEndsAt("");
@@ -212,7 +242,7 @@ export default function FeedPage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex gap-2">
                 <button type="button" onClick={() => setEventMode(false)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Publicação</button>
-                <button type="button" onClick={() => setEventMode(true)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Evento</button>
+                <button type="button" onClick={() => { setEventMode(true); setPostImage(null); setImageError(""); }} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Evento</button>
               </div>
             </div>
             <select aria-label="Tribo onde publicar" value={composerTribe} onChange={(event) => setComposerTribe(event.target.value)} required disabled={!tribes.length}
@@ -228,6 +258,18 @@ export default function FeedPage() {
               <Input aria-label="Limite de participantes" type="number" min="1" placeholder="Limite de participantes" value={eventCapacity} onChange={(event) => setEventCapacity(event.target.value)} />
             </div>}
             <Textarea placeholder={eventMode ? "Conte um pouco sobre o evento..." : "O que está acontecendo na sua tribo?"} value={postBody} onChange={(event) => setPostBody(event.target.value)} maxLength={5000} required />
+            {!eventMode && <div className="space-y-2">
+              <label htmlFor="post-image" className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-semibold transition-colors hover:bg-muted">
+                <ImagePlus className="size-4" />Adicionar imagem
+              </label>
+              <Input id="post-image" type="file" accept="image/jpeg,image/png,image/webp" onChange={selectPostImage} className="sr-only" aria-label="Adicionar imagem à publicação" />
+              <p className="text-xs text-muted-foreground">JPEG, PNG ou WebP · até 5 MB</p>
+              {imageError && <p role="alert" className="text-sm text-destructive">{imageError}</p>}
+              {postImage && <div className="relative w-fit max-w-full rounded-xl border border-border bg-muted/40 p-2">
+                <Image src={postImage} alt="Pré-visualização da imagem" width={1200} height={900} unoptimized className="max-h-64 w-auto max-w-full rounded-lg object-contain" />
+                <button type="button" aria-label="Remover imagem" onClick={() => { setPostImage(null); setImageError(""); }} className="absolute right-3 top-3 rounded-full bg-background/90 p-1.5 text-foreground shadow hover:bg-background"><X className="size-4" /></button>
+              </div>}
+            </div>}
             {!tribes.length && <p className="text-sm text-muted-foreground">Entre em uma tribo antes de publicar.</p>}
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
             <div className="flex justify-end">
@@ -284,6 +326,7 @@ export default function FeedPage() {
               </div>
             </div>}
             <p className="whitespace-pre-wrap text-sm leading-relaxed">{item.body}</p>
+            {item.imageUrl && <Image src={item.imageUrl} alt={`Imagem da publicação de ${item.author.name}`} width={1200} height={900} unoptimized className="max-h-[32rem] w-full rounded-2xl bg-muted/30 object-contain" />}
             <div className="flex flex-wrap items-center gap-2 border-t border-border/70 pt-3">
               <Button type="button" size="sm" variant="ghost" aria-pressed={item.likedByMe} onClick={() => void toggleLike(item)} className={item.likedByMe ? "text-primary" : "text-muted-foreground"}>
                 <Heart className={`size-4 ${item.likedByMe ? "fill-current" : ""}`} />{item.likesCount} {item.likesCount === 1 ? "curtida" : "curtidas"}

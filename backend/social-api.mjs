@@ -16,6 +16,7 @@ import {
   deletePasswordResetToken,
   deleteRegistrationToken,
   editComment,
+  getContentImage,
   getFeed,
   getSessionUser,
   getUserByEmail,
@@ -31,6 +32,8 @@ const SESSION_COOKIE = "tribes_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const REGISTRATION_TOKEN_TTL_MS = 30 * 60 * 1000;
 const PASSWORD_RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_POST_PAYLOAD_SIZE = Math.ceil(MAX_IMAGE_SIZE / 3) * 4 + 64 * 1024;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const authAttempts = new Map();
 const dummyPasswordHash = hashPassword("tribes-invalid-account-password");
@@ -44,12 +47,12 @@ function sendJson(response, statusCode, data, headers = {}) {
   response.end(JSON.stringify(data));
 }
 
-async function readJson(request) {
+async function readJson(request, maxSize = 64 * 1024) {
   const chunks = [];
   let size = 0;
   for await (const chunk of request) {
     size += chunk.length;
-    if (size > 64 * 1024) {
+    if (size > maxSize) {
       const error = new Error("Payload muito grande.");
       error.statusCode = 413;
       throw error;
@@ -65,6 +68,24 @@ async function readJson(request) {
     error.statusCode = 400;
     throw error;
   }
+}
+
+function parsePostImage(value) {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== "string") throw invalid("Imagem inválida.");
+  const match = value.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]*={0,2})$/);
+  if (!match) throw invalid("A imagem deve estar no formato JPEG, PNG ou WebP.");
+  const data = Buffer.from(match[2], "base64");
+  if (data.length === 0 || data.length > MAX_IMAGE_SIZE || data.toString("base64") !== match[2]) {
+    throw invalid("A imagem deve ter no máximo 5 MB.");
+  }
+  const signatures = {
+    jpeg: data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff,
+    png: data.length >= 8 && data.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+    webp: data.length >= 12 && data.toString("ascii", 0, 4) === "RIFF" && data.toString("ascii", 8, 12) === "WEBP",
+  };
+  if (!signatures[match[1]]) throw invalid("O conteúdo do arquivo não corresponde a uma imagem válida.");
+  return { data, mimeType: `image/${match[1]}` };
 }
 
 function readCookie(request, name) {
@@ -138,6 +159,7 @@ export async function handleSocialRequest(request, response, url) {
   const routeKnown = pathname.startsWith("/api/auth/") ||
     pathname === "/api/feed" || pathname === "/api/tribes" ||
     /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events)$/.test(pathname) ||
+    /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance)$/.test(pathname) ||
     /^\/api\/comments\/[^/]+$/.test(pathname);
   if (!routeKnown) return false;
@@ -299,6 +321,24 @@ export async function handleSocialRequest(request, response, url) {
       return true;
     }
 
+    const contentImageMatch = pathname.match(/^\/api\/content\/([^/]+)\/image$/);
+    if (contentImageMatch && method === "GET") {
+      const contentId = requireUuid(contentImageMatch[1], "Conteúdo");
+      const image = await getContentImage(user.id, contentId);
+      if (!image) {
+        sendJson(response, 404, { error: "Imagem não encontrada ou sem acesso." });
+        return true;
+      }
+      response.writeHead(200, {
+        "Content-Type": image.mimeType,
+        "Content-Length": image.data.length,
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+      });
+      response.end(image.data);
+      return true;
+    }
+
     if (pathname === "/api/feed" && method === "GET") {
       const rawLimit = url.searchParams.get("limit");
       const limit = rawLimit === null ? 20 : Number(rawLimit);
@@ -357,8 +397,9 @@ export async function handleSocialRequest(request, response, url) {
     if (contentMatch && method === "POST") {
       const tribeId = requireUuid(contentMatch[1], "Tribo");
       const type = contentMatch[2] === "posts" ? "post" : "event";
-      const payload = await readJson(request);
+      const payload = await readJson(request, type === "post" ? MAX_POST_PAYLOAD_SIZE : undefined);
       const body = requiredString(payload.body, "texto", 1, 5000);
+      const image = type === "post" ? parsePostImage(payload.image) : null;
       let event;
       if (type === "event") {
         const startsAt = requiredString(payload.startsAt, "data do evento", 10, 40);
@@ -381,7 +422,7 @@ export async function handleSocialRequest(request, response, url) {
           maxAttendees,
         };
       }
-      const item = await createContent(user.id, tribeId, { type, body, event });
+      const item = await createContent(user.id, tribeId, { type, body, event, image });
       sendJson(response, 201, { id: item.id, createdAt: item.created_at });
       return true;
     }

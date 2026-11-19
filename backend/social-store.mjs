@@ -322,6 +322,7 @@ export async function getFeed(userId, { tribeId, cursor, limit }) {
             author.id AS author_id, author.display_name AS author_name,
             t.id AS tribe_id, t.name AS tribe_name,
             e.title AS event_title, e.starts_at, e.ends_at, e.location, e.cost, e.max_attendees,
+            EXISTS (SELECT 1 FROM content_images i WHERE i.content_id = f.id) AS has_image,
             (SELECT COUNT(*) FROM content_likes l WHERE l.content_id = f.id)::int AS like_count,
             (SELECT COUNT(*) FROM content_comments c WHERE c.content_id = f.id)::int AS comment_count,
             EXISTS (SELECT 1 FROM content_likes l WHERE l.content_id = f.id AND l.user_id = $1) AS liked_by_me,
@@ -344,6 +345,7 @@ export async function getFeed(userId, { tribeId, cursor, limit }) {
     id: row.id,
     type: row.kind,
     body: row.body,
+    imageUrl: row.has_image ? `/api/content/${row.id}/image` : null,
     createdAt: row.created_at,
     editedAt: row.edited_at,
     author: { id: row.author_id, name: row.author_name },
@@ -390,7 +392,7 @@ export function decodeCursor(value) {
   }
 }
 
-export async function createContent(userId, tribeId, { type, body, event }) {
+export async function createContent(userId, tribeId, { type, body, event, image }) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -409,6 +411,13 @@ export async function createContent(userId, tribeId, { type, body, event }) {
        VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
       [tribeId, userId, type, body]
     );
+    if (image) {
+      await client.query(
+        `INSERT INTO content_images (content_id, mime_type, image_data, byte_size)
+         VALUES ($1, $2, $3, $4)`,
+        [rows[0].id, image.mimeType, image.data, image.data.length]
+      );
+    }
     if (type === "event") {
       await client.query(
         `INSERT INTO tribe_events (content_id, title, starts_at, ends_at, location, cost, max_attendees)
@@ -424,6 +433,18 @@ export async function createContent(userId, tribeId, { type, body, event }) {
   } finally {
     client.release();
   }
+}
+
+export async function getContentImage(userId, contentId) {
+  const { rows } = await pool.query(
+    `SELECT i.mime_type, i.image_data
+     FROM content_images i
+     JOIN feed_items f ON f.id = i.content_id
+     JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $1 AND m.status = 'active'
+     WHERE i.content_id = $2`,
+    [userId, contentId]
+  );
+  return rows[0] ? { mimeType: rows[0].mime_type, data: rows[0].image_data } : null;
 }
 
 export async function canAccessContent(userId, contentId) {

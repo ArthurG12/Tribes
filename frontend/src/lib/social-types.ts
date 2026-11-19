@@ -21,6 +21,7 @@ export interface FeedItem {
   id: string;
   type: "post" | "event";
   body: string;
+  imageUrl: string | null;
   createdAt: string;
   editedAt: string | null;
   author: { id: string; name: string };

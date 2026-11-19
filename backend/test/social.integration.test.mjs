@@ -79,10 +79,10 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
     return data.tribe;
   }
 
-  async function createPost(actor, tribe, body) {
+  async function createPost(actor, tribe, body, image) {
     const { response, data } = await call(actor, `/api/tribes/${tribe.id}/posts`, {
       method: "POST",
-      body: JSON.stringify({ body }),
+      body: JSON.stringify({ body, ...(image ? { image } : {}) }),
     });
     assert.equal(response.status, 201, JSON.stringify(data));
     return data.id;
@@ -171,6 +171,19 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal((await call(bob, `/api/tribes/${tribeOne.id}/join`, { method: "POST" })).response.status, 200);
 
   const postId = await createPost(alice, tribeOne, "Uma publicação para todos os membros.");
+  const imageData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII=";
+  const imagePostId = await createPost(alice, tribeOne, "Publicação com imagem.", imageData);
+  const invalidImage = await call(alice, `/api/tribes/${tribeOne.id}/posts`, {
+    method: "POST",
+    body: JSON.stringify({ body: "Imagem inválida.", image: "data:image/png;base64,ZmFrZQ==" }),
+  });
+  assert.equal(invalidImage.response.status, 400);
+  const imageResponse = await fetch(`${origin}/api/content/${imagePostId}/image`, { headers: { Cookie: alice.cookie } });
+  assert.equal(imageResponse.status, 200);
+  assert.equal(imageResponse.headers.get("content-type"), "image/png");
+  assert.equal((await imageResponse.arrayBuffer()).byteLength, Buffer.from(imageData.split(",")[1], "base64").length);
+  assert.equal((await fetch(`${origin}/api/content/${imagePostId}/image`, { headers: { Cookie: bob.cookie } })).status, 200);
+  assert.equal((await call(empty, `/api/content/${imagePostId}/image`)).response.status, 404);
   await new Promise((resolve) => setTimeout(resolve, 10));
   const eventResponse = await call(alice, `/api/tribes/${tribeOne.id}/events`, {
     method: "POST",
@@ -198,6 +211,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.deepEqual(new Set(feed.data.items.map((item) => item.tribe.id)), new Set([tribeOne.id, tribeTwo.id]));
   assert.deepEqual(new Set(feed.data.items.map((item) => item.type)), new Set(["post", "event"]));
   const eventInFeed = feed.data.items.find((item) => item.id === eventId);
+  assert.equal(feed.data.items.find((item) => item.id === imagePostId).imageUrl, `/api/content/${imagePostId}/image`);
   assert.equal(eventInFeed.event.title, "Noite de jogos");
   assert.equal(eventInFeed.event.location, "Centro de Belo Horizonte");
   for (let index = 1; index < feed.data.items.length; index += 1) {
@@ -279,6 +293,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   const left = await call(bob, `/api/tribes/${tribeOne.id}/membership`, { method: "DELETE" });
   assert.equal(left.response.status, 200);
   assert.equal((await call(bob, `/api/feed?tribeId=${tribeOne.id}`)).response.status, 403);
+  assert.equal((await call(bob, `/api/content/${imagePostId}/image`)).response.status, 404);
   assert.equal((await call(bob, `/api/tribes/${tribeOne.id}/posts`, {
     method: "POST", body: JSON.stringify({ body: "Sem participação" }),
   })).response.status, 403);

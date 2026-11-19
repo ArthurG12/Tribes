@@ -13,7 +13,7 @@ Landing Page de validação (Smoke Test + Protótipo Interativo) para a rede soc
    - **Points & Espaços Parceiros Verificados (B2B Local — cafés, ludotecas, arenas, livrarias)**
 5. **Captura de Lista de Espera (`#lista-espera`)**: coleta perfil, cidade/região, interesses e principal dor enfrentada, recomendando tribos compatíveis imediatamente após o envio.
 6. **Painel de Métricas de Validação do MVP (`/metricas`)**: acompanhamento de sessões visitantes, interações no protótipo, cliques em planos, taxa de conversão, demanda por interesse/segmento e exportação CSV de cadastros locais de demonstração.
-7. **Área autenticada da rede social**: feed cronológico de publicações e eventos das tribos do usuário, busca e participação em tribos, criação de comunidades, curtidas e comentários.
+7. **Área autenticada da rede social**: feed cronológico de publicações e eventos das tribos do usuário, imagens em publicações, busca e participação em tribos, criação de comunidades, curtidas e comentários.
 
 ## Organização do projeto
 
@@ -47,6 +47,7 @@ O Compose inicia quatro containers: `frontend` (porta `4317`), `backend` (porta 
 - `GET /api/feed?tribeId=<uuid>&cursor=<cursor>&limit=20` — timeline cronológica paginada por cursor; o filtro de tribo é validado pela associação ativa do usuário.
 - `GET /api/tribes?q=<busca>&mine=true` e `POST /api/tribes`; `POST /api/tribes/:id/join` e `DELETE /api/tribes/:id/membership`
 - `POST /api/tribes/:id/posts` e `POST /api/tribes/:id/events`
+- Publicações podem incluir uma imagem JPEG, PNG ou WebP de até 5 MB. As imagens são armazenadas no PostgreSQL e só podem ser carregadas por membros ativos da tribo.
 - `POST|DELETE /api/content/:id/like`, `GET|POST /api/content/:id/comments` e `PATCH|DELETE /api/comments/:id`
 
 As migrações são aplicadas no início do backend e registradas em `schema_migrations`. Os links de cadastro e redefinição de senha expiram em 30 minutos, só podem ser usados uma vez, e seus tokens são armazenados como hash. Ao redefinir uma senha, as sessões anteriores são encerradas. O MailHog recebe e-mails apenas no ambiente local; para outros ambientes, configure `SMTP_URL`, `EMAIL_FROM` e `FRONTEND_URL` no backend. Curtidas são únicas por usuário/conteúdo; comentários só podem ser alterados pelo autor. O feed, as tribos e as interações exigem sessão autenticada.
