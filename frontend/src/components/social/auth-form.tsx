@@ -1,0 +1,89 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Flame, LoaderCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export function AuthForm({ mode }: { mode: "login" | "register" }) {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [registrationRequested, setRegistrationRequested] = useState(false);
+  const registering = mode === "register";
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/auth/${registering ? "register" : "login"}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(registering ? { email } : { email, password }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Não foi possível entrar.");
+      if (registering) {
+        setRegistrationRequested(true);
+        return;
+      }
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next");
+      router.replace(next?.startsWith("/") && !next.startsWith("//") ? next : "/feed");
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+      <section className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-lg sm:p-8">
+        <Link href="/" className="flex items-center gap-2 font-heading text-lg font-extrabold">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Flame className="size-5 fill-current" />
+          </span>
+          tribes
+        </Link>
+        <h1 className="mt-8 font-heading text-2xl font-extrabold">
+          {registering ? registrationRequested ? "Confira seu e-mail" : "Crie sua conta" : "Entre na sua conta"}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {registering
+            ? registrationRequested
+              ? "Se este e-mail puder ser cadastrado, enviaremos um link para você escolher seu nome e senha."
+              : "Informe seu e-mail e enviaremos um link para criar sua senha."
+            : "Suas tribos e conversas estão esperando por você."}
+        </p>
+        {!registrationRequested && <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="email">E-mail</Label>
+            <Input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" maxLength={254} required />
+          </div>
+          {!registering && <div className="space-y-1.5">
+            <Label htmlFor="password">Senha</Label>
+            <Input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={1} maxLength={128} autoComplete="current-password" required />
+          </div>}
+          {error && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+          <Button type="submit" disabled={submitting} className="h-11 w-full rounded-xl font-semibold">
+            {submitting && <LoaderCircle className="size-4 animate-spin" />}
+            {submitting ? "Aguarde..." : registering ? "Enviar link" : "Entrar"}
+          </Button>
+        </form>}
+        <p className="mt-5 text-center text-sm text-muted-foreground">
+          {registering ? "Já tem uma conta? " : "Ainda não tem uma conta? "}
+          <Link href={registering ? "/entrar" : "/cadastro"} className="font-semibold text-primary hover:underline">
+            {registering ? "Entrar" : "Cadastre-se"}
+          </Link>
+        </p>
+      </section>
+    </main>
+  );
+}

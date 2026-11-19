@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Flame, Menu, X, BarChart3, ArrowRight } from "lucide-react";
+import { Flame, Menu, X, BarChart3, ArrowRight, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface NavbarProps {
@@ -53,6 +53,14 @@ export function Navbar({ onCtaClick }: NavbarProps) {
           <Button
             variant="ghost"
             size="sm"
+            render={<Link href="/entrar" />}
+          >
+            <LogIn className="size-4" />
+            Entrar
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             className="text-muted-foreground hover:text-foreground"
             render={<Link href="/metricas" />}
           >
@@ -93,6 +101,14 @@ export function Navbar({ onCtaClick }: NavbarProps) {
                 {item.label}
               </a>
             ))}
+            <Link
+              href="/entrar"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+            >
+              <LogIn className="size-4" />
+              Entrar ou criar conta
+            </Link>
             <Link
               href="/metricas"
               onClick={() => setMobileOpen(false)}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Compass,
@@ -42,6 +43,7 @@ import {
 } from "@/components/ui/accordion";
 
 export default function TribesLandingPage() {
+  const router = useRouter();
   const [selectedSegment, setSelectedSegment] = useState<SegmentId>("participante");
   const [selectedPlan, setSelectedPlan] = useState<PlanId | undefined>(undefined);
   const [selectedInterests, setSelectedInterests] = useState<InterestId[]>([
@@ -55,6 +57,17 @@ export default function TribesLandingPage() {
   useEffect(() => {
     void trackMvpEvent({ event: "page_view" });
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data: { user?: { id: string } | null }) => {
+        if (active && data.user) router.replace("/feed");
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [router]);
 
   const scrollToWaitlist = () => {
     const el = document.getElementById("lista-espera");

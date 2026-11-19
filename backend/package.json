@@ -1,0 +1,16 @@
+{
+  "name": "tribes-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test",
+    "test:integration": "TRIBES_TEST_ORIGIN=http://127.0.0.1:4000 node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "nodemailer": "^10.6.0",
+    "pg": "^8.16.3"
+  }
+}
