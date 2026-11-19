@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Flame, LoaderCircle } from "lucide-react";
+import Image from "next/image";
+import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,9 +38,7 @@ export function ForgotPasswordForm() {
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <section className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-lg sm:p-8">
         <Link href="/" className="flex items-center gap-2 font-heading text-lg font-extrabold">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Flame className="size-5 fill-current" />
-          </span>
+          <Image src="/tribes-emblem.png" alt="" width={36} height={36} className="size-9 rounded-full object-contain" />
           tribes
         </Link>
         <h1 className="mt-8 font-heading text-2xl font-extrabold">

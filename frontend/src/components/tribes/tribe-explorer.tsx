@@ -143,8 +143,8 @@ export function TribeExplorer({
                 }}
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
                   onlyBeginners
-                    ? "border-emerald-600 bg-emerald-600 text-white"
-                    : "border-emerald-600/30 bg-emerald-500/8 text-emerald-800 hover:bg-emerald-500/15"
+                    ? "border-brand-green bg-brand-green text-white"
+                    : "border-brand-green/30 bg-brand-green/8 text-brand-green-dark hover:bg-brand-green/15"
                 }`}
               >
                 <Sparkles className="size-3.5" />
@@ -243,7 +243,7 @@ export function TribeExplorer({
                           <Calendar className="size-3.5" />
                           {tribe.nextEvent.dateLabel}
                         </span>
-                        <span className="text-emerald-700">
+                        <span className="text-brand-green-dark">
                           {spotsLeft} vagas
                         </span>
                       </div>
@@ -258,7 +258,7 @@ export function TribeExplorer({
 
                   <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/60 pt-4">
                     {tribe.beginnerFriendly ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-green-dark">
                         <CheckCircle2 className="size-3.5" />
                         Iniciantes bem-vindos
                       </span>
@@ -312,7 +312,7 @@ export function TribeExplorer({
                   <Badge variant="secondary">{activeTribe.categoryLabel}</Badge>
                   <Badge variant="outline">{activeTribe.format}</Badge>
                   {activeTribe.beginnerFriendly && (
-                    <Badge className="bg-emerald-500/15 text-emerald-800">
+                    <Badge className="bg-brand-green/15 text-brand-green-dark">
                       Aberto p/ iniciantes
                     </Badge>
                   )}
@@ -348,7 +348,7 @@ export function TribeExplorer({
                       <MapPin className="size-3.5 text-primary" />
                       {activeTribe.nextEvent.locationLabel}
                     </p>
-                    <p className="flex items-center gap-2 font-medium text-emerald-800">
+                    <p className="flex items-center gap-2 font-medium text-brand-green-dark">
                       <Sparkles className="size-3.5" />
                       Custo: {activeTribe.nextEvent.costLabel}
                     </p>

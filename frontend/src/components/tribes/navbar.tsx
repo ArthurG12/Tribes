@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Flame, Menu, X, BarChart3, ArrowRight, LogIn } from "lucide-react";
+import Image from "next/image";
+import { Menu, X, BarChart3, ArrowRight, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface NavbarProps {
@@ -26,12 +27,19 @@ export function Navbar({ onCtaClick }: NavbarProps) {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
+          aria-label="Tribes — página inicial"
           className="flex items-center gap-2.5 font-heading text-lg font-extrabold tracking-tight text-foreground"
         >
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-            <Flame className="size-5 fill-current" />
+          <span className="relative h-12 w-[7.25rem] shrink-0 overflow-hidden">
+            <Image
+              src="/tribes-logo.png"
+              alt="Tribes — Comunidade e Natureza"
+              fill
+              priority
+              sizes="116px"
+              className="object-cover object-[center_40%]"
+            />
           </span>
-          <span>tribes</span>
           <span className="hidden rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary sm:inline-block">
             MVP Beta
           </span>

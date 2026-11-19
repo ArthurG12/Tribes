@@ -33,7 +33,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
     <div className="relative mx-auto w-full max-w-lg">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-gradient-to-tr from-primary/15 via-amber-500/10 to-emerald-500/15 blur-2xl"
+        className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-gradient-to-tr from-primary/15 via-brand-orange/10 to-brand-green/15 blur-2xl"
       />
 
       <div className="overflow-hidden rounded-3xl border border-border/90 bg-card shadow-xl ring-1 ring-black/[0.03]">
@@ -48,14 +48,14 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                 <span className="font-heading text-sm font-bold text-foreground">
                   Dados & Dragões Pampulha
                 </span>
-                <ShieldCheck className="size-4 text-emerald-600" />
+                <ShieldCheck className="size-4 text-brand-green" />
               </div>
               <p className="text-xs text-muted-foreground">
                 Belo Horizonte · 34 membros ativos
               </p>
             </div>
           </div>
-          <Badge className="border-emerald-600/20 bg-emerald-500/12 text-emerald-800 hover:bg-emerald-500/15">
+          <Badge className="border-brand-green/20 bg-brand-green/12 text-brand-green-dark hover:bg-brand-green/15">
             Aberto p/ iniciantes
           </Badge>
         </div>
@@ -145,7 +145,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                     key={initials + idx}
                     className={`flex size-8 items-center justify-center rounded-full border-2 border-card text-[11px] font-bold ${
                       initials === "VC"
-                        ? "bg-emerald-600 text-white"
+                        ? "bg-brand-green text-white"
                         : "bg-secondary text-secondary-foreground"
                     }`}
                   >
@@ -163,7 +163,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
               >
                 {rsvpConfirmed ? (
                   <>
-                    <CheckCircle2 className="size-4 text-emerald-600" />
+                    <CheckCircle2 className="size-4 text-brand-green" />
                     Presença confirmada! (Testar clique)
                   </>
                 ) : (

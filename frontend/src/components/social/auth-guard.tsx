@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Flame } from "lucide-react";
 import { SocialHeader } from "@/components/social/social-header";
 
 export interface CurrentUser {
@@ -27,7 +27,7 @@ export function useCurrentUser() {
 export function AuthLoadingState() {
   return (
     <div className="flex min-h-screen items-center justify-center text-primary">
-      <Flame className="size-8 animate-pulse fill-current" aria-label="Carregando Tribes" />
+      <Image src="/tribes-emblem.png" alt="Carregando Tribes" width={32} height={32} className="size-8 animate-pulse object-contain" />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   BarChart3,
@@ -12,7 +13,6 @@ import {
   MousePointerClick,
   Compass,
   CheckCircle2,
-  Flame,
 } from "lucide-react";
 import {
   INTEREST_CATEGORIES,
@@ -191,9 +191,7 @@ export default function MetricasMvpPage() {
             </Button>
             <div className="hidden h-5 w-px bg-border sm:block" />
             <div className="flex items-center gap-2">
-              <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Flame className="size-4 fill-current" />
-              </span>
+              <Image src="/tribes-emblem.png" alt="Tribes" width={28} height={28} className="size-7 rounded-full object-contain" />
               <span className="font-heading text-sm font-extrabold">
                 Tribes · Painel de Validação do MVP (TP4)
               </span>
@@ -273,16 +271,16 @@ export default function MetricasMvpPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-emerald-600/30 bg-emerald-500/[0.06] p-5 shadow-xs">
-            <div className="flex items-center justify-between text-xs font-semibold text-emerald-900">
+          <div className="rounded-2xl border border-brand-green/30 bg-brand-green/[0.06] p-5 shadow-xs">
+            <div className="flex items-center justify-between text-xs font-semibold text-brand-green-dark">
               <span>Cadastros & Conversão</span>
-              <CheckCircle2 className="size-4 text-emerald-700" />
+              <CheckCircle2 className="size-4 text-brand-green-dark" />
             </div>
             <div className="mt-2 flex items-baseline gap-2.5">
               <p className="font-heading text-3xl font-extrabold text-foreground">
                 {loading ? "—" : signups}
               </p>
-              <span className="rounded-full bg-emerald-600 px-2 py-0.5 font-mono text-xs font-bold text-white">
+              <span className="rounded-full bg-brand-green px-2 py-0.5 font-mono text-xs font-bold text-white">
                 {conversionRate}% conv.
               </span>
             </div>
@@ -312,12 +310,12 @@ export default function MetricasMvpPage() {
                 {
                   label: "Organizadores de Comunidades (Freemium / Pro)",
                   count: metrics?.segments.organizador ?? 0,
-                  color: "bg-amber-500",
+                  color: "bg-brand-orange",
                 },
                 {
                   label: "Points & Espaços Parceiros (B2B Local)",
                   count: metrics?.segments.parceiro ?? 0,
-                  color: "bg-emerald-600",
+                  color: "bg-brand-green",
                 },
               ].map((seg) => {
                 const pct = signups > 0 ? Math.round((seg.count / signups) * 100) : 0;

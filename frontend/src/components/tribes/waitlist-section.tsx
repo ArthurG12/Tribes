@@ -173,12 +173,12 @@ export function WaitlistSection({
         <div className="mt-10 rounded-3xl border border-border bg-card p-6 shadow-lg sm:p-8">
           {submittedState ? (
             <div className="space-y-6 py-2 text-center">
-              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-700">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-brand-green/15 text-brand-green-dark">
                 <CheckCircle2 className="size-8" />
               </div>
 
               <div>
-                <Badge className="bg-emerald-500/12 text-emerald-800">
+                <Badge className="bg-brand-green/12 text-brand-green-dark">
                   Convite #{submittedState.queuePosition} reservado
                 </Badge>
                 <h3 className="mt-2 font-heading text-2xl font-extrabold text-foreground">
@@ -418,7 +418,7 @@ export function WaitlistSection({
 
               <div className="flex flex-col items-center justify-between gap-3 pt-1 sm:flex-row">
                 <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Shield className="size-4 text-emerald-600" />
+                  <Shield className="size-4 text-brand-green" />
                   Zero spam · Saia quando quiser com 1 clique
                 </span>
 

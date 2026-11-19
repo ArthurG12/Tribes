@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -13,7 +14,6 @@ import {
   Users,
   Sparkles,
   Store,
-  Flame,
   BarChart3,
   MessageCircleOff,
   MapPin,
@@ -176,7 +176,7 @@ export default function TribesLandingPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="font-heading text-xl font-extrabold text-emerald-700 sm:text-2xl">
+                  <p className="font-heading text-xl font-extrabold text-brand-green-dark sm:text-2xl">
                     100% grátis
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -232,7 +232,7 @@ export default function TribesLandingPage() {
               </div>
 
               <div className="rounded-3xl border border-border bg-card p-6 shadow-xs">
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-800">
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-brand-orange/15 text-brand-orange-dark">
                   <MessageCircleOff className="size-5" />
                 </div>
                 <h3 className="mt-4 font-heading text-lg font-bold text-foreground">
@@ -282,7 +282,7 @@ export default function TribesLandingPage() {
                       <span>{row.currentTools}</span>
                     </div>
                     <div className="flex items-start gap-2 font-medium text-foreground md:col-span-4">
-                      <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                      <Check className="mt-0.5 size-4 shrink-0 text-brand-green" />
                       <span>{row.tribes}</span>
                     </div>
                   </div>
@@ -296,7 +296,7 @@ export default function TribesLandingPage() {
         <section id="como-funciona" className="py-20 sm:py-24">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
-              <Badge className="mb-3 bg-emerald-500/12 text-emerald-800 hover:bg-emerald-500/15">
+              <Badge className="mb-3 bg-brand-green/12 text-brand-green-dark hover:bg-brand-green/15">
                 Simples do convite ao encontro
               </Badge>
               <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
@@ -339,7 +339,7 @@ export default function TribesLandingPage() {
                 <span className="font-mono text-xs font-bold text-primary">
                   PASSO 03
                 </span>
-                <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-700">
+                <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-brand-green/15 text-brand-green-dark">
                   <HeartHandshake className="size-6" />
                 </div>
                 <h3 className="mt-4 font-heading text-xl font-bold text-foreground">
@@ -411,15 +411,15 @@ export default function TribesLandingPage() {
                       </p>
                       <ul className="mt-5 space-y-2.5 text-sm">
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-brand-green" />
                           Selo “Aberto para iniciantes” em tribos receptivas
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-brand-green" />
                           Ambiente separado de mensagens de trabalho e faculdade
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-brand-green" />
                           Agenda clara: saiba exatamente quem vai, quanto custa e onde será
                         </li>
                       </ul>
@@ -452,15 +452,15 @@ export default function TribesLandingPage() {
                       </p>
                       <ul className="mt-5 space-y-2.5 text-sm">
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-brand-green" />
                           RSVP com limite de vagas, fila de espera e lembrete automático
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-brand-green" />
                           Encontros recorrentes (semanais ou quinzenais) em 30 segundos
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Check className="size-4 text-emerald-600" />
+                          <Check className="size-4 text-brand-green" />
                           Divisão transparente de aluguel de quadra, mesa ou materiais
                         </li>
                       </ul>
@@ -472,7 +472,7 @@ export default function TribesLandingPage() {
                       <div className="mt-3 space-y-2.5 text-xs">
                         <div className="flex items-center justify-between rounded-xl bg-card p-3">
                           <span className="font-semibold">Enquete de horário</span>
-                          <span className="text-emerald-700 font-semibold">Sábado 14h30 venceu (82%)</span>
+                          <span className="text-brand-green-dark font-semibold">Sábado 14h30 venceu (82%)</span>
                         </div>
                         <div className="flex items-center justify-between rounded-xl bg-card p-3">
                           <span className="font-semibold">Vagas do encontro</span>
@@ -490,7 +490,7 @@ export default function TribesLandingPage() {
                 <TabsContent value="parceiros" className="mt-6">
                   <div className="grid items-center gap-8 rounded-3xl border border-border bg-card p-6 sm:p-10 md:grid-cols-2">
                     <div>
-                      <Badge className="bg-emerald-500/15 text-emerald-800">
+                      <Badge className="bg-brand-green/15 text-brand-green-dark">
                         Parceiros Locais B2B
                       </Badge>
                       <h3 className="mt-3 font-heading text-2xl font-extrabold text-foreground">
@@ -501,21 +501,21 @@ export default function TribesLandingPage() {
                       </p>
                       <ul className="mt-5 space-y-2.5 text-sm">
                         <li className="flex items-center gap-2.5">
-                          <Store className="size-4 text-emerald-600" />
+                          <Store className="size-4 text-brand-green" />
                           Ocupação previsível em horários estratégicos com grupos confirmados
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Store className="size-4 text-emerald-600" />
+                          <Store className="size-4 text-brand-green" />
                           Selo “Point Verificado” na escolha de local pelos organizadores
                         </li>
                         <li className="flex items-center gap-2.5">
-                          <Store className="size-4 text-emerald-600" />
+                          <Store className="size-4 text-brand-green" />
                           Benefícios exclusivos para fidelizar comunidades inteiras
                         </li>
                       </ul>
                     </div>
                     <div className="rounded-2xl border border-border bg-secondary/45 p-6">
-                      <p className="font-mono text-xs font-semibold uppercase text-emerald-800">
+                      <p className="font-mono text-xs font-semibold uppercase text-brand-green-dark">
                         Exemplos de Points Parceiros
                       </p>
                       <div className="mt-3 grid grid-cols-2 gap-2.5 text-xs font-medium">
@@ -595,7 +595,7 @@ export default function TribesLandingPage() {
                     <ul className="mt-6 space-y-2.5 border-t border-border pt-5 text-sm">
                       {plan.features.map((feat) => (
                         <li key={feat} className="flex items-start gap-2.5">
-                          <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                          <Check className="mt-0.5 size-4 shrink-0 text-brand-green" />
                           <span className="text-foreground/90">{feat}</span>
                         </li>
                       ))}
@@ -661,9 +661,7 @@ export default function TribesLandingPage() {
       <footer className="border-t border-border bg-card py-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-6">
           <div className="flex items-center gap-3">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Flame className="size-4 fill-current" />
-            </span>
+            <Image src="/tribes-emblem.png" alt="Tribes" width={32} height={32} className="size-8 rounded-full object-contain" />
             <div>
               <span className="font-heading text-base font-extrabold text-foreground">
                 tribes

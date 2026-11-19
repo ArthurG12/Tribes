@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Compass, Flame, LogOut, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,8 +24,15 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <Link href="/feed" className="flex shrink-0 items-center gap-2 font-heading text-lg font-extrabold">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Flame className="size-5 fill-current" /></span>
-          <span className="hidden sm:inline">tribes</span>
+          <span className="relative h-10 w-[7.25rem] overflow-hidden">
+            <Image
+              src="/tribes-logo.png"
+              alt="Tribes — Comunidade e Natureza"
+              fill
+              sizes="116px"
+              className="object-cover object-[center_40%]"
+            />
+          </span>
         </Link>
         <nav aria-label="Navegação principal" className="flex items-center gap-1 sm:gap-2">
           {nav.map((item) => {
