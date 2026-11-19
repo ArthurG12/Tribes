@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { hashPassword, verifyPassword, createSessionToken, digestSessionToken } from "./security.mjs";
+import { readJson, sendJson } from "./http-utils.mjs";
 import { sendRegistrationEmail } from "./registration-email.mjs";
 import { sendPasswordResetEmail } from "./password-reset-email.mjs";
 import {
@@ -18,14 +19,17 @@ import {
   editComment,
   getContentImage,
   getFeed,
+  getPublicUserProfile,
   getSessionUser,
   getUserByEmail,
+  getUserProfileImage,
   joinTribe,
   leaveTribe,
   listComments,
   searchTribes,
   setEventAttendance,
   toggleLike,
+  updateUserProfile,
 } from "./social-store.mjs";
 
 const SESSION_COOKIE = "tribes_session";
@@ -34,43 +38,12 @@ const REGISTRATION_TOKEN_TTL_MS = 30 * 60 * 1000;
 const PASSWORD_RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_POST_PAYLOAD_SIZE = Math.ceil(MAX_IMAGE_SIZE / 3) * 4 + 64 * 1024;
+const MAX_PROFILE_PAYLOAD_SIZE = MAX_POST_PAYLOAD_SIZE;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const authAttempts = new Map();
 const dummyPasswordHash = hashPassword("tribes-invalid-account-password");
 
-function sendJson(response, statusCode, data, headers = {}) {
-  response.writeHead(statusCode, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store",
-    ...headers,
-  });
-  response.end(JSON.stringify(data));
-}
-
-async function readJson(request, maxSize = 64 * 1024) {
-  const chunks = [];
-  let size = 0;
-  for await (const chunk of request) {
-    size += chunk.length;
-    if (size > maxSize) {
-      const error = new Error("Payload muito grande.");
-      error.statusCode = 413;
-      throw error;
-    }
-    chunks.push(chunk);
-  }
-  try {
-    const value = JSON.parse(Buffer.concat(chunks).toString("utf8"));
-    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error();
-    return value;
-  } catch {
-    const error = new Error("Objeto JSON inválido.");
-    error.statusCode = 400;
-    throw error;
-  }
-}
-
-function parsePostImage(value) {
+function parseImage(value) {
   if (value === undefined || value === null) return null;
   if (typeof value !== "string") throw invalid("Imagem inválida.");
   const match = value.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]*={0,2})$/);
@@ -157,6 +130,7 @@ export async function handleSocialRequest(request, response, url) {
   const { pathname } = url;
   const method = request.method ?? "GET";
   const routeKnown = pathname.startsWith("/api/auth/") ||
+    pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
     pathname === "/api/feed" || pathname === "/api/tribes" ||
     /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events)$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
@@ -321,6 +295,57 @@ export async function handleSocialRequest(request, response, url) {
       return true;
     }
 
+    if (pathname === "/api/profile" && method === "PATCH") {
+      const payload = await readJson(request, {
+        maxSize: MAX_PROFILE_PAYLOAD_SIZE,
+        requireObject: true,
+        invalidMessage: "Objeto JSON inválido.",
+      });
+      const name = requiredString(payload.name, "nome", 2, 80);
+      if (typeof payload.aboutMe !== "string" || payload.aboutMe.trim().length > 500) {
+        throw invalid("O campo sobre mim deve ter até 500 caracteres.");
+      }
+      const aboutMe = payload.aboutMe.trim();
+      const avatar = Object.hasOwn(payload, "avatar")
+        ? payload.avatar === null ? null : parseImage(payload.avatar)
+        : undefined;
+      const updatedUser = await updateUserProfile(user.id, { name, aboutMe, avatar });
+      if (!updatedUser) {
+        sendJson(response, 404, { error: "Usuário não encontrado." });
+        return true;
+      }
+      sendJson(response, 200, { user: updatedUser });
+      return true;
+    }
+
+    const publicProfileMatch = pathname.match(/^\/api\/users\/([^/]+)\/profile$/);
+    if (publicProfileMatch && method === "GET") {
+      const profile = await getPublicUserProfile(requireUuid(publicProfileMatch[1], "Usuário"));
+      if (!profile) {
+        sendJson(response, 404, { error: "Perfil não encontrado." });
+        return true;
+      }
+      sendJson(response, 200, { profile });
+      return true;
+    }
+
+    const profileAvatarMatch = pathname.match(/^\/api\/users\/([^/]+)\/avatar$/);
+    if (profileAvatarMatch && method === "GET") {
+      const avatar = await getUserProfileImage(requireUuid(profileAvatarMatch[1], "Usuário"));
+      if (!avatar) {
+        sendJson(response, 404, { error: "Foto de perfil não encontrada." });
+        return true;
+      }
+      response.writeHead(200, {
+        "Content-Type": avatar.mimeType,
+        "Content-Length": avatar.data.length,
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+      });
+      response.end(avatar.data);
+      return true;
+    }
+
     const contentImageMatch = pathname.match(/^\/api\/content\/([^/]+)\/image$/);
     if (contentImageMatch && method === "GET") {
       const contentId = requireUuid(contentImageMatch[1], "Conteúdo");
@@ -397,9 +422,13 @@ export async function handleSocialRequest(request, response, url) {
     if (contentMatch && method === "POST") {
       const tribeId = requireUuid(contentMatch[1], "Tribo");
       const type = contentMatch[2] === "posts" ? "post" : "event";
-      const payload = await readJson(request, type === "post" ? MAX_POST_PAYLOAD_SIZE : undefined);
+      const payload = await readJson(request, {
+        maxSize: type === "post" ? MAX_POST_PAYLOAD_SIZE : 64 * 1024,
+        requireObject: true,
+        invalidMessage: "Objeto JSON inválido.",
+      });
       const body = requiredString(payload.body, "texto", 1, 5000);
-      const image = type === "post" ? parsePostImage(payload.image) : null;
+      const image = type === "post" ? parseImage(payload.image) : null;
       let event;
       if (type === "event") {
         const startsAt = requiredString(payload.startsAt, "data do evento", 10, 40);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Flame } from "lucide-react";
 import { SocialHeader } from "@/components/social/social-header";
@@ -9,6 +9,27 @@ export interface CurrentUser {
   id: string;
   name: string;
   email: string;
+  aboutMe: string;
+  avatarUrl: string | null;
+}
+
+const CurrentUserContext = createContext<{
+  user: CurrentUser;
+  setUser: React.Dispatch<React.SetStateAction<CurrentUser | null>>;
+} | null>(null);
+
+export function useCurrentUser() {
+  const context = useContext(CurrentUserContext);
+  if (!context) throw new Error("useCurrentUser deve ser usado dentro de AuthGuard.");
+  return context;
+}
+
+export function AuthLoadingState() {
+  return (
+    <div className="flex min-h-screen items-center justify-center text-primary">
+      <Flame className="size-8 animate-pulse fill-current" aria-label="Carregando Tribes" />
+    </div>
+  );
 }
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -40,17 +61,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [pathname, router]);
 
   if (!loaded || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-primary">
-        <Flame className="size-8 animate-pulse fill-current" aria-label="Carregando Tribes" />
-      </div>
-    );
+    return <AuthLoadingState />;
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <SocialHeader user={user} />
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-9">{children}</div>
+      <CurrentUserContext.Provider value={{ user, setUser }}>
+        <SocialHeader user={user} />
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-9">{children}</div>
+      </CurrentUserContext.Provider>
     </div>
   );
 }

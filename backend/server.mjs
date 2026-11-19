@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { readJson, sendJson } from "./http-utils.mjs";
 import {
   checkDatabase,
   getMetrics,
@@ -13,15 +14,6 @@ const PORT = Number(process.env.PORT ?? 4000);
 const MAX_BODY_SIZE = 64 * 1024;
 
 const rateMap = new Map();
-
-function sendJson(response, statusCode, data, headers = {}) {
-  response.writeHead(statusCode, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store",
-    ...headers,
-  });
-  response.end(JSON.stringify(data));
-}
 
 function checkRateLimit(ip) {
   const now = Date.now();
@@ -42,29 +34,6 @@ function checkRateLimit(ip) {
 
   existing.count += 1;
   return true;
-}
-
-async function readJson(request) {
-  const chunks = [];
-  let size = 0;
-
-  for await (const chunk of request) {
-    size += chunk.length;
-    if (size > MAX_BODY_SIZE) {
-      const error = new Error("Payload muito grande.");
-      error.statusCode = 413;
-      throw error;
-    }
-    chunks.push(chunk);
-  }
-
-  try {
-    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
-  } catch {
-    const error = new Error("Payload JSON inválido.");
-    error.statusCode = 400;
-    throw error;
-  }
 }
 
 const server = createServer(async (request, response) => {
@@ -112,7 +81,11 @@ const server = createServer(async (request, response) => {
 
   let payload;
   try {
-    payload = await readJson(request);
+    payload = await readJson(request, {
+      maxSize: MAX_BODY_SIZE,
+      requireObject: false,
+      invalidMessage: "Payload JSON inválido.",
+    });
   } catch (error) {
     return sendJson(response, error.statusCode ?? 400, {
       error: error.message ?? "Payload JSON inválido.",

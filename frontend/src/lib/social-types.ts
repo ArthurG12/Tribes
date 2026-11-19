@@ -2,6 +2,8 @@ export interface SocialUser {
   id: string;
   name: string;
   email: string;
+  aboutMe: string;
+  avatarUrl: string | null;
 }
 
 export interface Tribe {
@@ -24,7 +26,7 @@ export interface FeedItem {
   imageUrl: string | null;
   createdAt: string;
   editedAt: string | null;
-  author: { id: string; name: string };
+  author: { id: string; name: string; avatarUrl: string | null };
   tribe: { id: string; name: string };
   likesCount: number;
   commentsCount: number;
@@ -47,7 +49,14 @@ export interface FeedComment {
   createdAt: string;
   editedAt: string | null;
   isMine: boolean;
-  author: { id: string; name: string };
+  author: { id: string; name: string; avatarUrl: string | null };
+}
+
+export interface PublicProfile {
+  id: string;
+  name: string;
+  aboutMe: string;
+  avatarUrl: string | null;
 }
 
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {

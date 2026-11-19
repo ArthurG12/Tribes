@@ -206,7 +206,8 @@ export async function createSession(userId, token, expiresAt) {
 export async function getSessionUser(token) {
   if (!token) return null;
   const { rows } = await pool.query(
-    `SELECT u.id, u.display_name, u.email
+    `SELECT u.id, u.display_name, u.email, u.about_me,
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id) AS has_avatar
      FROM user_sessions s
      JOIN users u ON u.id = s.user_id
      WHERE s.token_hash = $1 AND s.expires_at > CURRENT_TIMESTAMP`,
@@ -221,7 +222,78 @@ export async function deleteSession(token) {
 }
 
 function toUser(row) {
-  return { id: row.id, name: row.display_name, email: row.email };
+  return {
+    id: row.id,
+    name: row.display_name,
+    email: row.email,
+    aboutMe: row.about_me ?? "",
+    avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
+  };
+}
+
+export async function updateUserProfile(userId, { name, aboutMe, avatar }) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows } = await client.query(
+      `UPDATE users SET display_name = $2, about_me = $3
+       WHERE id = $1
+       RETURNING id, display_name, email, about_me`,
+      [userId, name, aboutMe]
+    );
+    if (rows.length === 0) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+    if (avatar === null) {
+      await client.query("DELETE FROM user_profile_images WHERE user_id = $1", [userId]);
+    } else if (avatar) {
+      await client.query(
+        `INSERT INTO user_profile_images (user_id, mime_type, image_data, byte_size)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (user_id) DO UPDATE
+         SET mime_type = EXCLUDED.mime_type, image_data = EXCLUDED.image_data, byte_size = EXCLUDED.byte_size`,
+        [userId, avatar.mimeType, avatar.data, avatar.data.length]
+      );
+    }
+    const { rows: updated } = await client.query(
+      `SELECT u.id, u.display_name, u.email, u.about_me,
+              EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id) AS has_avatar
+       FROM users u WHERE u.id = $1`,
+      [userId]
+    );
+    await client.query("COMMIT");
+    return toUser(updated[0]);
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function getPublicUserProfile(userId) {
+  const { rows } = await pool.query(
+    `SELECT u.id, u.display_name, u.about_me,
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id) AS has_avatar
+     FROM users u WHERE u.id = $1`,
+    [userId]
+  );
+  const row = rows[0];
+  return row ? {
+    id: row.id,
+    name: row.display_name,
+    aboutMe: row.about_me,
+    avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
+  } : null;
+}
+
+export async function getUserProfileImage(userId) {
+  const { rows } = await pool.query(
+    "SELECT mime_type, image_data FROM user_profile_images WHERE user_id = $1",
+    [userId]
+  );
+  return rows[0] ? { mimeType: rows[0].mime_type, data: rows[0].image_data } : null;
 }
 
 export async function searchTribes(userId, { query = "", mine = false, limit = 40 }) {
@@ -320,6 +392,7 @@ export async function getFeed(userId, { tribeId, cursor, limit }) {
   const { rows } = await pool.query(
     `SELECT f.id, f.kind, f.body, f.created_at, f.edited_at,
             author.id AS author_id, author.display_name AS author_name,
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = author.id) AS author_has_avatar,
             t.id AS tribe_id, t.name AS tribe_name,
             e.title AS event_title, e.starts_at, e.ends_at, e.location, e.cost, e.max_attendees,
             EXISTS (SELECT 1 FROM content_images i WHERE i.content_id = f.id) AS has_image,
@@ -348,7 +421,11 @@ export async function getFeed(userId, { tribeId, cursor, limit }) {
     imageUrl: row.has_image ? `/api/content/${row.id}/image` : null,
     createdAt: row.created_at,
     editedAt: row.edited_at,
-    author: { id: row.author_id, name: row.author_name },
+    author: {
+      id: row.author_id,
+      name: row.author_name,
+      avatarUrl: row.author_has_avatar ? `/api/users/${row.author_id}/avatar` : null,
+    },
     tribe: { id: row.tribe_id, name: row.tribe_name },
     likesCount: row.like_count,
     commentsCount: row.comment_count,
@@ -521,7 +598,9 @@ export async function listComments(userId, contentId) {
   if (!(await canAccessContent(userId, contentId))) return null;
   const { rows } = await pool.query(
     `SELECT c.id, c.body, c.created_at, c.edited_at,
-            u.id AS author_id, u.display_name AS author_name, (c.user_id = $2) AS is_mine
+            u.id AS author_id, u.display_name AS author_name,
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id) AS author_has_avatar,
+            (c.user_id = $2) AS is_mine
      FROM content_comments c JOIN users u ON u.id = c.user_id
      WHERE c.content_id = $1 ORDER BY c.created_at ASC, c.id ASC LIMIT 200`,
     [contentId, userId]
@@ -532,7 +611,11 @@ export async function listComments(userId, contentId) {
     createdAt: row.created_at,
     editedAt: row.edited_at,
     isMine: row.is_mine,
-    author: { id: row.author_id, name: row.author_name },
+    author: {
+      id: row.author_id,
+      name: row.author_name,
+      avatarUrl: row.author_has_avatar ? `/api/users/${row.author_id}/avatar` : null,
+    },
   }));
 }
 

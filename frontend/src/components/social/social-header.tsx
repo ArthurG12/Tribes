@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Compass, Flame, LogOut, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CurrentUser } from "@/components/social/auth-guard";
+import { UserAvatar } from "@/components/social/user-avatar";
 
 export function SocialHeader({ user }: { user: CurrentUser }) {
   const pathname = usePathname();
@@ -38,7 +39,10 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
           })}
         </nav>
         <div className="flex min-w-0 items-center gap-2">
-          <span className="hidden max-w-32 truncate text-xs font-medium text-muted-foreground md:inline">{user.name}</span>
+          <Link href="/perfil" aria-label="Meu perfil" className="flex min-w-0 items-center gap-2 rounded-xl p-1 transition-colors hover:bg-muted">
+            <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-8 text-xs" />
+            <span className="hidden max-w-32 truncate text-xs font-medium text-muted-foreground md:inline">{user.name}</span>
+          </Link>
           <Button variant="ghost" size="icon-sm" aria-label="Sair da conta" onClick={() => void logout()}><LogOut className="size-4" /></Button>
         </div>
       </div>

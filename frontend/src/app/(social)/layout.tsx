@@ -1,5 +1,10 @@
-import { AuthGuard } from "@/components/social/auth-guard";
+import { Suspense } from "react";
+import { AuthGuard, AuthLoadingState } from "@/components/social/auth-guard";
 
 export default function SocialLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <AuthGuard>{children}</AuthGuard>;
+  return (
+    <Suspense fallback={<AuthLoadingState />}>
+      <AuthGuard>{children}</AuthGuard>
+    </Suspense>
+  );
 }

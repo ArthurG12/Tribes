@@ -149,6 +149,47 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(reusedToken.response.status, 400);
   const bob = await register("bob");
   const empty = await register("empty");
+
+  const profileImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII=";
+  const profileUpdate = await call(alice, "/api/profile", {
+    method: "PATCH",
+    body: JSON.stringify({ name: "Alice Perfil", aboutMe: "Gosto de jogos e comunidades.", avatar: profileImage }),
+  });
+  assert.equal(profileUpdate.response.status, 200, JSON.stringify(profileUpdate.data));
+  assert.equal(profileUpdate.data.user.name, "Alice Perfil");
+  assert.equal(profileUpdate.data.user.aboutMe, "Gosto de jogos e comunidades.");
+  assert.equal(profileUpdate.data.user.avatarUrl, `/api/users/${alice.user.id}/avatar`);
+  const currentProfile = await call(alice, "/api/auth/me");
+  assert.equal(currentProfile.data.user.name, "Alice Perfil");
+  assert.equal(currentProfile.data.user.avatarUrl, `/api/users/${alice.user.id}/avatar`);
+  const publicProfile = await call(bob, `/api/users/${alice.user.id}/profile`);
+  assert.equal(publicProfile.response.status, 200);
+  assert.deepEqual(publicProfile.data.profile, {
+    id: alice.user.id,
+    name: "Alice Perfil",
+    aboutMe: "Gosto de jogos e comunidades.",
+    avatarUrl: `/api/users/${alice.user.id}/avatar`,
+  });
+  assert.equal("email" in publicProfile.data.profile, false);
+  const publicAvatar = await fetch(`${origin}/api/users/${alice.user.id}/avatar`, { headers: { Cookie: bob.cookie } });
+  assert.equal(publicAvatar.status, 200);
+  assert.equal(publicAvatar.headers.get("content-type"), "image/png");
+  assert.equal((await publicAvatar.arrayBuffer()).byteLength, Buffer.from(profileImage.split(",")[1], "base64").length);
+  const removedAvatar = await call(alice, "/api/profile", {
+    method: "PATCH",
+    body: JSON.stringify({ name: "Alice Perfil", aboutMe: "Gosto de jogos e comunidades.", avatar: null }),
+  });
+  assert.equal(removedAvatar.response.status, 200);
+  assert.equal(removedAvatar.data.user.avatarUrl, null);
+  assert.equal((await call(bob, `/api/users/${alice.user.id}/avatar`)).response.status, 404);
+  assert.equal((await call(null, "/api/profile", { method: "PATCH", body: JSON.stringify({ name: "Hacker", aboutMe: "" }) })).response.status, 401);
+  assert.equal((await call(alice, "/api/profile", {
+    method: "PATCH", body: JSON.stringify({ name: "A", aboutMe: "" }),
+  })).response.status, 400);
+  assert.equal((await call(alice, "/api/profile", {
+    method: "PATCH", body: JSON.stringify({ name: "Alice Perfil", aboutMe: "x".repeat(501) }),
+  })).response.status, 400);
+
   assert.equal((await call(null, "/api/feed")).response.status, 401);
   assert.deepEqual((await call(empty, "/api/tribes?mine=true")).data.tribes, []);
   const tribeOne = await createTribe(alice, "one");
@@ -157,7 +198,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
 
   const { response: loginResponse, data: loginData } = await call(null, "/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email: alice.user.email, password: "integration-test-password" }),
+    body: JSON.stringify({ email: alice.user.email, password: "new-integration-test-password" }),
   });
   assert.equal(loginResponse.status, 200);
   assert.equal(loginData.user.id, alice.user.id);
