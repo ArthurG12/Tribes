@@ -36,6 +36,7 @@ export async function initializeSocialStore() {
   }
   await pool.query("DELETE FROM user_sessions WHERE expires_at <= CURRENT_TIMESTAMP");
   await pool.query("DELETE FROM registration_tokens WHERE expires_at <= CURRENT_TIMESTAMP");
+  await pool.query("DELETE FROM password_reset_tokens WHERE expires_at <= CURRENT_TIMESTAMP");
 }
 
 export async function createRegistrationToken({ email, tokenHash, expiresAt }) {
@@ -70,6 +71,85 @@ export async function createRegistrationToken({ email, tokenHash, expiresAt }) {
 
 export async function deleteRegistrationToken(tokenHash) {
   await pool.query("DELETE FROM registration_tokens WHERE token_hash = $1", [tokenHash]);
+}
+
+export async function createPasswordResetToken({ email, tokenHash, expiresAt }) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [email]);
+    const { rows: users } = await client.query("SELECT id FROM users WHERE email = $1", [email]);
+    if (users.length === 0) {
+      await client.query("COMMIT");
+      return null;
+    }
+
+    await client.query("DELETE FROM password_reset_tokens WHERE expires_at <= CURRENT_TIMESTAMP");
+    const { rowCount } = await client.query(
+      `SELECT 1 FROM password_reset_tokens
+       WHERE user_id = $1 AND created_at > CURRENT_TIMESTAMP - INTERVAL '1 minute'`,
+      [users[0].id]
+    );
+    if (rowCount > 0) {
+      await client.query("COMMIT");
+      return false;
+    }
+
+    await client.query("DELETE FROM password_reset_tokens WHERE user_id = $1", [users[0].id]);
+    await client.query(
+      "INSERT INTO password_reset_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
+      [tokenHash, users[0].id, expiresAt]
+    );
+    await client.query("COMMIT");
+    return true;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function deletePasswordResetToken(tokenHash) {
+  await pool.query("DELETE FROM password_reset_tokens WHERE token_hash = $1", [tokenHash]);
+}
+
+export async function completePasswordReset({ tokenHash, passwordHash, sessionToken, sessionExpiresAt }) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows: tokens } = await client.query(
+      `SELECT user_id FROM password_reset_tokens
+       WHERE token_hash = $1 AND expires_at > CURRENT_TIMESTAMP
+       FOR UPDATE`,
+      [tokenHash]
+    );
+    if (tokens.length === 0) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    const userId = tokens[0].user_id;
+    const { rows } = await client.query(
+      `UPDATE users SET password_hash = $1
+       WHERE id = $2
+       RETURNING id, display_name, email`,
+      [passwordHash, userId]
+    );
+    await client.query("DELETE FROM user_sessions WHERE user_id = $1", [userId]);
+    await client.query(
+      "INSERT INTO user_sessions (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
+      [digestSessionToken(sessionToken), userId, sessionExpiresAt]
+    );
+    await client.query("DELETE FROM password_reset_tokens WHERE token_hash = $1", [tokenHash]);
+    await client.query("COMMIT");
+    return toUser(rows[0]);
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function completeRegistration({ tokenHash, displayName, passwordHash, sessionToken, sessionExpiresAt }) {

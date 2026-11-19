@@ -70,6 +70,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           {!registering && <div className="space-y-1.5">
             <Label htmlFor="password">Senha</Label>
             <Input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={1} maxLength={128} autoComplete="current-password" required />
+            <div className="text-right">
+              <Link href="/esqueci-senha" className="text-sm font-semibold text-primary hover:underline">
+                Esqueci minha senha
+              </Link>
+            </div>
           </div>}
           {error && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={submitting} className="h-11 w-full rounded-xl font-semibold">

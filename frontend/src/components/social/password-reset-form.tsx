@@ -1,0 +1,77 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { LoaderCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export function PasswordResetForm({ token }: { token: string }) {
+  const router = useRouter();
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    if (password !== passwordConfirmation) {
+      setError("As senhas não coincidem.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/auth/password-reset/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Não foi possível redefinir sua senha.");
+      router.replace("/feed");
+      router.refresh();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+      <section className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-lg sm:p-8">
+        <h1 className="font-heading text-2xl font-extrabold">Redefina sua senha</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Escolha uma nova senha para acessar sua conta.</p>
+        {!token ? (
+          <p role="alert" className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            O link está incompleto. Solicite um novo link de redefinição.
+          </p>
+        ) : (
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Nova senha</Label>
+              <Input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={10} maxLength={128} autoComplete="new-password" required />
+              <p className="text-xs text-muted-foreground">Use pelo menos 10 caracteres.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password-confirmation">Confirme sua nova senha</Label>
+              <Input id="password-confirmation" type="password" value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} minLength={10} maxLength={128} autoComplete="new-password" required />
+            </div>
+            {error && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+            <Button type="submit" disabled={submitting} className="h-11 w-full rounded-xl font-semibold">
+              {submitting && <LoaderCircle className="size-4 animate-spin" />}
+              {submitting ? "Salvando..." : "Redefinir senha e entrar"}
+            </Button>
+          </form>
+        )}
+        <p className="mt-5 text-center text-sm text-muted-foreground">
+          <Link href="/entrar" className="font-semibold text-primary hover:underline">Voltar para entrar</Link>
+        </p>
+      </section>
+    </main>
+  );
+}

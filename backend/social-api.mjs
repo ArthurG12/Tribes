@@ -1,15 +1,19 @@
 import { randomBytes } from "node:crypto";
 import { hashPassword, verifyPassword, createSessionToken, digestSessionToken } from "./security.mjs";
 import { sendRegistrationEmail } from "./registration-email.mjs";
+import { sendPasswordResetEmail } from "./password-reset-email.mjs";
 import {
   addComment,
+  completePasswordReset,
   completeRegistration,
   createContent,
+  createPasswordResetToken,
   createRegistrationToken,
   createSession,
   createTribe,
   decodeCursor,
   deleteSession,
+  deletePasswordResetToken,
   deleteRegistrationToken,
   editComment,
   getFeed,
@@ -25,6 +29,7 @@ import {
 const SESSION_COOKIE = "tribes_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const REGISTRATION_TOKEN_TTL_MS = 30 * 60 * 1000;
+const PASSWORD_RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const authAttempts = new Map();
 const dummyPasswordHash = hashPassword("tribes-invalid-account-password");
@@ -203,6 +208,58 @@ export async function handleSocialRequest(request, response, url) {
       }
       if (!user) throw invalid("Este link é inválido, expirou ou já foi usado. Solicite um novo link.");
       return sendJson(response, 201, withUser(user), { "Set-Cookie": sessionCookie(sessionToken) }), true;
+    }
+
+    if (pathname === "/api/auth/password-reset" && method === "POST") {
+      if (!allowAuthAttempt(request)) {
+        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." });
+        return true;
+      }
+      const payload = await readJson(request);
+      const email = requiredString(payload.email, "e-mail", 3, 254).toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw invalid("Informe um e-mail válido.");
+      const token = randomBytes(32).toString("base64url");
+      const tokenHash = digestSessionToken(token);
+      const created = await createPasswordResetToken({
+        email,
+        tokenHash,
+        expiresAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS),
+      });
+      if (created === null) {
+        return sendJson(response, 404, { error: "Este e-mail não está cadastrado." }), true;
+      }
+      if (created) {
+        try {
+          await sendPasswordResetEmail(email, token);
+        } catch (error) {
+          await deletePasswordResetToken(tokenHash);
+          throw error;
+        }
+      }
+      return sendJson(response, 202, {
+        message: "Se este e-mail estiver cadastrado, enviaremos um link para redefinir sua senha.",
+      }), true;
+    }
+
+    if (pathname === "/api/auth/password-reset/complete" && method === "POST") {
+      if (!allowAuthAttempt(request)) {
+        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." });
+        return true;
+      }
+      const payload = await readJson(request);
+      const token = requiredString(payload.token, "token", 20, 200);
+      if (typeof payload.password !== "string" || payload.password.length < 10 || payload.password.length > 128) {
+        throw invalid("A senha deve ter entre 10 e 128 caracteres.");
+      }
+      const sessionToken = createSessionToken();
+      const user = await completePasswordReset({
+        tokenHash: digestSessionToken(token),
+        passwordHash: await hashPassword(payload.password),
+        sessionToken,
+        sessionExpiresAt: new Date(Date.now() + SESSION_TTL_SECONDS * 1000),
+      });
+      if (!user) throw invalid("Este link é inválido, expirou ou já foi usado. Solicite um novo link.");
+      return sendJson(response, 200, withUser(user), { "Set-Cookie": sessionCookie(sessionToken) }), true;
     }
 
     if (pathname === "/api/auth/login" && method === "POST") {

@@ -96,6 +96,52 @@ integrationTest("authenticated social feed, tribes, likes, comments and cursor p
   });
 
   const alice = await register("alice");
+  const resetRequest = await call(null, "/api/auth/password-reset", {
+    method: "POST",
+    body: JSON.stringify({ email: "not-registered@example.test" }),
+    headers: { "x-forwarded-for": "203.0.113.1" },
+  });
+  assert.equal(resetRequest.response.status, 404);
+  assert.equal(resetRequest.data.error, "Este e-mail não está cadastrado.");
+
+  const { response: resetRequestResponse } = await call(null, "/api/auth/password-reset", {
+    method: "POST",
+    body: JSON.stringify({ email: alice.user.email }),
+  });
+  assert.equal(resetRequestResponse.status, 202);
+  let resetLink;
+  for (let attempt = 0; attempt < 20 && !resetLink; attempt += 1) {
+    const search = await fetch(`${mailhogApi}/api/v2/search?kind=to&query=${encodeURIComponent(alice.user.email)}`);
+    const messages = await search.json();
+    const body = (messages.items ?? [])
+      .flatMap((message) => message.MIME?.Parts ?? [])
+      .map((part) => part.Body)
+      .join("\n")
+      .replace(/=\r?\n/g, "")
+      .replace(/=([0-9a-f]{2})/gi, (_, byte) => String.fromCharCode(Number.parseInt(byte, 16)));
+    const match = body.match(/https?:\/\/[^\s<"]+\/senha\/redefinir\?token=[^\s<"]+/);
+    if (match) resetLink = match[0];
+    else await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  assert.ok(resetLink, "MailHog deve receber o link de redefinição de senha");
+  const resetToken = new URL(resetLink).searchParams.get("token");
+  const { response: resetResponse, data: resetData } = await call(null, "/api/auth/password-reset/complete", {
+    method: "POST",
+    body: JSON.stringify({ token: resetToken, password: "new-integration-test-password" }),
+  });
+  assert.equal(resetResponse.status, 200, JSON.stringify(resetData));
+  assert.equal(resetData.user.id, alice.user.id);
+  const resetCookie = resetResponse.headers.get("set-cookie")?.split(";")[0];
+  assert.ok(resetCookie);
+  assert.equal((await call(alice, "/api/auth/me")).data.user, null);
+  const resetSession = { cookie: resetCookie, user: alice.user };
+  assert.equal((await call(resetSession, "/api/auth/me")).data.user.id, alice.user.id);
+  assert.equal((await call(null, "/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email: alice.user.email, password: "integration-test-password" }),
+  })).response.status, 401);
+  alice.cookie = resetCookie;
+
   const reusedToken = await call(null, "/api/auth/register/complete", {
     method: "POST",
     body: JSON.stringify({ name: "Tester alice", token: alice.token, password: "another-valid-password" }),

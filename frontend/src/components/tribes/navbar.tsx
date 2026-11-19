@@ -53,14 +53,6 @@ export function Navbar({ onCtaClick }: NavbarProps) {
           <Button
             variant="ghost"
             size="sm"
-            render={<Link href="/entrar" />}
-          >
-            <LogIn className="size-4" />
-            Entrar
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
             className="text-muted-foreground hover:text-foreground"
             render={<Link href="/metricas" />}
           >
@@ -75,6 +67,14 @@ export function Navbar({ onCtaClick }: NavbarProps) {
           >
             Garantir acesso
             <ArrowRight className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            render={<Link href="/entrar" />}
+          >
+            <LogIn className="size-4" />
+            Entrar
           </Button>
         </div>
 
