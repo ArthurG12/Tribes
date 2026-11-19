@@ -35,6 +35,8 @@ export interface FeedItem {
     location: string;
     cost: string;
     maxAttendees: number | null;
+    attendeesCount: number;
+    attendingByMe: boolean;
   };
 }
 

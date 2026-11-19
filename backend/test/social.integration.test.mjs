@@ -7,7 +7,7 @@ const origin = process.env.TRIBES_TEST_ORIGIN;
 const mailhogApi = process.env.MAILHOG_API_URL;
 const integrationTest = origin && mailhogApi ? test : test.skip;
 
-integrationTest("authenticated social feed, tribes, likes, comments and cursor pagination", async (t) => {
+integrationTest("authenticated social feed, event attendance, likes, comments and cursor pagination", async (t) => {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const marker = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const userIds = [];
@@ -181,7 +181,7 @@ integrationTest("authenticated social feed, tribes, likes, comments and cursor p
       endsAt: "2027-01-15T22:00:00.000Z",
       location: "Centro de Belo Horizonte",
       cost: "Gratuito",
-      maxAttendees: 12,
+      maxAttendees: 1,
     }),
   });
   assert.equal(eventResponse.response.status, 201, JSON.stringify(eventResponse.data));
@@ -223,6 +223,21 @@ integrationTest("authenticated social feed, tribes, likes, comments and cursor p
   assert.deepEqual((await call(alice, likePath, { method: "POST" })).data, { likesCount: 2, likedByMe: true });
   assert.deepEqual((await call(bob, likePath, { method: "DELETE" })).data, { likesCount: 1, likedByMe: false });
   assert.equal((await call(empty, likePath, { method: "POST" })).response.status, 404);
+
+  const attendancePath = `/api/content/${eventId}/attendance`;
+  assert.deepEqual((await call(bob, attendancePath, { method: "POST" })).data, { attendeesCount: 1, attendingByMe: true });
+  assert.deepEqual((await call(bob, attendancePath, { method: "POST" })).data, { attendeesCount: 1, attendingByMe: true });
+  assert.deepEqual((await call(alice, attendancePath, { method: "POST" })).data, { attendeesCount: 2, attendingByMe: true });
+  assert.deepEqual((await call(bob, attendancePath, { method: "DELETE" })).data, { attendeesCount: 1, attendingByMe: false });
+  assert.equal((await call(empty, attendancePath, { method: "POST" })).response.status, 404);
+  assert.equal((await call(alice, `/api/content/${postId}/attendance`, { method: "POST" })).response.status, 404);
+  const feedWithAttendance = await call(alice, `/api/feed?tribeId=${tribeOne.id}&limit=50`);
+  const eventWithAttendance = feedWithAttendance.data.items.find((item) => item.id === eventId);
+  assert.equal(eventWithAttendance.event.attendeesCount, 1);
+  assert.equal(eventWithAttendance.event.attendingByMe, true);
+  const bobFeedWithAttendance = await call(bob, `/api/feed?tribeId=${tribeOne.id}&limit=50`);
+  assert.equal(bobFeedWithAttendance.data.items.find((item) => item.id === eventId).event.attendingByMe, false);
+  assert.equal(feedWithAttendance.data.items.find((item) => item.id === postId).event, null);
 
   const commentsPath = `/api/content/${eventId}/comments`;
   const createdComment = await call(bob, commentsPath, { method: "POST", body: JSON.stringify({ body: "Vou participar!" }) });

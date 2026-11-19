@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
+    "seed:demo": "node seed-demo.mjs",
     "test": "node --test",
     "test:integration": "TRIBES_TEST_ORIGIN=http://127.0.0.1:4000 node --test test/*.test.mjs"
   },

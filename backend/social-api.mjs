@@ -23,6 +23,7 @@ import {
   leaveTribe,
   listComments,
   searchTribes,
+  setEventAttendance,
   toggleLike,
 } from "./social-store.mjs";
 
@@ -137,7 +138,7 @@ export async function handleSocialRequest(request, response, url) {
   const routeKnown = pathname.startsWith("/api/auth/") ||
     pathname === "/api/feed" || pathname === "/api/tribes" ||
     /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events)$/.test(pathname) ||
-    /^\/api\/content\/[^/]+\/(?:like|comments)$/.test(pathname) ||
+    /^\/api\/content\/[^/]+\/(?:like|comments|attendance)$/.test(pathname) ||
     /^\/api\/comments\/[^/]+$/.test(pathname);
   if (!routeKnown) return false;
 
@@ -391,6 +392,18 @@ export async function handleSocialRequest(request, response, url) {
       const result = await toggleLike(user.id, contentId, method === "POST");
       if (!result) {
         sendJson(response, 404, { error: "Conteúdo não encontrado ou sem acesso." });
+        return true;
+      }
+      sendJson(response, 200, result);
+      return true;
+    }
+
+    const attendanceMatch = pathname.match(/^\/api\/content\/([^/]+)\/attendance$/);
+    if (attendanceMatch && ["POST", "DELETE"].includes(method)) {
+      const contentId = requireUuid(attendanceMatch[1], "Evento");
+      const result = await setEventAttendance(user.id, contentId, method === "POST");
+      if (!result) {
+        sendJson(response, 404, { error: "Evento não encontrado ou sem acesso." });
         return true;
       }
       sendJson(response, 200, result);

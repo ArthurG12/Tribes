@@ -324,7 +324,9 @@ export async function getFeed(userId, { tribeId, cursor, limit }) {
             e.title AS event_title, e.starts_at, e.ends_at, e.location, e.cost, e.max_attendees,
             (SELECT COUNT(*) FROM content_likes l WHERE l.content_id = f.id)::int AS like_count,
             (SELECT COUNT(*) FROM content_comments c WHERE c.content_id = f.id)::int AS comment_count,
-            EXISTS (SELECT 1 FROM content_likes l WHERE l.content_id = f.id AND l.user_id = $1) AS liked_by_me
+            EXISTS (SELECT 1 FROM content_likes l WHERE l.content_id = f.id AND l.user_id = $1) AS liked_by_me,
+            (SELECT COUNT(*) FROM event_attendees a WHERE a.content_id = f.id)::int AS attendee_count,
+            EXISTS (SELECT 1 FROM event_attendees a WHERE a.content_id = f.id AND a.user_id = $1) AS attending_by_me
      FROM feed_items f
      JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $1 AND m.status = 'active'
      JOIN users author ON author.id = f.author_id
@@ -356,6 +358,8 @@ export async function getFeed(userId, { tribeId, cursor, limit }) {
       location: row.location,
       cost: row.cost,
       maxAttendees: row.max_attendees,
+      attendeesCount: row.attendee_count,
+      attendingByMe: row.attending_by_me,
     } : null,
   }));
   const last = pageRows.at(-1);
@@ -449,6 +453,47 @@ export async function toggleLike(userId, contentId, liked) {
     [contentId, userId]
   );
   return { likesCount: rows[0].count, likedByMe: rows[0].liked };
+}
+
+export async function setEventAttendance(userId, contentId, attending) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rowCount } = await client.query(
+      `SELECT 1 FROM feed_items f
+       JOIN tribe_events e ON e.content_id = f.id
+       JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $1 AND m.status = 'active'
+       WHERE f.id = $2 FOR SHARE OF f`,
+      [userId, contentId]
+    );
+    if (!rowCount) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    if (attending) {
+      await client.query(
+        "INSERT INTO event_attendees (content_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+        [contentId, userId]
+      );
+    } else {
+      await client.query("DELETE FROM event_attendees WHERE content_id = $1 AND user_id = $2", [contentId, userId]);
+    }
+
+    const { rows } = await client.query(
+      `SELECT COUNT(*)::int AS count,
+              EXISTS (SELECT 1 FROM event_attendees WHERE content_id = $1 AND user_id = $2) AS attending
+       FROM event_attendees WHERE content_id = $1`,
+      [contentId, userId]
+    );
+    await client.query("COMMIT");
+    return { attendeesCount: rows[0].count, attendingByMe: rows[0].attending };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function listComments(userId, contentId) {

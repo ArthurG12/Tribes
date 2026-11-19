@@ -9,11 +9,13 @@ import {
   LoaderCircle,
   MapPin,
   MessageCircle,
+  Plus,
   Send,
   Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest, formatDateTime, type FeedComment, type FeedItem, type Tribe } from "@/lib/social-types";
@@ -28,6 +30,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
+  const [composerOpen, setComposerOpen] = useState(false);
   const [composerTribe, setComposerTribe] = useState("");
   const [postBody, setPostBody] = useState("");
   const [creating, setCreating] = useState(false);
@@ -44,6 +47,7 @@ export default function FeedPage() {
   const [commentError, setCommentError] = useState<Record<string, string>>({});
   const [editingComment, setEditingComment] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
+  const [attendancePending, setAttendancePending] = useState<Record<string, boolean>>({});
 
   const fetchPage = useCallback(async (cursor?: string, replace = false) => {
     const query = new URLSearchParams({ limit: String(PAGE_SIZE) });
@@ -103,6 +107,7 @@ export default function FeedPage() {
       setEventCost("");
       setEventCapacity("");
       await fetchPage(undefined, true);
+      setComposerOpen(false);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Não foi possível publicar.");
     } finally {
@@ -117,6 +122,22 @@ export default function FeedPage() {
       setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, ...result } : entry));
     } catch (likeError) {
       setError(likeError instanceof Error ? likeError.message : "Não foi possível atualizar a curtida.");
+    }
+  }
+
+  async function toggleAttendance(item: FeedItem) {
+    if (!item.event || attendancePending[item.id]) return;
+    setAttendancePending((current) => ({ ...current, [item.id]: true }));
+    try {
+      const method = item.event.attendingByMe ? "DELETE" : "POST";
+      const result = await apiRequest<{ attendeesCount: number; attendingByMe: boolean }>(`/api/content/${item.id}/attendance`, { method });
+      setItems((current) => current.map((entry) => entry.id === item.id && entry.event
+        ? { ...entry, event: { ...entry.event, ...result } }
+        : entry));
+    } catch (attendanceError) {
+      setError(attendanceError instanceof Error ? attendanceError.message : "Não foi possível atualizar sua presença.");
+    } finally {
+      setAttendancePending((current) => ({ ...current, [item.id]: false }));
     }
   }
 
@@ -168,48 +189,56 @@ export default function FeedPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-6">
-      <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <Badge className="bg-primary/10 text-primary">Sua comunidade</Badge>
-          <h1 className="mt-2 font-heading text-3xl font-extrabold">Feed das suas tribos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Publicações e eventos, em ordem cronológica.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" render={<Link href="/tribos" />}><Users className="size-4" />Explorar</Button>
-          <Button variant="outline" render={<Link href="/tribos/nova" />}>Criar tribo</Button>
-        </div>
-      </section>
+      <Dialog open={composerOpen} onOpenChange={setComposerOpen}>
+        <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <Badge className="bg-primary/10 text-primary">Sua comunidade</Badge>
+            <h1 className="mt-2 font-heading text-3xl font-extrabold">Feed das suas tribos</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Publicações e eventos, em ordem cronológica.</p>
+          </div>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="outline" render={<Link href="/tribos" />}><Users className="size-4" />Explorar</Button>
+            <Button variant="outline" onClick={() => setComposerOpen(true)}><Send className="size-4" />Publicar</Button>
+            <Button variant="outline" render={<Link href="/tribos/nova" />}><Plus className="size-4" />Criar tribo</Button>
+          </div>
+        </section>
 
-      <section className="rounded-2xl border border-border bg-card p-4 shadow-xs sm:p-5">
-        <form className="space-y-3" onSubmit={(event) => void submitContent(event)}>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="font-heading font-bold">Compartilhe com sua tribo</h2>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => setEventMode(false)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Publicação</button>
-              <button type="button" onClick={() => setEventMode(true)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Evento</button>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-2xl overflow-y-auto rounded-2xl p-5 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-xl font-bold">Compartilhe com sua tribo</DialogTitle>
+            <DialogDescription>Publique uma novidade ou crie um evento para os membros da sua tribo.</DialogDescription>
+          </DialogHeader>
+          <form className="space-y-3" onSubmit={(event) => void submitContent(event)}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setEventMode(false)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Publicação</button>
+                <button type="button" onClick={() => setEventMode(true)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Evento</button>
+              </div>
             </div>
-          </div>
-          <select aria-label="Tribo onde publicar" value={composerTribe} onChange={(event) => setComposerTribe(event.target.value)} required disabled={!tribes.length}
-            className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            {tribes.length ? tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>) : <option value="">Entre em uma tribo para publicar</option>}
-          </select>
-          {eventMode && <div className="grid gap-3 sm:grid-cols-2">
-            <Input aria-label="Título do evento" placeholder="Título do evento" value={eventTitle} onChange={(event) => setEventTitle(event.target.value)} required />
-            <Input aria-label="Local do evento" placeholder="Local" value={eventLocation} onChange={(event) => setEventLocation(event.target.value)} required />
-            <Input aria-label="Início do evento" type="datetime-local" value={eventStartsAt} onChange={(event) => setEventStartsAt(event.target.value)} required />
-            <Input aria-label="Término do evento" type="datetime-local" value={eventEndsAt} onChange={(event) => setEventEndsAt(event.target.value)} />
-            <Input aria-label="Custo do evento" placeholder="Custo (opcional)" value={eventCost} onChange={(event) => setEventCost(event.target.value)} />
-            <Input aria-label="Limite de participantes" type="number" min="1" placeholder="Limite de participantes" value={eventCapacity} onChange={(event) => setEventCapacity(event.target.value)} />
-          </div>}
-          <Textarea placeholder={eventMode ? "Conte um pouco sobre o evento..." : "O que está acontecendo na sua tribo?"} value={postBody} onChange={(event) => setPostBody(event.target.value)} maxLength={5000} required />
-          <div className="flex justify-end">
-            <Button type="submit" disabled={creating || !tribes.length || !postBody.trim()} className="rounded-xl">
-              {creating ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
-              {eventMode ? "Publicar evento" : "Publicar"}
-            </Button>
-          </div>
-        </form>
-      </section>
+            <select aria-label="Tribo onde publicar" value={composerTribe} onChange={(event) => setComposerTribe(event.target.value)} required disabled={!tribes.length}
+              className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              {tribes.length ? tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>) : <option value="">Entre em uma tribo para publicar</option>}
+            </select>
+            {eventMode && <div className="grid gap-3 sm:grid-cols-2">
+              <Input aria-label="Título do evento" placeholder="Título do evento" value={eventTitle} onChange={(event) => setEventTitle(event.target.value)} required />
+              <Input aria-label="Local do evento" placeholder="Local" value={eventLocation} onChange={(event) => setEventLocation(event.target.value)} required />
+              <Input aria-label="Início do evento" type="datetime-local" value={eventStartsAt} onChange={(event) => setEventStartsAt(event.target.value)} required />
+              <Input aria-label="Término do evento" type="datetime-local" value={eventEndsAt} onChange={(event) => setEventEndsAt(event.target.value)} />
+              <Input aria-label="Custo do evento" placeholder="Custo (opcional)" value={eventCost} onChange={(event) => setEventCost(event.target.value)} />
+              <Input aria-label="Limite de participantes" type="number" min="1" placeholder="Limite de participantes" value={eventCapacity} onChange={(event) => setEventCapacity(event.target.value)} />
+            </div>}
+            <Textarea placeholder={eventMode ? "Conte um pouco sobre o evento..." : "O que está acontecendo na sua tribo?"} value={postBody} onChange={(event) => setPostBody(event.target.value)} maxLength={5000} required />
+            {!tribes.length && <p className="text-sm text-muted-foreground">Entre em uma tribo antes de publicar.</p>}
+            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+            <div className="flex justify-end">
+              <Button type="submit" disabled={creating || !tribes.length || !postBody.trim()} className="rounded-xl">
+                {creating ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
+                {eventMode ? "Publicar evento" : "Publicar"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
         <label htmlFor="tribe-filter" className="mb-2 block text-sm font-semibold">Filtrar feed</label>
@@ -255,13 +284,16 @@ export default function FeedPage() {
               </div>
             </div>}
             <p className="whitespace-pre-wrap text-sm leading-relaxed">{item.body}</p>
-            <div className="flex items-center gap-2 border-t border-border/70 pt-3">
+            <div className="flex flex-wrap items-center gap-2 border-t border-border/70 pt-3">
               <Button type="button" size="sm" variant="ghost" aria-pressed={item.likedByMe} onClick={() => void toggleLike(item)} className={item.likedByMe ? "text-primary" : "text-muted-foreground"}>
                 <Heart className={`size-4 ${item.likedByMe ? "fill-current" : ""}`} />{item.likesCount} {item.likesCount === 1 ? "curtida" : "curtidas"}
               </Button>
               <Button type="button" size="sm" variant="ghost" aria-expanded={Boolean(expandedComments[item.id])} onClick={() => void toggleComments(item.id)} className="text-muted-foreground">
                 <MessageCircle className="size-4" />{item.commentsCount} {item.commentsCount === 1 ? "comentário" : "comentários"}
               </Button>
+              {item.event && <Button type="button" size="sm" variant="ghost" aria-pressed={item.event.attendingByMe} disabled={Boolean(attendancePending[item.id])} onClick={() => void toggleAttendance(item)} className={item.event.attendingByMe ? "text-primary" : "text-muted-foreground"}>
+                <Users className="size-4" />{item.event.attendingByMe ? "Presença confirmada" : "Confirmar presença"} · {item.event.attendeesCount}
+              </Button>}
             </div>
             {expandedComments[item.id] && <div className="space-y-3 border-t border-border/70 pt-3">
               {(comments[item.id] ?? []).map((comment) => <div key={comment.id} className="rounded-xl bg-muted/55 p-3">
