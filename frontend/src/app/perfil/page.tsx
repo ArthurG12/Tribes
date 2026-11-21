@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SAMPLE_TRIBES, INTEREST_CATEGORIES } from "@/lib/tribes-data";
-import { FAVORITES_KEY, PROFILE_KEY, readProfile, readStringList, writeProfile, type LocalProfile } from "@/lib/user-preferences";
+import { FAVORITES_KEY, readProfile, readStringList, writeProfile, type LocalProfile } from "@/lib/user-preferences";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<LocalProfile>({ name: "", city: "", bio: "", interests: [] });
