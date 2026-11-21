@@ -32,7 +32,7 @@ export default function MyAgendaPage() {
   return (
     <PageShell>
       <PageIntro
-        eyebrow="Área do participante · Demonstração"
+        eyebrow="Área do participante"
         title="Minha agenda"
         description="Reúna os encontros que você marcou como interesse nas páginas das tribos."
       />
@@ -52,7 +52,7 @@ export default function MyAgendaPage() {
               <article key={tribe.id} className="event-card">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Badge variant="secondary">{tribe.categoryLabel}</Badge>
-                  <Badge className="bg-[#dce8d2] text-[#45613c]">Interesse registrado</Badge>
+                  <Badge className="bg-[#e8f1e4] text-primary">Interesse registrado</Badge>
                 </div>
                 <h2 className="mt-4 font-heading text-xl font-bold text-foreground">{tribe.name}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{tribe.nextEvent.title}</p>
