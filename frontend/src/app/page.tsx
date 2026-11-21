@@ -29,10 +29,10 @@ export default function TribesLandingPage() {
                 Pessoas com os mesmos interesses, atividades que você gosta e encontros de verdade.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Button size="lg" className="h-12 rounded-full px-7 text-base font-semibold" render={<Link href="/lista-de-espera" />}>
+                <Button size="lg" className="h-12 rounded-full px-7 text-base font-semibold" nativeButton={false} render={<Link href="/lista-de-espera" />}>
                   Começar agora <ArrowRight className="size-4" />
                 </Button>
-                <Button variant="outline" size="lg" className="h-12 rounded-full px-6 text-base font-semibold" render={<Link href="/explorar" />}>
+                <Button variant="outline" size="lg" className="h-12 rounded-full px-6 text-base font-semibold" nativeButton={false} render={<Link href="/explorar" />}>
                   Explorar tribos
                 </Button>
               </div>
@@ -50,7 +50,7 @@ export default function TribesLandingPage() {
               onExplorerInteract={(interest) => { void trackMvpEvent({ event: "explorer_interaction", interests: interest ? [interest] : undefined }); }}
             />
             <div className="mt-2 text-center">
-              <Button variant="outline" className="rounded-full" render={<Link href="/explorar" />}>Ver todas as tribos <ArrowRight className="size-4" /></Button>
+              <Button variant="outline" className="rounded-full" nativeButton={false} render={<Link href="/explorar" />}>Ver todas as tribos <ArrowRight className="size-4" /></Button>
             </div>
           </div>
         </section>
