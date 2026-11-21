@@ -465,7 +465,7 @@ export async function handleSocialRequest(request, response, url) {
         const startsAt = requiredString(payload.startsAt, "data do evento", 10, 40);
         if (!Number.isFinite(Date.parse(startsAt))) throw invalid("Data do evento inválida.");
         const endsAt = payload.endsAt ? requiredString(payload.endsAt, "fim do evento", 10, 40) : null;
-        if (endsAt && (!Number.isFinite(Date.parse(endsAt)) || Date.parse(endsAt) < Date.parse(startsAt))) {
+        if (endsAt && (!Number.isFinite(Date.parse(endsAt)) || Date.parse(endsAt) <= Date.parse(startsAt))) {
           throw invalid("A data de término deve ser posterior ao início.");
         }
         const maxAttendees = payload.maxAttendees === "" || payload.maxAttendees == null
