@@ -38,7 +38,7 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
         <nav aria-label="Navegação principal" className="flex items-center gap-1 sm:gap-2">
           {nav.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href || (item.href === "/tribos" && pathname.startsWith("/tribos/"));
+            const active = pathname === item.href || (item.href === "/minhas-tribos" && pathname.startsWith("/minhas-tribos/"));
             return (
               <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined}
                 className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-semibold transition-colors sm:px-3 sm:text-sm ${active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
