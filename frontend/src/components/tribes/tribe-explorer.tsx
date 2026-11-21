@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -56,6 +56,7 @@ export function TribeExplorer({
   const [selectedFormat, setSelectedFormat] = useState<"Todos" | "Presencial" | "Híbrido" | "Online">("Todos");
   const [onlyBeginners, setOnlyBeginners] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"relevancia" | "membros" | "nome">("relevancia");
   const [activeTribe, setActiveTribe] = useState<TribePreview | null>(null);
 
   const filteredTribes = useMemo(() => {
@@ -79,7 +80,32 @@ export function TribeExplorer({
     });
   }, [selectedCategory, selectedFormat, onlyBeginners, searchQuery]);
 
-  const displayedTribes = compact ? filteredTribes.slice(0, 3) : filteredTribes;
+  const sortedTribes = useMemo(() => [...filteredTribes].sort((a, b) => sortBy === "membros" ? b.membersCount - a.membersCount : sortBy === "nome" ? a.name.localeCompare(b.name, "pt-BR") : 0), [filteredTribes, sortBy]);
+  const displayedTribes = compact ? sortedTribes.slice(0, 3) : sortedTribes;
+
+  useEffect(() => {
+    if (compact) return;
+    const params = new URLSearchParams(window.location.search);
+    const category = params.get("categoria");
+    const format = params.get("formato");
+    const query = params.get("busca");
+    const sort = params.get("ordem");
+    if (category === "todos" || INTEREST_CATEGORIES.some(item => item.id === category)) setSelectedCategory(category as "todos" | InterestId);
+    if (format === "Presencial" || format === "Híbrido" || format === "Online") setSelectedFormat(format);
+    if (query) setSearchQuery(query);
+    if (sort === "membros" || sort === "nome") setSortBy(sort);
+  }, [compact]);
+
+  useEffect(() => {
+    if (compact) return;
+    const params = new URLSearchParams();
+    if (selectedCategory !== "todos") params.set("categoria", selectedCategory);
+    if (selectedFormat !== "Todos") params.set("formato", selectedFormat);
+    if (searchQuery.trim()) params.set("busca", searchQuery.trim());
+    if (sortBy !== "relevancia") params.set("ordem", sortBy);
+    const query = params.toString();
+    window.history.replaceState(null, "", query ? `/explorar?${query}` : "/explorar");
+  }, [compact, selectedCategory, selectedFormat, searchQuery, sortBy]);
 
   const activeFilterCount = Number(selectedCategory !== "todos") + Number(selectedFormat !== "Todos") + Number(onlyBeginners) + Number(searchQuery.trim().length > 0);
 
@@ -149,7 +175,7 @@ export function TribeExplorer({
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-3.5 text-xs">
             <span className="font-medium text-muted-foreground">{filteredTribes.length} {filteredTribes.length === 1 ? "tribo encontrada" : "tribos encontradas"}{activeFilterCount > 0 ? ` · ${activeFilterCount} filtros ativos` : " · vitrine completa"}</span>
-            {activeFilterCount > 0 && <button type="button" onClick={() => { setSelectedCategory("todos"); setSelectedFormat("Todos"); setOnlyBeginners(false); setSearchQuery(""); }} className="font-bold text-primary underline decoration-dotted underline-offset-4 hover:text-primary">Limpar filtros</button>}
+            <div className="flex flex-wrap items-center gap-3">{activeFilterCount > 0 && <button type="button" onClick={() => { setSelectedCategory("todos"); setSelectedFormat("Todos"); setOnlyBeginners(false); setSearchQuery(""); setSortBy("relevancia"); }} className="font-bold text-primary underline decoration-dotted underline-offset-4 hover:text-primary">Limpar filtros</button>}<label className="flex items-center gap-2 text-muted-foreground">Ordenar <select aria-label="Ordenar comunidades" value={sortBy} onChange={event => setSortBy(event.target.value as "relevancia" | "membros" | "nome")} className="rounded-lg border border-border bg-white px-2.5 py-1.5 font-semibold text-foreground"><option value="relevancia">Relevância</option><option value="membros">Mais populares</option><option value="nome">Nome</option></select></label></div>
           </div>
 
           {/* Category pills */}
@@ -171,6 +197,8 @@ export function TribeExplorer({
           </div>
         </div>
         </>}
+
+        {displayedTribes.length === 0 && <div className="mt-8 rounded-2xl border border-dashed border-primary/30 bg-white px-6 py-14 text-center"><div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Search className="size-5" /></div><h3 className="mt-4 font-heading text-xl font-bold">Nenhuma tribo encontrada</h3><p className="mt-2 text-sm text-muted-foreground">Tente outro termo ou remova alguns filtros.</p><Button variant="outline" className="mt-5 rounded-full" onClick={() => { setSelectedCategory("todos"); setSelectedFormat("Todos"); setOnlyBeginners(false); setSearchQuery(""); setSortBy("relevancia"); }}>Limpar busca e filtros</Button></div>}
 
         {displayedTribes.length > 0 && (
           <div className="mt-8">
