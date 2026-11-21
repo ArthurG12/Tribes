@@ -145,6 +145,7 @@ export function TribeExplorer({
                 <button
                   key={fmt}
                   type="button"
+                  aria-pressed={selectedFormat === fmt}
                   onClick={() => {
                     setSelectedFormat(fmt);
                     onExplorerInteract();
@@ -161,6 +162,7 @@ export function TribeExplorer({
 
               <button
                 type="button"
+                aria-pressed={onlyBeginners}
                 onClick={() => {
                   setOnlyBeginners((prev) => !prev);
                   onExplorerInteract();
@@ -188,6 +190,7 @@ export function TribeExplorer({
               <button
                 key={filter.id}
                 type="button"
+                aria-pressed={selectedCategory === filter.id}
                 onClick={() => handleCategoryClick(filter.id)}
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   selectedCategory === filter.id
