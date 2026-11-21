@@ -56,6 +56,8 @@ export interface PublicProfile {
   id: string;
   name: string;
   aboutMe: string;
+  city: string;
+  interests: string[];
   avatarUrl: string | null;
 }
 
