@@ -4,13 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, ArrowRight, LogIn } from "lucide-react";
+import { Menu, X, ArrowRight, LogIn, UserRound, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
   { href: "/explorar", label: "Explorar tribos" },
   { href: "/minha-agenda", label: "Agenda" },
   { href: "/planos", label: "Planos" },
+  { href: "/perfil", label: "Meu perfil" },
+  { href: "/notificacoes", label: "Notificações" },
 ];
 
 export function Navbar() {
@@ -50,7 +52,7 @@ export function Navbar() {
         <div className="border-t border-border bg-background px-4 py-4 md:hidden">
           <nav className="mx-auto flex max-w-7xl flex-col gap-1">
             {NAV_LINKS.map((item) => (
-              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} className="rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">{item.label}</Link>
+              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} aria-current={pathname === item.href ? "page" : undefined} className={`rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${pathname === item.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{item.label}</Link>
             ))}
             <Link href="/entrar" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
               <LogIn className="size-4" /> Entrar / Rede social
