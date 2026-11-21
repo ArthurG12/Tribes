@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, BarChart3 } from "lucide-react";
 import { Navbar } from "@/components/tribes/navbar";
 import { HeroMockup } from "@/components/tribes/hero-mockup";
 import { Button } from "@/components/ui/button";
@@ -38,30 +38,6 @@ export default function TribesLandingPage() {
 
             </div>
             <div className="lg:col-span-6"><HeroMockup /></div>
-          </div>
-        </section>
-        <section className="border-y border-[#dce5da] bg-[#eef4e9] py-12 sm:py-16">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Explore a Tribes</p>
-              <h2 className="mt-3 font-heading text-3xl font-extrabold text-foreground sm:text-4xl">Feita para conectar.</h2>
-              <p className="mt-3 text-muted-foreground"></p>
-            </div>
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
-              {destinations.map(({ href, icon: Icon, title, description }) => (
-                <Link key={href} href={href} className="surface-card group flex h-full flex-col bg-white p-6 hover:-translate-y-1 hover:bg-[#fbfdf9]">
-                  <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary"><Icon className="size-5" /></span>
-                  <h3 className="mt-4 font-heading text-lg font-bold text-foreground">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
-                  <span className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-semibold text-primary">Explorar <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
-                </Link>
-              ))}
-            </div>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Button variant="outline" render={<Link href="/planos" />}>Ver planos</Button>
-              <Button variant="outline" render={<Link href="/sobre" />}>Por que Tribes?</Button>
-              <Button variant="outline" render={<Link href="/faq" />}>Perguntas frequentes</Button>
-            </div>
           </div>
         </section>
         <section className="relative overflow-hidden bg-[#f8faf6] py-14 sm:py-18">
