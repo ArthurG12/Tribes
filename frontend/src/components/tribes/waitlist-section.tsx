@@ -158,19 +158,11 @@ export function WaitlistSection({
       className="relative overflow-hidden border-y border-border bg-[#faf7f5] py-14 sm:py-16"
     >
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <Badge className="mb-3 bg-primary/12 text-primary hover:bg-primary/15">
-            Acesso antecipado
-          </Badge>
-          <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Sua próxima comunidade começa aqui.
-          </h2>
-          <p className="mt-3 text-base text-muted-foreground">
-            Conte um pouco sobre você e seus interesses.
-          </p>
-        </div>
+        <p className="mx-auto max-w-2xl text-center text-base text-muted-foreground">
+          Conte um pouco sobre você e seus interesses.
+        </p>
 
-        <div className="mt-10 rounded-[1.75rem] border border-[#eadbd7] bg-white p-6 shadow-[0_18px_50px_rgba(48,66,45,0.10)] backdrop-blur-xl sm:p-9">
+        <div className="mt-7 rounded-[1.75rem] border border-[#eadbd7] bg-white p-6 shadow-[0_18px_50px_rgba(48,66,45,0.10)] backdrop-blur-xl sm:p-9">
           {submittedState ? (
             <div className="space-y-6 py-2 text-center">
               <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#f8eae7] text-primary">
