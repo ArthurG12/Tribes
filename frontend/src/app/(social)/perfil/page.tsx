@@ -146,7 +146,6 @@ export default function ProfileSettingsPage() {
           <div className="space-y-2">
             <label htmlFor="profile-name" className="text-sm font-semibold">Nome</label>
             <Input id="profile-name" value={name} onChange={(event) => { setName(event.target.value); setSaved(false); }} minLength={2} maxLength={80} required autoComplete="name" />
-            <p className="text-xs text-muted-foreground">Como você aparece na comunidade.</p>
           </div>
           <div className="space-y-2">
             <label htmlFor="profile-city" className="flex items-center gap-2 text-sm font-semibold"><MapPin className="size-4 text-primary" />Cidade</label>
@@ -164,7 +163,7 @@ export default function ProfileSettingsPage() {
                 </ul>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">{cityLoading ? "Carregando municípios do IBGE..." : citySelected ? "Cidade selecionada na base do IBGE." : "Digite pelo menos 2 letras e escolha uma sugestão."}</p>
+            <p className="text-xs text-muted-foreground">{cityLoading ? "Carregando municípios..." : citySelected ? "" : "Digite pelo menos 2 letras e escolha uma sugestão."}</p>
             {cityError && <p role="status" className="text-xs text-destructive">{cityError}</p>}
           </div>
         </div>
