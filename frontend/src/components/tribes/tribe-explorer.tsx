@@ -20,6 +20,7 @@ import {
   type TribePreview,
 } from "@/lib/tribes-data";
 import { Badge } from "@/components/ui/badge";
+import { TribeFavoriteButton } from "@/components/tribes/tribe-favorite-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -188,7 +189,7 @@ export function TribeExplorer({
                     <article key={"identity-" + tribe.id} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#eee3df] bg-white shadow-[0_5px_18px_rgba(65,35,30,0.045)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_12px_30px_rgba(65,35,30,0.09)]">
                       <div className="relative flex h-24 items-end overflow-hidden bg-gradient-to-br from-[#f9e9e6] via-[#fff8f6] to-[#f4e5df] px-5 pb-3"><div aria-hidden="true" className="absolute -right-5 -top-10 size-32 rounded-full border-[18px] border-white/55" /><div aria-hidden="true" className="absolute right-12 -top-8 size-20 rounded-full bg-white/45" /><span className="relative flex size-11 items-center justify-center rounded-2xl bg-white/85 font-heading text-xl font-extrabold text-primary shadow-sm">{tribe.name.slice(0, 1)}</span><span className="absolute bottom-0 left-0 h-1 w-full" style={{ backgroundColor: accent }} /></div>
                       <div className="flex flex-1 flex-col p-5">
-                        <div className="flex items-center justify-between gap-2"><Badge variant="secondary">{tribe.categoryLabel}</Badge><span className="text-[11px] font-semibold text-muted-foreground">{tribe.format}</span></div>
+                        <div className="flex items-center justify-between gap-2"><Badge variant="secondary">{tribe.categoryLabel}</Badge><div className="flex items-center gap-2"><span className="text-[11px] font-semibold text-muted-foreground">{tribe.format}</span><TribeFavoriteButton tribeId={tribe.id} compact /></div></div>
                         <h4 className="mt-4 font-heading text-xl font-bold text-foreground group-hover:text-primary">{tribe.name}</h4>
                         <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{tribe.tagline}</p>
                         <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
