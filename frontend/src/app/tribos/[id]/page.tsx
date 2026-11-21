@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/tribes/page-shell";
 import { TribeRsvpButton } from "@/components/tribes/tribe-rsvp-button";
 import { TribeFavoriteButton } from "@/components/tribes/tribe-favorite-button";
+import { TribeShareButton } from "@/components/tribes/tribe-share-button";
 import { SAMPLE_TRIBES } from "@/lib/tribes-data";
 
 export default async function TribeDetailPage({
@@ -117,6 +118,7 @@ export default async function TribeDetailPage({
               <h2 className="mt-2 font-heading text-xl font-bold text-foreground">Esse encontro combina com você?</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Registre seu interesse e encontre esta tribo novamente na sua agenda de demonstração.</p>
               <div className="mt-5"><TribeRsvpButton tribeId={tribe.id} /></div>
+              <div className="mt-3"><TribeShareButton tribeName={tribe.name} /></div>
               <div className="mt-5 border-t border-border pt-4">
                 <p className="text-xs text-muted-foreground">Quer conhecer outras comunidades?</p>
                 <Button variant="outline" className="mt-3 w-full rounded-xl" render={<Link href="/explorar" />}>Explorar outras tribos</Button>
