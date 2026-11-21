@@ -20,7 +20,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" aria-label="Tribes — página inicial" className="flex shrink-0 items-center gap-2.5">
-          <span className="relative h-11 w-36 shrink-0">
+          <span className="relative h-12 w-[7.25rem] shrink-0 overflow-hidden">
             <Image src="/tribes-logo.png" alt="Tribes" fill priority sizes="116px" className="object-contain" />
           </span>
         </Link>
