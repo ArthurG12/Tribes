@@ -89,25 +89,10 @@ export function TribeExplorer({
   };
 
   return (
-    <section id="explorar" className="pt-6 pb-20 sm:pt-8 sm:pb-24">
+    <section id="explorar" className="pt-2 pb-20 sm:pt-4 sm:pb-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <Badge
-            variant="outline"
-            className="mb-3 border-primary/30 bg-primary/8 px-3 py-1 text-xs font-semibold text-primary"
-          >
-            Explore
-          </Badge>
-          <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Encontre sua tribo
-          </h2>
-          <p className="mt-3 text-base text-muted-foreground sm:text-lg">
-            Descubra grupos por interesse e encontre sua próxima atividade.
-          </p>
-        </div>
-
         {/* Search + Format + Beginner filter bar */}
-        <div className="mt-10 rounded-xl border border-primary/20 bg-[#faf7f5] p-4 shadow-[0_16px_40px_rgba(48,66,45,0.08)] backdrop-blur-xl sm:p-5">
+        <div className="mt-0 rounded-xl border border-primary/20 bg-[#faf7f5] p-4 shadow-[0_16px_40px_rgba(48,66,45,0.08)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
