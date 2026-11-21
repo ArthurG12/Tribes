@@ -1,5 +1,7 @@
 "use client";
 
+export const instant = false;
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, LoaderCircle, MapPin, Plus, Users } from "lucide-react";
