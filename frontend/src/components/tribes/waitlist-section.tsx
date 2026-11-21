@@ -155,7 +155,7 @@ export function WaitlistSection({
   return (
     <section
       id="lista-espera"
-      className="relative overflow-hidden border-y border-border bg-[#dce4d3] py-24 sm:py-28"
+      className="relative overflow-hidden border-y border-border bg-[#edf4e8] py-16 sm:py-20"
     >
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
@@ -170,15 +170,15 @@ export function WaitlistSection({
           </p>
         </div>
 
-        <div className="mt-10 rounded-[2rem] border border-[#c8d3be] bg-[#e7ecdf] p-6 shadow-[0_18px_50px_rgba(48,66,45,0.10)] backdrop-blur-xl sm:p-9">
+        <div className="mt-10 rounded-[1.75rem] border border-[#d5e1ce] bg-white p-6 shadow-[0_18px_50px_rgba(48,66,45,0.10)] backdrop-blur-xl sm:p-9">
           {submittedState ? (
             <div className="space-y-6 py-2 text-center">
-              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#dce7ce] text-[#627c4d]">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#e8f1e4] text-primary">
                 <CheckCircle2 className="size-8" />
               </div>
 
               <div>
-                <Badge className="bg-[#dce7ce] text-[#536c43]">
+                <Badge className="bg-[#e8f1e4] text-primary">
                   Convite #{submittedState.queuePosition} reservado
                 </Badge>
                 <h3 className="mt-2 font-heading text-2xl font-extrabold text-foreground">
@@ -205,7 +205,7 @@ export function WaitlistSection({
                   {submittedState.recommendedTribes.map((tribe) => (
                     <div
                       key={tribe.id}
-                      className="rounded-xl border border-[#c8d3be] bg-[#e7ecdf] p-3"
+                      className="rounded-xl border border-[#d5e1ce] bg-[#f4f7f1] p-3"
                     >
                       <p className="font-heading text-sm font-bold text-foreground">
                         {tribe.name}
@@ -295,7 +295,7 @@ export function WaitlistSection({
                         className={`flex flex-col items-start rounded-2xl border p-3.5 text-left transition-all ${
                           active
                             ? "border-primary bg-primary/[0.05] ring-2 ring-primary/20"
-                            : "border-[#c8d3be] bg-[#e7ecdf] hover:border-primary/40 hover:bg-primary/[0.04]"
+                            : "border-[#d5e1ce] bg-white hover:border-primary/40 hover:bg-[#f5f9f2]"
                         }`}
                       >
                         <Icon
@@ -368,7 +368,7 @@ export function WaitlistSection({
                         className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all ${
                           selected
                             ? "border-primary bg-primary text-primary-foreground shadow-xs"
-                            : "border-[#c8d3be] bg-[#e7ecdf] text-foreground/80 hover:border-primary/40"
+                            : "border-[#d5e1ce] bg-white text-foreground/80 hover:border-primary/40 hover:bg-[#f5f9f2]"
                         }`}
                       >
                         {cat.label}
@@ -406,7 +406,7 @@ export function WaitlistSection({
                   className="mt-0.5 size-4 rounded border-input accent-primary"
                 />
                 <span className="leading-relaxed">
-                  Concordo em receber o convite de acesso antecipado da Tribes. Seus dados pessoais ficam salvos apenas no seu navegador nesta demonstração acadêmica de MVP (LGPD), contabilizando somente métricas anônimas agregadas de interesse.
+                  Concordo em receber o convite de acesso antecipado da Tribes. Seus dados pessoais ficam salvos apenas no seu navegador nesta para organizar o acesso antecipado. Usaremos os dados somente para contato sobre o lançamento e validação da Tribes.
                 </span>
               </label>
 
@@ -418,7 +418,7 @@ export function WaitlistSection({
 
               <div className="flex flex-col items-center justify-between gap-3 pt-1 sm:flex-row">
                 <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Shield className="size-4 text-[#627c4d]" />
+                  <Shield className="size-4 text-primary" />
                 </span>
 
                 <Button
