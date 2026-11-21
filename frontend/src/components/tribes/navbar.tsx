@@ -3,139 +3,71 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Menu, X, BarChart3, ArrowRight, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface NavbarProps {
-  onCtaClick?: () => void;
-}
-
 const NAV_LINKS = [
-  { href: "#problema", label: "Por que Tribes" },
-  { href: "#como-funciona", label: "Como funciona" },
-  { href: "#explorar", label: "Explorar tribos" },
-  { href: "#segmentos", label: "Para quem" },
-  { href: "#planos", label: "Planos" },
-  { href: "#faq", label: "Dúvidas" },
+  { href: "/explorar", label: "Explorar tribos" },
+  { href: "/minha-agenda", label: "Minha agenda" },
+  { href: "/como-funciona", label: "Como funciona" },
+  { href: "/sobre", label: "Por que Tribes" },
+  { href: "/para-quem", label: "Para quem" },
+  { href: "/planos", label: "Planos" },
+  { href: "/faq", label: "Dúvidas" },
 ];
 
-export function Navbar({ onCtaClick }: NavbarProps) {
+export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link
-          href="/"
-          aria-label="Tribes — página inicial"
-          className="flex items-center gap-2.5 font-heading text-lg font-extrabold tracking-tight text-foreground"
-        >
-          <span className="relative h-12 w-[7.25rem] shrink-0 overflow-hidden">
-            <Image
-              src="/tribes-logo.png"
-              alt="Tribes — Comunidade e Natureza"
-              fill
-              priority
-              sizes="116px"
-              className="object-cover object-[center_40%]"
-            />
+    <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-md">
+      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <Link href="/" aria-label="Tribes — página inicial" className="flex shrink-0 items-center gap-2.5">
+          <span className="relative h-12 w-[7.25rem] overflow-hidden">
+            <Image src="/tribes-logo.png" alt="Tribes — Comunidade e Natureza" fill priority sizes="116px" className="object-cover object-[center_40%]" />
           </span>
-          <span className="hidden rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary sm:inline-block">
-            MVP Beta
-          </span>
+          <span className="hidden rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary sm:inline-block">MVP Beta</span>
         </Link>
-
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav aria-label="Navegação principal" className="hidden items-center gap-4 xl:flex">
           {NAV_LINKS.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
+            <Link key={item.href} href={item.href} aria-current={pathname === item.href ? "page" : undefined}
+              className={`relative py-2 text-[13px] font-semibold transition-colors hover:text-foreground ${pathname === item.href ? "text-primary after:absolute after:inset-x-0 after:-bottom-[2px] after:h-[3px] after:rounded-full after:bg-primary" : "text-muted-foreground"}`}>
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
-
-        <div className="hidden items-center gap-2.5 md:flex">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-foreground"
-            render={<Link href="/metricas" />}
-          >
-            <BarChart3 className="size-4" />
-            Métricas MVP
+        <div className="hidden items-center gap-2 md:flex">
+          <Button variant="ghost" size="sm" className="text-muted-foreground" nativeButton={false} render={<Link href="/metricas" />}>
+            <BarChart3 className="size-4" /> Métricas
           </Button>
-          <Button
-            size="lg"
-            className="rounded-full px-4 font-semibold shadow-sm"
-            onClick={onCtaClick}
-            render={<a href="#lista-espera" />}
-          >
-            Garantir acesso
-            <ArrowRight className="size-4" />
+          <Button size="lg" className="rounded-full px-4 font-semibold" nativeButton={false} render={<Link href="/lista-de-espera" />}>
+            Garantir acesso <ArrowRight className="size-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            render={<Link href="/entrar" />}
-          >
-            <LogIn className="size-4" />
-            Entrar
+          <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/entrar" />}>
+            <LogIn className="size-4" /> Entrar
           </Button>
         </div>
-
-        <button
-          type="button"
-          aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
-          onClick={() => setMobileOpen((prev) => !prev)}
-          className="inline-flex size-9 items-center justify-center rounded-lg border border-border text-foreground md:hidden"
-        >
+        <button type="button" aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"} onClick={() => setMobileOpen((prev) => !prev)}
+          className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-card text-foreground md:hidden">
           {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
-
       {mobileOpen && (
         <div className="border-t border-border bg-background px-4 py-4 md:hidden">
-          <nav className="flex flex-col gap-3">
+          <nav className="mx-auto flex max-w-7xl flex-col gap-1">
             {NAV_LINKS.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
-              >
-                {item.label}
-              </a>
+              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} className="rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">{item.label}</Link>
             ))}
-            <Link
-              href="/entrar"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
-            >
-              <LogIn className="size-4" />
-              Entrar ou criar conta
+            <Link href="/entrar" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
+              <LogIn className="size-4" /> Entrar / Rede social
             </Link>
-            <Link
-              href="/metricas"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <BarChart3 className="size-4" />
-              Painel de Métricas MVP
+            <Link href="/metricas" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted">
+              <BarChart3 className="size-4" /> Métricas MVP
             </Link>
-            <Button
-              size="lg"
-              className="mt-1 w-full rounded-full font-semibold"
-              onClick={() => {
-                setMobileOpen(false);
-                onCtaClick?.();
-              }}
-              render={<a href="#lista-espera" />}
-            >
-              Entrar na lista de espera
-              <ArrowRight className="size-4" />
+            <Button size="lg" className="mt-2 w-full rounded-full font-semibold" nativeButton={false} onClick={() => setMobileOpen(false)} render={<Link href="/lista-de-espera" />}>
+              Entrar na lista de espera <ArrowRight className="size-4" />
             </Button>
           </nav>
         </div>

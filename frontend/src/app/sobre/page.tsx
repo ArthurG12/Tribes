@@ -1,0 +1,13 @@
+import { Check, X, MapPin, MessageCircleOff, Users } from "lucide-react";
+import { COMPARISON_ROWS } from "@/lib/tribes-data";
+import { PageIntro, PageShell } from "@/components/tribes/page-shell";
+
+const problems = [
+  { icon: MapPin, title: "É difícil encontrar sua galera", text: "Comunidades costumam ficar escondidas em convites fechados. Quem começa um hobby novo nem sempre sabe onde procurar." },
+  { icon: MessageCircleOff, title: "Os combinados se perdem", text: "Data, horário, endereço e confirmações desaparecem no meio de conversas e mensagens paralelas." },
+  { icon: Users, title: "Começar do zero pode intimidar", text: "Entrar em um grupo antigo de desconhecidos é difícil sem acolhimento e atividades pensadas para iniciantes." },
+];
+
+export default function AboutPage() {
+  return <PageShell><PageIntro eyebrow="Por que Tribes" title="Menos conversa perdida. Mais experiências compartilhadas." description="A Tribes nasceu para aproximar pessoas por interesses em comum e transformar comunidades digitais em encontros que acontecem de verdade." /><section className="mx-auto grid max-w-6xl gap-5 px-4 py-12 md:grid-cols-3 sm:px-6">{problems.map(({icon:Icon,title,text}) => <article key={title} className="rounded-3xl border border-[#c8d3be] bg-white p-6"><span className="flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary"><Icon className="size-5" /></span><h2 className="mt-4 font-heading text-lg font-bold text-foreground">{title}</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p></article>)}</section><section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6"><h2 className="text-center font-heading text-2xl font-extrabold text-foreground sm:text-3xl">O que muda com a Tribes</h2><div className="mt-8 overflow-hidden rounded-3xl border border-[#c8d3be] bg-white"><div className="grid grid-cols-1 gap-2 border-b border-border bg-muted/40 px-5 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground md:grid-cols-3"><span>O que você precisa</span><span className="hidden md:block">Redes e chats tradicionais</span><span className="hidden text-primary md:block">Como é na Tribes</span></div>{COMPARISON_ROWS.map(row => <div key={row.criteria} className="grid gap-3 border-b border-border/70 px-5 py-4 text-sm last:border-0 md:grid-cols-3"><strong className="text-foreground">{row.criteria}</strong><span className="flex gap-2 text-muted-foreground"><X className="size-4 shrink-0 text-destructive" />{row.currentTools}</span><span className="flex gap-2 text-foreground"><Check className="size-4 shrink-0 text-[#627c4d]" />{row.tribes}</span></div>)}</div></section></PageShell>;
+}
