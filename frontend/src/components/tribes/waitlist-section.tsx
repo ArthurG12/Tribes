@@ -111,7 +111,7 @@ export function WaitlistSection({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       name: trimmedName,
       email: trimmedEmail,
-      city: city.trim() || "Belo Horizonte - MG",
+      city: city.trim() || "Não informado",
       segment,
       selectedPlan: preselectedPlan,
       interests: selectedInterests,
