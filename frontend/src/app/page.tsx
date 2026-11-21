@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Sparkles, BarChart3 } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/tribes/navbar";
 import { HeroMockup } from "@/components/tribes/hero-mockup";
 import { Button } from "@/components/ui/button";
 import { TribeExplorer } from "@/components/tribes/tribe-explorer";
 import { trackMvpEvent } from "@/lib/mvp-tracker";
+import { SiteFooter } from "@/components/tribes/site-footer";
 
 export default function TribesLandingPage() {
   return (
@@ -54,12 +55,7 @@ export default function TribesLandingPage() {
           </div>
         </section>
       </main>
-      <footer className="border-t border-border bg-card py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-center sm:flex-row sm:text-left">
-          <p className="text-xs text-muted-foreground">Tribes · Encontros reais, interesses em comum.</p>
-          <Link href="/metricas" className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><BarChart3 className="size-4" /> Métricas</Link>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
