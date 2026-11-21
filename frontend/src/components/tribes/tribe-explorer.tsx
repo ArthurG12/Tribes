@@ -97,7 +97,7 @@ export function TribeExplorer({
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {!compact && <>
         {/* Search + Format + Beginner filter bar */}
-        <div className="mt-0 rounded-xl border border-primary/20 bg-[#faf7f5] p-4 shadow-[0_16px_40px_rgba(48,66,45,0.08)] backdrop-blur-xl sm:p-5">
+        <div className="mt-0 rounded-2xl border border-[#eadfdb] bg-white p-4 shadow-[0_12px_32px_rgba(65,35,30,0.06)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -137,7 +137,7 @@ export function TribeExplorer({
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
                   onlyBeginners
                     ? "border-primary bg-primary text-primary-foreground"
-                    : "border-[#eadbd7] bg-white text-primary hover:bg-[#f5f8f2]"
+                    : "border-[#eadbd7] bg-white text-primary hover:bg-[#fbf1ef]"
                 }`}
               >
                 <Sparkles className="size-3.5" />
@@ -173,11 +173,11 @@ export function TribeExplorer({
 
         {displayedTribes.length > 0 && (
           <div className="mt-8">
-            <section className="rounded-3xl border border-[#dce8d4] bg-gradient-to-br from-[#faf7f5] via-white to-[#f8f3f0] px-4 py-7 shadow-[0_12px_36px_rgba(45,75,40,0.055)] sm:px-6 sm:py-8">
+            <section className="rounded-3xl border border-[#eadfdb] bg-gradient-to-br from-[#fffaf9] via-white to-[#faf6f3] px-4 py-7 shadow-[0_10px_30px_rgba(65,35,30,0.045)] sm:px-6 sm:py-8">
               <div className="mb-6">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Comunidades</p>
                 <h3 className="mt-1 font-heading text-2xl font-extrabold text-foreground">{compact ? "Algumas comunidades" : "Comunidades em destaque"}</h3>
-                <p className="mt-1 text-sm text-muted-foreground"></p>
+                
               </div>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {displayedTribes.map((tribe, index) => {
@@ -185,8 +185,8 @@ export function TribeExplorer({
                   const accent = accents[index % accents.length];
                   const spotsLeft = tribe.nextEvent.maxSpots - tribe.nextEvent.confirmedCount;
                   return (
-                    <article key={"identity-" + tribe.id} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#eadfdb] bg-white shadow-[0_6px_20px_rgba(45,75,40,0.055)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_14px_32px_rgba(45,75,40,0.11)]">
-                      <div className="h-2" style={{ backgroundColor: accent }} />
+                    <article key={"identity-" + tribe.id} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#eee3df] bg-white shadow-[0_5px_18px_rgba(65,35,30,0.045)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_12px_30px_rgba(65,35,30,0.09)]">
+                      <div className="relative flex h-24 items-end overflow-hidden bg-gradient-to-br from-[#f9e9e6] via-[#fff8f6] to-[#f4e5df] px-5 pb-3"><div aria-hidden="true" className="absolute -right-5 -top-10 size-32 rounded-full border-[18px] border-white/55" /><div aria-hidden="true" className="absolute right-12 -top-8 size-20 rounded-full bg-white/45" /><span className="relative flex size-11 items-center justify-center rounded-2xl bg-white/85 font-heading text-xl font-extrabold text-primary shadow-sm">{tribe.name.slice(0, 1)}</span><span className="absolute bottom-0 left-0 h-1 w-full" style={{ backgroundColor: accent }} /></div>
                       <div className="flex flex-1 flex-col p-5">
                         <div className="flex items-center justify-between gap-2"><Badge variant="secondary">{tribe.categoryLabel}</Badge><span className="text-[11px] font-semibold text-muted-foreground">{tribe.format}</span></div>
                         <h4 className="mt-4 font-heading text-xl font-bold text-foreground group-hover:text-primary">{tribe.name}</h4>
@@ -195,7 +195,7 @@ export function TribeExplorer({
                           <span className="inline-flex items-center gap-1"><MapPin className="size-3.5 text-primary" />{tribe.neighborhood}</span>
                           <span className="inline-flex items-center gap-1"><Users className="size-3.5 text-primary" />{tribe.membersCount} membros</span>
                         </div>
-                        <div className="mt-4 rounded-xl border border-[#e2eadc] bg-[#f5f8f2] p-3">
+                        <div className="mt-4 rounded-xl border border-[#f0e2de] bg-[#fff8f6] p-3">
                           <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-primary"><span className="inline-flex items-center gap-1"><Calendar className="size-3.5" />{tribe.nextEvent.dateLabel}</span><span>{spotsLeft} vagas</span></div>
                           <p className="mt-1 text-sm font-semibold text-foreground">{tribe.nextEvent.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{tribe.nextEvent.locationLabel}</p>
                         </div>
