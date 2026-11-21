@@ -88,7 +88,7 @@
   --sidebar-primary-foreground: oklch(0.99 0.005 75);
   --sidebar-accent: oklch(0.955 0.012 55);
   --sidebar-accent-foreground: oklch(0.24 0.025 50);
-  --sidebar-border: oklch(0.89 0.025 135);
+  --sidebar-border: oklch(0.91 0.012 45);
   --sidebar-ring: oklch(0.53 0.19 27);
 }
 
@@ -106,19 +106,19 @@
 }
 
 
-/* Componentes visuais da branch design, mantendo a paleta original da main. */
+/* Sistema visual Tribes: vermelho como destaque e neutros quentes como base. */
 @layer utilities {
   .surface-card {
     border: 1px solid var(--border);
     border-radius: 1.25rem;
     background: var(--card);
-    box-shadow: 0 8px 24px rgba(75, 35, 30, 0.045);
+    box-shadow: 0 6px 22px rgba(65, 35, 30, 0.045);
     transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
   }
 
   .surface-card:hover {
     border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
-    box-shadow: 0 14px 32px rgba(75, 35, 30, 0.075);
+    box-shadow: 0 12px 28px rgba(65, 35, 30, 0.075);
   }
 
   .metric-card {
