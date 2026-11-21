@@ -22,7 +22,7 @@ export function Navbar() {
       <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" aria-label="Tribes — página inicial" className="flex shrink-0 items-center gap-2.5">
           <span className="relative h-12 w-[7.25rem] overflow-hidden">
-            <Image src="/tribes-logo.png" alt="Tribes — Comunidade e Natureza" fill priority sizes="116px" className="object-cover object-[center_40%]" />
+            <Image src="/tribes-logo.png" alt="Tribes — Comunidade e Natureza" fill priority sizes="116px" className="scale-[1.22] object-cover object-center" />
           </span>
         </Link>
         <nav aria-label="Navegação principal" className="hidden items-center gap-6 lg:flex">
