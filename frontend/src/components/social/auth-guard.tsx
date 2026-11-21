@@ -10,6 +10,8 @@ export interface CurrentUser {
   name: string;
   email: string;
   aboutMe: string;
+  city: string;
+  interests: string[];
   avatarUrl: string | null;
 }
 

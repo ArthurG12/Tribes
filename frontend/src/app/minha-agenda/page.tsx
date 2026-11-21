@@ -32,13 +32,13 @@ export default function MyAgendaPage() {
   return (
     <PageShell>
       <PageIntro
-        eyebrow="Área do participante · Demonstração"
+        eyebrow="Área do participante"
         title="Minha agenda"
         description="Reúna os encontros que você marcou como interesse nas páginas das tribos."
       />
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
         {!ready ? (
-          <div className="metric-card mt-8 text-center text-sm text-muted-foreground">Carregando sua agenda...</div>
+          <div className="metric-card mt-8 text-center text-sm text-muted-foreground"><span className="mx-auto mb-3 block h-2 w-32 animate-pulse rounded-full bg-muted" /><span className="mx-auto block h-2 w-48 animate-pulse rounded-full bg-muted" />Carregando sua agenda...</div>
         ) : selectedTribes.length === 0 ? (
           <div className="surface-card mt-8 border-dashed px-6 py-14 text-center">
             <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><CalendarDays className="size-6" /></span>
@@ -52,7 +52,7 @@ export default function MyAgendaPage() {
               <article key={tribe.id} className="event-card">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Badge variant="secondary">{tribe.categoryLabel}</Badge>
-                  <Badge className="bg-[#dce8d2] text-[#45613c]">Interesse registrado</Badge>
+                  <Badge className="bg-[#e8f1e4] text-primary">Interesse registrado</Badge>
                 </div>
                 <h2 className="mt-4 font-heading text-xl font-bold text-foreground">{tribe.name}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{tribe.nextEvent.title}</p>

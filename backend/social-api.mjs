@@ -30,6 +30,7 @@ import {
   setEventAttendance,
   toggleLike,
   updateUserProfile,
+  updateTribe,
 } from "./social-store.mjs";
 
 const SESSION_COOKIE = "tribes_session";
@@ -127,12 +128,12 @@ async function authenticatedUser(request) {
 }
 
 export async function handleSocialRequest(request, response, url) {
-  const { pathname } = url;
+  const pathname = url.pathname.replace(/\/+$/, "") || "/";
   const method = request.method ?? "GET";
   const routeKnown = pathname.startsWith("/api/auth/") ||
     pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
     pathname === "/api/feed" || pathname === "/api/tribes" ||
-    /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events)$/.test(pathname) ||
+    /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events)$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance)$/.test(pathname) ||
     /^\/api\/comments\/[^/]+$/.test(pathname);
@@ -306,10 +307,17 @@ export async function handleSocialRequest(request, response, url) {
         throw invalid("O campo sobre mim deve ter até 500 caracteres.");
       }
       const aboutMe = payload.aboutMe.trim();
+      const city = typeof payload.city === "string" ? payload.city.trim() : "";
+      if (city.length > 100) throw invalid("A cidade deve ter até 100 caracteres.");
+      if (!Array.isArray(payload.interests) || payload.interests.length > 20 ||
+        payload.interests.some((interest) => typeof interest !== "string" || interest.trim().length < 1 || interest.trim().length > 30)) {
+        throw invalid("Informe até 20 interesses, com no máximo 30 caracteres cada.");
+      }
+      const interests = [...new Set(payload.interests.map((interest) => interest.trim()))];
       const avatar = Object.hasOwn(payload, "avatar")
         ? payload.avatar === null ? null : parseImage(payload.avatar)
         : undefined;
-      const updatedUser = await updateUserProfile(user.id, { name, aboutMe, avatar });
+      const updatedUser = await updateUserProfile(user.id, { name, aboutMe, city, interests, avatar });
       if (!updatedUser) {
         sendJson(response, 404, { error: "Usuário não encontrado." });
         return true;
@@ -383,8 +391,31 @@ export async function handleSocialRequest(request, response, url) {
       const query = (url.searchParams.get("q") ?? "").trim();
       if (query.length > 100) throw invalid("A busca deve ter até 100 caracteres.");
       const mine = url.searchParams.get("mine") === "true";
-      const tribes = await searchTribes(user.id, { query, mine, limit: 50 });
+      const managed = url.searchParams.get("managed") === "true";
+      const tribes = await searchTribes(user.id, { query, mine, managed, limit: 50 });
       sendJson(response, 200, { tribes });
+      return true;
+    }
+
+    const tribeMatch = pathname.match(/^\/api\/tribes\/([^/]+)$/);
+    if (tribeMatch && ["PATCH", "PUT"].includes(method)) {
+      const tribeId = requireUuid(tribeMatch[1], "Tribo");
+      const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });
+      const format = payload.format;
+      if (!["Presencial", "Híbrido", "Online"].includes(format)) throw invalid("Formato de tribo inválido.");
+      const tribe = await updateTribe(user.id, tribeId, {
+        name: requiredString(payload.name, "nome", 2, 80),
+        description: requiredString(payload.description, "descrição", 2, 1000),
+        category: requiredString(payload.category, "categoria", 2, 60),
+        format,
+        city: requiredString(payload.city, "cidade", 2, 100),
+        neighborhood: typeof payload.neighborhood === "string" ? payload.neighborhood.trim().slice(0, 100) : "",
+      });
+      if (!tribe) {
+        sendJson(response, 404, { error: "Tribo não encontrada ou você não tem permissão para editá-la." });
+        return true;
+      }
+      sendJson(response, 200, { tribe });
       return true;
     }
 
@@ -434,7 +465,7 @@ export async function handleSocialRequest(request, response, url) {
         const startsAt = requiredString(payload.startsAt, "data do evento", 10, 40);
         if (!Number.isFinite(Date.parse(startsAt))) throw invalid("Data do evento inválida.");
         const endsAt = payload.endsAt ? requiredString(payload.endsAt, "fim do evento", 10, 40) : null;
-        if (endsAt && (!Number.isFinite(Date.parse(endsAt)) || Date.parse(endsAt) < Date.parse(startsAt))) {
+        if (endsAt && (!Number.isFinite(Date.parse(endsAt)) || Date.parse(endsAt) <= Date.parse(startsAt))) {
           throw invalid("A data de término deve ser posterior ao início.");
         }
         const maxAttendees = payload.maxAttendees === "" || payload.maxAttendees == null

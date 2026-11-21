@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, LoaderCircle, UserRound } from "lucide-react";
+import { ArrowLeft, LoaderCircle, MapPin, UserRound } from "lucide-react";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { Button } from "@/components/ui/button";
 import { apiRequest, type PublicProfile } from "@/lib/social-types";
@@ -50,6 +50,15 @@ export default function PublicProfilePage() {
               <UserAvatar name={profile.name} avatarUrl={profile.avatarUrl} className="size-full text-3xl" />
             </div>
             <h1 className="mt-4 font-heading text-3xl font-extrabold">{profile.name}</h1>
+            {profile.city && <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground"><MapPin className="size-4 text-primary" />{profile.city}</p>}
+            {profile.interests.length > 0 && (
+              <section className="mt-5">
+                <h2 className="font-heading text-lg font-bold">Interesses</h2>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {profile.interests.map((interest) => <span key={interest} className="rounded-full border border-primary/20 bg-primary/8 px-3 py-1.5 text-xs font-semibold text-primary">{interest}</span>)}
+                </div>
+              </section>
+            )}
             <section className="mt-6 border-t border-border pt-5">
               <h2 className="font-heading text-lg font-bold">Sobre mim</h2>
               {profile.aboutMe ? (

@@ -19,8 +19,6 @@ interface FeedComposerProps {
   tribes: Tribe[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  error: string;
-  onError: (message: string) => void;
   onPublished: () => Promise<void>;
 }
 
@@ -30,6 +28,7 @@ export function FeedComposer({ tribes, open, onOpenChange, error, onError, onPub
   const [image, setImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState("");
   const [creating, setCreating] = useState(false);
+  const [composerError, setComposerError] = useState("");
   const [eventMode, setEventMode] = useState(false);
   const [eventTitle, setEventTitle] = useState("");
   const [eventStartsAt, setEventStartsAt] = useState("");
@@ -62,8 +61,12 @@ export function FeedComposer({ tribes, open, onOpenChange, error, onError, onPub
   async function submitContent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedTribeId) return;
+    if (eventMode && eventEndsAt && new Date(eventEndsAt).getTime() <= new Date(eventStartsAt).getTime()) {
+      setComposerError("A data de término deve ser posterior ao início.");
+      return;
+    }
     setCreating(true);
-    onError("");
+    setComposerError("");
     try {
       if (eventMode) {
         await apiRequest(`/api/tribes/${selectedTribeId}/events`, {
@@ -97,7 +100,7 @@ export function FeedComposer({ tribes, open, onOpenChange, error, onError, onPub
       await onPublished();
       onOpenChange(false);
     } catch (submitError) {
-      onError(submitError instanceof Error ? submitError.message : "Não foi possível publicar.");
+      setComposerError(submitError instanceof Error ? submitError.message : "Não foi possível publicar.");
     } finally {
       setCreating(false);
     }
@@ -105,12 +108,12 @@ export function FeedComposer({ tribes, open, onOpenChange, error, onError, onPub
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-2xl overflow-y-auto rounded-2xl p-5 sm:p-6">
+      <DialogContent className="box-border w-[calc(100%-2rem)] max-w-2xl min-w-0 max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto rounded-2xl p-5 sm:p-6">
         <DialogHeader>
           <DialogTitle className="font-heading text-xl font-bold">Compartilhe com sua tribo</DialogTitle>
           <DialogDescription>Publique uma novidade ou crie um evento para os membros da sua tribo.</DialogDescription>
         </DialogHeader>
-        <form className="space-y-3" onSubmit={(event) => void submitContent(event)}>
+        <form className="w-full min-w-0 space-y-3" onSubmit={(event) => void submitContent(event)}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex gap-2">
               <button type="button" onClick={() => setEventMode(false)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Publicação</button>
@@ -143,7 +146,7 @@ export function FeedComposer({ tribes, open, onOpenChange, error, onError, onPub
             </div>}
           </div>}
           {!tribes.length && <p className="text-sm text-muted-foreground">Entre em uma tribo antes de publicar.</p>}
-          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          {composerError && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{composerError}</p>}
           <div className="flex justify-end">
             <Button type="submit" disabled={creating || !tribes.length || !body.trim()} className="rounded-xl">
               {creating ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}

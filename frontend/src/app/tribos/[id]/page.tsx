@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/tribes/page-shell";
 import { TribeRsvpButton } from "@/components/tribes/tribe-rsvp-button";
+import { TribeFavoriteButton } from "@/components/tribes/tribe-favorite-button";
+import { TribeShareButton } from "@/components/tribes/tribe-share-button";
 import { SAMPLE_TRIBES } from "@/lib/tribes-data";
 
 export default async function TribeDetailPage({
@@ -26,10 +28,11 @@ export default async function TribeDetailPage({
 
         <div className="mt-7 grid gap-8 lg:grid-cols-[1fr_360px]">
           <div className="min-w-0">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex flex-wrap gap-2">
               <Badge variant="secondary">{tribe.categoryLabel}</Badge>
               <Badge variant="outline">{tribe.format}</Badge>
-              {tribe.beginnerFriendly && <Badge className="bg-[#dce8d2] text-[#45613c]">Aberto para iniciantes</Badge>}
+              {tribe.beginnerFriendly && <Badge className="bg-primary/10 text-primary">Aberto para iniciantes</Badge>}
+            </div><TribeFavoriteButton tribeId={tribe.id} />
             </div>
 
             <h1 className="mt-4 font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">{tribe.name}</h1>
@@ -50,12 +53,12 @@ export default async function TribeDetailPage({
                 <Badge variant="outline">{tribe.nextEvent.confirmedCount}/{tribe.nextEvent.maxSpots} confirmados</Badge>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-border/70 bg-[#f5f8f1] p-4">
+                <div className="rounded-xl border border-border/70 bg-[#fff8f6] p-4">
                   <CalendarDays className="size-5 text-primary" />
                   <p className="mt-2 text-sm font-semibold text-foreground">{tribe.nextEvent.dateLabel}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{tribe.weeklyFrequency}</p>
                 </div>
-                <div className="rounded-xl border border-border/70 bg-[#f5f8f1] p-4">
+                <div className="rounded-xl border border-border/70 bg-[#fff8f6] p-4">
                   <MapPin className="size-5 text-primary" />
                   <p className="mt-2 text-sm font-semibold text-foreground">{tribe.nextEvent.locationLabel}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{tribe.nextEvent.costLabel}</p>
@@ -110,11 +113,12 @@ export default async function TribeDetailPage({
           </div>
 
           <aside className="lg:sticky lg:top-28 lg:self-start">
-            <div className="surface-card p-5 shadow-[0_12px_32px_rgba(45,75,40,0.08)]">
+            <div className="surface-card p-5 shadow-[0_12px_32px_rgba(65,35,30,0.07)]">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Participe</p>
               <h2 className="mt-2 font-heading text-xl font-bold text-foreground">Esse encontro combina com você?</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Registre seu interesse e encontre esta tribo novamente na sua agenda de demonstração.</p>
               <div className="mt-5"><TribeRsvpButton tribeId={tribe.id} /></div>
+              <div className="mt-3"><TribeShareButton tribeName={tribe.name} /></div>
               <div className="mt-5 border-t border-border pt-4">
                 <p className="text-xs text-muted-foreground">Quer conhecer outras comunidades?</p>
                 <Button variant="outline" className="mt-3 w-full rounded-xl" render={<Link href="/explorar" />}>Explorar outras tribos</Button>

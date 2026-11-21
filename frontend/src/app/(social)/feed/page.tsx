@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import { LoaderCircle, Plus, Send, Users } from "lucide-react";
+import { LoaderCircle, Send, Users } from "lucide-react";
 import { FeedComposer } from "@/components/social/feed-composer";
 import { FeedItemCard } from "@/components/social/feed-item-card";
 import { Badge } from "@/components/ui/badge";
@@ -60,8 +59,6 @@ export default function FeedPage() {
         tribes={tribes}
         open={composerOpen}
         onOpenChange={setComposerOpen}
-        error={error}
-        onError={setError}
         onPublished={() => fetchPage(undefined, true)}
       />
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -71,9 +68,7 @@ export default function FeedPage() {
           <p className="mt-1 text-sm text-muted-foreground">Publicações e eventos, em ordem cronológica.</p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="outline" render={<Link href="/tribos" />}><Users className="size-4" />Explorar</Button>
           <Button variant="outline" onClick={() => setComposerOpen(true)}><Send className="size-4" />Publicar</Button>
-          <Button variant="outline" render={<Link href="/tribos/nova" />}><Plus className="size-4" />Criar tribo</Button>
         </div>
       </section>
 
@@ -91,11 +86,7 @@ export default function FeedPage() {
         <section className="rounded-3xl border border-dashed border-border bg-card px-5 py-12 text-center">
           <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Users className="size-6" /></div>
           <h2 className="mt-4 font-heading text-xl font-bold">{tribes.length ? "Seu feed está começando" : "Encontre sua primeira tribo"}</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{tribes.length ? "Quando alguém publicar ou criar um evento, ele aparecerá aqui." : "Explore comunidades por interesse ou crie uma nova para começar a compartilhar."}</p>
-          <div className="mt-5 flex justify-center gap-2">
-            <Button render={<Link href="/tribos" />}>Buscar tribos</Button>
-            <Button variant="outline" render={<Link href="/tribos/nova" />}>Criar tribo</Button>
-          </div>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{tribes.length ? "Quando alguém publicar ou criar um evento, ele aparecerá aqui." : "Entre em uma comunidade para acompanhar publicações e eventos por aqui."}</p>
         </section>
       ) : <div className="space-y-4">
         {items.map((item) => <FeedItemCard key={item.id} item={item} onUpdateItem={updateItem} onError={setError} />)}

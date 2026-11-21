@@ -53,30 +53,30 @@
 }
 
 :root {
-  --background: oklch(0.988 0.006 75);
-  --foreground: oklch(0.19 0.02 50);
+  --background: oklch(0.985 0.008 55);
+  --foreground: oklch(0.22 0.018 35);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.19 0.02 50);
+  --card-foreground: oklch(0.22 0.018 35);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.19 0.02 50);
-  --primary: oklch(0.57 0.185 36);
-  --primary-foreground: oklch(0.99 0.005 75);
-  --secondary: oklch(0.955 0.014 75);
-  --secondary-foreground: oklch(0.24 0.025 50);
-  --muted: oklch(0.955 0.012 75);
-  --muted-foreground: oklch(0.46 0.02 50);
-  --accent: oklch(0.94 0.03 139);
-  --accent-foreground: oklch(0.27 0.07 139);
-  /* Tribes logo palette: forest green, leaf orange, warm cream, and cocoa. */
-  --brand-green: oklch(0.55 0.12 139);
-  --brand-green-dark: oklch(0.4 0.09 139);
-  --brand-orange: oklch(0.69 0.17 48);
-  --brand-orange-dark: oklch(0.43 0.14 43);
+  --primary: oklch(0.53 0.19 27);
+  --primary-foreground: oklch(0.99 0.004 75);
+  --secondary: oklch(0.955 0.012 55);
+  --secondary-foreground: oklch(0.3 0.035 35);
+  --muted: oklch(0.96 0.008 55);
+  --muted-foreground: oklch(0.49 0.018 35);
+  --accent: oklch(0.94 0.035 28);
+  --accent-foreground: oklch(0.38 0.12 27);
+  /* Tribes brand palette: warm red, soft neutrals, and subtle terracotta accents. */
+  --brand-green: oklch(0.53 0.19 27);
+  --brand-green-dark: oklch(0.39 0.15 27);
+  --brand-orange: oklch(0.72 0.14 55);
+  --brand-orange-dark: oklch(0.48 0.13 35);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.905 0.014 70);
-  --input: oklch(0.89 0.016 70);
-  --ring: oklch(0.57 0.185 36);
-  --chart-1: oklch(0.57 0.185 36);
+  --border: oklch(0.91 0.012 45);
+  --input: oklch(0.88 0.012 45);
+  --ring: oklch(0.53 0.19 27);
+  --chart-1: oklch(0.53 0.19 27);
   --chart-2: var(--brand-green);
   --chart-3: oklch(0.76 0.15 75);
   --chart-4: oklch(0.37 0.06 50);
@@ -84,12 +84,12 @@
   --radius: 0.75rem;
   --sidebar: oklch(0.985 0.006 75);
   --sidebar-foreground: oklch(0.19 0.02 50);
-  --sidebar-primary: oklch(0.57 0.185 36);
+  --sidebar-primary: oklch(0.53 0.19 27);
   --sidebar-primary-foreground: oklch(0.99 0.005 75);
-  --sidebar-accent: oklch(0.955 0.014 75);
+  --sidebar-accent: oklch(0.955 0.012 55);
   --sidebar-accent-foreground: oklch(0.24 0.025 50);
-  --sidebar-border: oklch(0.905 0.014 70);
-  --sidebar-ring: oklch(0.57 0.185 36);
+  --sidebar-border: oklch(0.91 0.012 45);
+  --sidebar-ring: oklch(0.53 0.19 27);
 }
 
 @layer base {
@@ -106,19 +106,19 @@
 }
 
 
-/* Componentes visuais da branch design, mantendo a paleta original da main. */
+/* Sistema visual Tribes: vermelho como destaque e neutros quentes como base. */
 @layer utilities {
   .surface-card {
     border: 1px solid var(--border);
     border-radius: 1.25rem;
     background: var(--card);
-    box-shadow: 0 8px 24px rgba(45, 75, 40, 0.06);
+    box-shadow: 0 6px 22px rgba(65, 35, 30, 0.045);
     transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
   }
 
   .surface-card:hover {
     border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
-    box-shadow: 0 14px 32px rgba(45, 75, 40, 0.10);
+    box-shadow: 0 12px 28px rgba(65, 35, 30, 0.075);
   }
 
   .metric-card {
@@ -126,7 +126,7 @@
     border-radius: 1rem;
     background: var(--card);
     padding: 1.25rem;
-    box-shadow: 0 4px 16px rgba(45, 75, 40, 0.045);
+    box-shadow: 0 4px 16px rgba(75, 35, 30, 0.035);
   }
 
   .event-card {
@@ -134,29 +134,29 @@
     border-radius: 1.25rem;
     background: var(--card);
     padding: 1.25rem;
-    box-shadow: 0 8px 24px rgba(45, 75, 40, 0.06);
+    box-shadow: 0 8px 24px rgba(75, 35, 30, 0.045);
     transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
   }
 
   .event-card:hover {
     transform: translateY(-2px);
     border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
-    box-shadow: 0 14px 32px rgba(45, 75, 40, 0.10);
+    box-shadow: 0 14px 32px rgba(75, 35, 30, 0.075);
   }
 
   .glass-panel {
-    border: 1px solid oklch(0.88 0.03 130 / 0.9);
-    background: oklch(0.995 0.004 120 / 0.94);
-    box-shadow: 0 12px 36px oklch(0.32 0.04 145 / 0.06);
+    border: 1px solid oklch(0.9 0.015 45 / 0.9);
+    background: oklch(0.995 0.003 55 / 0.94);
+    box-shadow: 0 12px 36px oklch(0.32 0.025 35 / 0.05);
     backdrop-filter: blur(14px);
   }
 
   .neon-glow {
-    box-shadow: 0 8px 24px oklch(0.48 0.12 142 / 0.14);
+    box-shadow: 0 8px 24px oklch(0.53 0.19 27 / 0.12);
   }
 
   .text-gradient {
-    background: linear-gradient(110deg, oklch(0.49 0.13 142), oklch(0.61 0.13 112));
+    background: linear-gradient(110deg, oklch(0.53 0.19 27), oklch(0.66 0.16 35));
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -170,5 +170,26 @@
   @keyframes tribes-float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-9px); }
+  }
+}
+
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+
+  a, button, input, textarea, select {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

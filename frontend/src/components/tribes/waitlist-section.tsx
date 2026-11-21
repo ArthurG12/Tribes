@@ -9,7 +9,6 @@ import {
   Users,
   CalendarPlus,
   Store,
-  Shield,
 } from "lucide-react";
 import {
   INTEREST_CATEGORIES,
@@ -43,20 +42,20 @@ const SEGMENT_OPTIONS: {
 }[] = [
   {
     id: "participante",
-    title: "Quero participar de tribos",
-    subtitle: "Encontrar pessoas e companhia p/ hobbies",
+    title: "Participar",
+    subtitle: "Encontrar minha comunidade",
     icon: Users,
   },
   {
     id: "organizador",
-    title: "Quero criar / organizar grupos",
-    subtitle: "Gerenciar encontros, vagas e recorrência",
+    title: "Organizar grupos",
+    subtitle: "Criar encontros",
     icon: CalendarPlus,
   },
   {
     id: "parceiro",
-    title: "Tenho um espaço parceiro",
-    subtitle: "Café, ludoteca, quadra, livraria ou clube",
+    title: "Sou um espaço parceiro",
+    subtitle: "Divulgar meu espaço",
     icon: Store,
   },
 ];
@@ -71,7 +70,7 @@ export function WaitlistSection({
 }: WaitlistSectionProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [city, setCity] = useState("Belo Horizonte - MG");
+  const [city, setCity] = useState("");
   const [painPoint, setPainPoint] = useState<PainPointId>("encontrar-grupos-locais");
   const [consentChecked, setConsentChecked] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -112,7 +111,7 @@ export function WaitlistSection({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       name: trimmedName,
       email: trimmedEmail,
-      city: city.trim() || "Belo Horizonte - MG",
+      city: city.trim() || "Não informado",
       segment,
       selectedPlan: preselectedPlan,
       interests: selectedInterests,
@@ -155,34 +154,26 @@ export function WaitlistSection({
   return (
     <section
       id="lista-espera"
-      className="relative overflow-hidden border-y border-border bg-[#dce4d3] py-24 sm:py-28"
+      className="relative overflow-hidden border-y border-border bg-[#faf7f5] py-14 sm:py-16"
     >
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <Badge className="mb-3 bg-primary/12 text-primary hover:bg-primary/15">
-            Acesso Antecipado · Lote Fundador
-          </Badge>
-          <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Entre nas primeiras tribos da sua cidade
-          </h2>
-          <p className="mt-3 text-base text-muted-foreground">
-            Estamos abrindo o acesso por ondas para garantir grupos ativos, acolhedores e cheios de gente com os mesmos interesses que você.
-          </p>
-        </div>
+        <p className="mx-auto max-w-2xl text-center text-base text-muted-foreground">
+          Conte um pouco sobre você e seus interesses.
+        </p>
 
-        <div className="mt-10 rounded-[2rem] border border-[#c8d3be] bg-[#e7ecdf] p-6 shadow-[0_18px_50px_rgba(48,66,45,0.10)] backdrop-blur-xl sm:p-9">
+        <div className="mt-7 rounded-[1.75rem] border border-[#eadbd7] bg-white p-6 shadow-[0_18px_50px_rgba(48,66,45,0.10)] backdrop-blur-xl sm:p-9">
           {submittedState ? (
             <div className="space-y-6 py-2 text-center">
-              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#dce7ce] text-[#627c4d]">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#f8eae7] text-primary">
                 <CheckCircle2 className="size-8" />
               </div>
 
               <div>
-                <Badge className="bg-[#dce7ce] text-[#536c43]">
+                <Badge className="bg-[#f8eae7] text-primary">
                   Convite #{submittedState.queuePosition} reservado
                 </Badge>
                 <h3 className="mt-2 font-heading text-2xl font-extrabold text-foreground">
-                  Você está dentro, {name.split(" ")[0]}!
+                  Tudo certo, {name.split(" ")[0]}!
                 </h3>
                 <p className="mx-auto mt-1.5 max-w-lg text-sm text-muted-foreground">
                   Registramos seu perfil como{" "}
@@ -197,15 +188,15 @@ export function WaitlistSection({
                 </p>
               </div>
 
-              <div className="mx-auto max-w-xl rounded-2xl border border-[#c8d3be] bg-white p-4 text-left">
+              <div className="mx-auto max-w-xl rounded-2xl border border-[#eadbd7] bg-white p-4 text-left">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Tribos compatíveis com o seu perfil no lançamento:
+                  Sugestões para você
                 </p>
                 <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
                   {submittedState.recommendedTribes.map((tribe) => (
                     <div
                       key={tribe.id}
-                      className="rounded-xl border border-[#c8d3be] bg-[#e7ecdf] p-3"
+                      className="rounded-xl border border-[#eadbd7] bg-[#faf5f3] p-3"
                     >
                       <p className="font-heading text-sm font-bold text-foreground">
                         {tribe.name}
@@ -233,7 +224,7 @@ export function WaitlistSection({
                   ) : (
                     <>
                       <Copy className="size-4" />
-                      Convidar amigos para furar a fila
+                      Convidar amigos
                     </>
                   )}
                 </Button>
@@ -248,7 +239,7 @@ export function WaitlistSection({
                     setEmail("");
                   }}
                 >
-                  Simular outro cadastro
+                  Novo cadastro
                 </Button>
               </div>
             </div>
@@ -281,7 +272,7 @@ export function WaitlistSection({
               {/* Segment selector */}
               <div className="space-y-2.5">
                 <Label className="text-sm font-semibold">
-                  1. Como você quer usar a Tribes?
+                  1. Como pretende usar a Tribes?
                 </Label>
                 <div className="grid gap-3 sm:grid-cols-3">
                   {SEGMENT_OPTIONS.map((opt) => {
@@ -295,7 +286,7 @@ export function WaitlistSection({
                         className={`flex flex-col items-start rounded-2xl border p-3.5 text-left transition-all ${
                           active
                             ? "border-primary bg-primary/[0.05] ring-2 ring-primary/20"
-                            : "border-[#c8d3be] bg-[#e7ecdf] hover:border-primary/40 hover:bg-primary/[0.04]"
+                            : "border-[#eadbd7] bg-white hover:border-primary/40 hover:bg-[#f5f9f2]"
                         }`}
                       >
                         <Icon
@@ -323,7 +314,7 @@ export function WaitlistSection({
                     id="lead-name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex: Arthur Mendes"
+                    placeholder="Seu nome"
                     className="h-10 rounded-xl"
                     required
                   />
@@ -335,7 +326,7 @@ export function WaitlistSection({
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="voce@exemplo.com"
+                    placeholder="seuemail@exemplo.com"
                     className="h-10 rounded-xl"
                     required
                   />
@@ -346,7 +337,7 @@ export function WaitlistSection({
                     id="lead-city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="Belo Horizonte - Pampulha"
+                    placeholder="Cidade - UF"
                     className="h-10 rounded-xl"
                   />
                 </div>
@@ -355,7 +346,7 @@ export function WaitlistSection({
               {/* Interests chips */}
               <div className="space-y-2.5">
                 <Label className="text-sm font-semibold">
-                  2. Quais interesses você quer viver em grupo? *
+                  2. Quais são seus interesses? *
                 </Label>
                 <div className="flex flex-wrap gap-2">
                   {INTEREST_CATEGORIES.map((cat) => {
@@ -368,7 +359,7 @@ export function WaitlistSection({
                         className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all ${
                           selected
                             ? "border-primary bg-primary text-primary-foreground shadow-xs"
-                            : "border-[#c8d3be] bg-[#e7ecdf] text-foreground/80 hover:border-primary/40"
+                            : "border-[#eadbd7] bg-white text-foreground/80 hover:border-primary/40 hover:bg-[#f5f9f2]"
                         }`}
                       >
                         {cat.label}
@@ -381,7 +372,7 @@ export function WaitlistSection({
               {/* Main pain point validation */}
               <div className="space-y-2">
                 <Label htmlFor="lead-pain" className="text-sm font-semibold">
-                  3. O que mais te atrapalha hoje para participar ou organizar grupos?
+                  3. O que você procura?
                 </Label>
                 <select
                   id="lead-pain"
@@ -406,7 +397,7 @@ export function WaitlistSection({
                   className="mt-0.5 size-4 rounded border-input accent-primary"
                 />
                 <span className="leading-relaxed">
-                  Concordo em receber o convite de acesso antecipado da Tribes. Seus dados pessoais ficam salvos apenas no seu navegador nesta demonstração acadêmica de MVP (LGPD), contabilizando somente métricas anônimas agregadas de interesse.
+                  Concordo em receber novidades e informações sobre o acesso à Tribes.
                 </span>
               </label>
 
@@ -417,10 +408,6 @@ export function WaitlistSection({
               )}
 
               <div className="flex flex-col items-center justify-between gap-3 pt-1 sm:flex-row">
-                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Shield className="size-4 text-[#627c4d]" />
-                </span>
-
                 <Button
                   type="submit"
                   size="lg"
