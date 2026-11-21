@@ -30,6 +30,7 @@ import {
   setEventAttendance,
   toggleLike,
   updateUserProfile,
+  updateTribe,
 } from "./social-store.mjs";
 
 const SESSION_COOKIE = "tribes_session";
@@ -132,7 +133,7 @@ export async function handleSocialRequest(request, response, url) {
   const routeKnown = pathname.startsWith("/api/auth/") ||
     pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
     pathname === "/api/feed" || pathname === "/api/tribes" ||
-    /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events)$/.test(pathname) ||
+    /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events)$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance)$/.test(pathname) ||
     /^\/api\/comments\/[^/]+$/.test(pathname);
@@ -390,8 +391,31 @@ export async function handleSocialRequest(request, response, url) {
       const query = (url.searchParams.get("q") ?? "").trim();
       if (query.length > 100) throw invalid("A busca deve ter até 100 caracteres.");
       const mine = url.searchParams.get("mine") === "true";
-      const tribes = await searchTribes(user.id, { query, mine, limit: 50 });
+      const managed = url.searchParams.get("managed") === "true";
+      const tribes = await searchTribes(user.id, { query, mine, managed, limit: 50 });
       sendJson(response, 200, { tribes });
+      return true;
+    }
+
+    const tribeMatch = pathname.match(/^\/api\/tribes\/([^/]+)$/);
+    if (tribeMatch && method === "PATCH") {
+      const tribeId = requireUuid(tribeMatch[1], "Tribo");
+      const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });
+      const format = payload.format;
+      if (!["Presencial", "Híbrido", "Online"].includes(format)) throw invalid("Formato de tribo inválido.");
+      const tribe = await updateTribe(user.id, tribeId, {
+        name: requiredString(payload.name, "nome", 2, 80),
+        description: requiredString(payload.description, "descrição", 2, 1000),
+        category: requiredString(payload.category, "categoria", 2, 60),
+        format,
+        city: requiredString(payload.city, "cidade", 2, 100),
+        neighborhood: typeof payload.neighborhood === "string" ? payload.neighborhood.trim().slice(0, 100) : "",
+      });
+      if (!tribe) {
+        sendJson(response, 404, { error: "Tribo não encontrada ou você não tem permissão para editá-la." });
+        return true;
+      }
+      sendJson(response, 200, { tribe });
       return true;
     }
 
