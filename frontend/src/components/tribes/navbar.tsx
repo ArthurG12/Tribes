@@ -53,7 +53,7 @@ export function Navbar() {
               <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} aria-current={pathname === item.href ? "page" : undefined} className={`rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${pathname === item.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{item.label}</Link>
             ))}
             <Link href="/entrar" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
-              <LogIn className="size-4" /> Entrar / Rede social
+              <LogIn className="size-4" /> Entrar
             </Link>
             <Button size="lg" className="mt-2 w-full rounded-full font-semibold" nativeButton={false} onClick={() => setMobileOpen(false)} render={<Link href="/lista-de-espera" />}>
               Entrar na lista de espera <ArrowRight className="size-4" />
