@@ -20,5 +20,5 @@ export function TribeShareButton({ tribeName }: { tribeName: string }) {
       window.prompt("Copie o link da comunidade:", url);
     }
   }
-  return <Button type="button" variant="outline" className="gap-2 rounded-xl" onClick={share}>{copied ? <Check className="size-4" /> : navigator.share ? <Share2 className="size-4" /> : <Copy className="size-4" />}{copied ? "Link copiado" : "Compartilhar"}</Button>;
+  return <Button type="button" variant="outline" className="gap-2 rounded-xl" onClick={share}>{copied ? <Check className="size-4" /> : <Share2 className="size-4" />}{copied ? "Link copiado" : "Compartilhar"}</Button>;
 }
