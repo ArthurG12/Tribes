@@ -222,12 +222,12 @@ export function TribeExplorer({
                   const spotsLeft = tribe.nextEvent.maxSpots - tribe.nextEvent.confirmedCount;
                   return (
                     <article key={"identity-" + tribe.id} className="group relative flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[#eee3df] bg-white shadow-[0_6px_20px_rgba(65,35,30,0.055)] transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/35 hover:shadow-[0_18px_38px_rgba(125,45,38,0.13)]">
-                      <div className="relative flex h-28 items-end overflow-hidden bg-gradient-to-br from-[#f8e4df] via-[#fff8f5] to-[#f0d9d2] px-5 pb-3 transition-colors">
-                        <div aria-hidden="true" className="absolute -right-7 -top-14 size-40 rounded-full border-[22px] border-white/55 transition-transform duration-500 group-hover:scale-110" />
-                        <div aria-hidden="true" className="absolute right-16 -top-9 size-24 rounded-full bg-white/45 blur-[1px]" />
-                        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white/35 to-transparent" />
-                        <span aria-hidden="true" className="absolute right-5 bottom-0 translate-y-1/3 font-heading text-8xl font-black leading-none text-white/45 transition-transform duration-500 group-hover:-translate-y-1/4">{tribe.name.slice(0, 1)}</span>
-                        <span className="relative z-10 flex size-12 items-center justify-center rounded-2xl border border-white/80 bg-white/90 font-heading text-xl font-extrabold text-primary shadow-[0_5px_15px_rgba(110,45,35,0.10)] transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105">{tribe.name.slice(0, 1)}</span>
+                      <div className="relative flex h-[4.75rem] items-end overflow-hidden bg-gradient-to-br from-[#f8e4df] via-[#fff8f5] to-[#f0d9d2] px-5 pb-2.5 transition-colors">
+                        <div aria-hidden="true" className="absolute -right-5 -top-12 size-32 rounded-full border-[18px] border-white/55 transition-transform duration-500 group-hover:scale-110" />
+                        <div aria-hidden="true" className="absolute right-14 -top-8 size-20 rounded-full bg-white/45 blur-[1px]" />
+                        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/35 to-transparent" />
+                        <span aria-hidden="true" className="absolute right-5 bottom-0 translate-y-1/3 font-heading text-7xl font-black leading-none text-white/45 transition-transform duration-500 group-hover:-translate-y-1/4">{tribe.name.slice(0, 1)}</span>
+                        <span className="relative z-10 flex size-11 items-center justify-center rounded-2xl border border-white/80 bg-white/90 font-heading text-xl font-extrabold text-primary shadow-[0_5px_15px_rgba(110,45,35,0.10)] transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105">{tribe.name.slice(0, 1)}</span>
                         <span className="absolute bottom-0 left-0 h-1 w-full" style={{ background: `linear-gradient(90deg, ${accent}, #e9a18f 58%, #f4d4c9)` }} />
                       </div>
                       <div className="flex flex-1 flex-col p-5">
