@@ -11,8 +11,6 @@ const NAV_LINKS = [
   { href: "/explorar", label: "Explorar tribos" },
   { href: "/minha-agenda", label: "Agenda" },
   { href: "/planos", label: "Planos" },
-  { href: "/perfil", label: "Meu perfil" },
-  { href: "/notificacoes", label: "Notificações" },
 ];
 
 export function Navbar() {
