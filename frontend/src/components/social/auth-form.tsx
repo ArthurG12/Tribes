@@ -49,7 +49,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       <section className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-lg sm:p-8">
         <Link href="/" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground">
           <ArrowLeft className="size-4" />
-          Voltar para as abas
+          Voltar
         </Link>
         <Link href="/" className="flex items-center gap-2 font-heading text-lg font-extrabold">
           <Image src="/tribes-emblem.png" alt="" width={36} height={36} className="size-9 rounded-full object-contain" />
