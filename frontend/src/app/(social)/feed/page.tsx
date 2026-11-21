@@ -71,9 +71,9 @@ export default function FeedPage() {
           <p className="mt-1 text-sm text-muted-foreground">Publicações e eventos, em ordem cronológica.</p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="outline" render={<Link href="/tribos" />}><Users className="size-4" />Explorar</Button>
+          <Button variant="outline" nativeButton={false} render={<Link href="/tribos" />}><Users className="size-4" />Explorar</Button>
           <Button variant="outline" onClick={() => setComposerOpen(true)}><Send className="size-4" />Publicar</Button>
-          <Button variant="outline" render={<Link href="/tribos/nova" />}><Plus className="size-4" />Criar tribo</Button>
+          <Button variant="outline" nativeButton={false} render={<Link href="/tribos/nova" />}><Plus className="size-4" />Criar tribo</Button>
         </div>
       </section>
 
@@ -93,8 +93,8 @@ export default function FeedPage() {
           <h2 className="mt-4 font-heading text-xl font-bold">{tribes.length ? "Seu feed está começando" : "Encontre sua primeira tribo"}</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{tribes.length ? "Quando alguém publicar ou criar um evento, ele aparecerá aqui." : "Explore comunidades por interesse ou crie uma nova para começar a compartilhar."}</p>
           <div className="mt-5 flex justify-center gap-2">
-            <Button render={<Link href="/tribos" />}>Buscar tribos</Button>
-            <Button variant="outline" render={<Link href="/tribos/nova" />}>Criar tribo</Button>
+            <Button nativeButton={false} render={<Link href="/tribos" />}>Buscar tribos</Button>
+            <Button variant="outline" nativeButton={false} render={<Link href="/tribos/nova" />}>Criar tribo</Button>
           </div>
         </section>
       ) : <div className="space-y-4">
