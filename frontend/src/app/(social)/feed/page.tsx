@@ -59,8 +59,6 @@ export default function FeedPage() {
         tribes={tribes}
         open={composerOpen}
         onOpenChange={setComposerOpen}
-        error={error}
-        onError={setError}
         onPublished={() => fetchPage(undefined, true)}
       />
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
