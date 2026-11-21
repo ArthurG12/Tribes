@@ -63,7 +63,7 @@ export default function EditMyTribePage() {
         body: JSON.stringify({ name, description, category, format, city, neighborhood }),
       });
       setTribe(result.tribe);
-      setSaved(true);
+      router.push("/minhas-tribos");
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Não foi possível salvar as alterações.");
     } finally {
