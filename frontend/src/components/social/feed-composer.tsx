@@ -19,8 +19,6 @@ interface FeedComposerProps {
   tribes: Tribe[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  error: string;
-  onError: (message: string) => void;
   onPublished: () => Promise<void>;
 }
 
@@ -30,6 +28,7 @@ export function FeedComposer({ tribes, open, onOpenChange, error, onError, onPub
   const [image, setImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState("");
   const [creating, setCreating] = useState(false);
+  const [composerError, setComposerError] = useState("");
   const [eventMode, setEventMode] = useState(false);
   const [eventTitle, setEventTitle] = useState("");
   const [eventStartsAt, setEventStartsAt] = useState("");
@@ -62,8 +61,12 @@ export function FeedComposer({ tribes, open, onOpenChange, error, onError, onPub
   async function submitContent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedTribeId) return;
+    if (eventMode && eventEndsAt && new Date(eventEndsAt).getTime() <= new Date(eventStartsAt).getTime()) {
+      setComposerError("A data de término deve ser posterior ao início.");
+      return;
+    }
     setCreating(true);
-    onError("");
+    setComposerError("");
     try {
       if (eventMode) {
         await apiRequest(`/api/tribes/${selectedTribeId}/events`, {
@@ -97,7 +100,7 @@ export function FeedComposer({ tribes, open, onOpenChange, error, onError, onPub
       await onPublished();
       onOpenChange(false);
     } catch (submitError) {
-      onError(submitError instanceof Error ? submitError.message : "Não foi possível publicar.");
+      setComposerError(submitError instanceof Error ? submitError.message : "Não foi possível publicar.");
     } finally {
       setCreating(false);
     }
@@ -143,7 +146,7 @@ export function FeedComposer({ tribes, open, onOpenChange, error, onError, onPub
             </div>}
           </div>}
           {!tribes.length && <p className="text-sm text-muted-foreground">Entre em uma tribo antes de publicar.</p>}
-          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          {composerError && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{composerError}</p>}
           <div className="flex justify-end">
             <Button type="submit" disabled={creating || !tribes.length || !body.trim()} className="rounded-xl">
               {creating ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
