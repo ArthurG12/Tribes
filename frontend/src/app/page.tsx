@@ -1,18 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Compass, Users, CalendarCheck2, Sparkles, BarChart3 } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/tribes/navbar";
 import { HeroMockup } from "@/components/tribes/hero-mockup";
 import { Button } from "@/components/ui/button";
 import { TribeExplorer } from "@/components/tribes/tribe-explorer";
 import { trackMvpEvent } from "@/lib/mvp-tracker";
-
-const destinations = [
-  { href: "/explorar", icon: Compass, title: "Explore tribos", description: "Pessoas e atividades que combinam com você." },
-  { href: "/como-funciona", icon: CalendarCheck2, title: "Como funciona", description: "Da descoberta ao encontro." },
-  { href: "/para-quem", icon: Users, title: "Para quem é", description: "Uma comunidade para todos." },
-];
 
 export default function TribesLandingPage() {
   return (
@@ -41,11 +35,7 @@ export default function TribesLandingPage() {
                   Explorar tribos
                 </Button>
               </div>
-              <div className="mt-6 grid grid-cols-3 gap-3 border-t border-border/80 pt-5">
-                <div><p className="font-heading text-xl font-extrabold text-foreground sm:text-2xl">9 nichos</p><p className="text-xs text-muted-foreground">mapeados na validação inicial</p></div>
-                <div><p className="font-heading text-xl font-extrabold text-foreground sm:text-2xl">1 clique</p><p className="text-xs text-muted-foreground">para confirmar presença</p></div>
-                <div><p className="font-heading text-xl font-extrabold text-primary sm:text-2xl">Grátis</p><p className="text-xs text-muted-foreground">para descobrir e participar</p></div>
-              </div>
+
             </div>
             <div className="lg:col-span-6"><HeroMockup /></div>
           </div>
@@ -90,7 +80,7 @@ export default function TribesLandingPage() {
       <footer className="border-t border-border bg-card py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-center sm:flex-row sm:text-left">
           <p className="text-xs text-muted-foreground">Tribes · Conexões reais a partir de interesses em comum · Belo Horizonte, MG</p>
-          <Link href="/metricas" className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><BarChart3 className="size-4" /> Painel de métricas MVP</Link>
+          <Link href="/metricas" className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><BarChart3 className="size-4" /> Métricas</Link>
         </div>
       </footer>
     </div>
