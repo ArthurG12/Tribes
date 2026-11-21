@@ -155,7 +155,7 @@ export function WaitlistSection({
   return (
     <section
       id="lista-espera"
-      className="relative overflow-hidden border-y border-border bg-[#edf4e8] py-16 sm:py-20"
+      className="relative overflow-hidden border-y border-border bg-[#faf7f5] py-14 sm:py-16"
     >
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
@@ -182,7 +182,7 @@ export function WaitlistSection({
                   Convite #{submittedState.queuePosition} reservado
                 </Badge>
                 <h3 className="mt-2 font-heading text-2xl font-extrabold text-foreground">
-                  Você está dentro, {name.split(" ")[0]}!
+                  Tudo certo, {name.split(" ")[0]}!
                 </h3>
                 <p className="mx-auto mt-1.5 max-w-lg text-sm text-muted-foreground">
                   Registramos seu perfil como{" "}
@@ -199,7 +199,7 @@ export function WaitlistSection({
 
               <div className="mx-auto max-w-xl rounded-2xl border border-[#c8d3be] bg-white p-4 text-left">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Tribos compatíveis com o seu perfil no lançamento:
+                  Sugestões para você
                 </p>
                 <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
                   {submittedState.recommendedTribes.map((tribe) => (
@@ -233,7 +233,7 @@ export function WaitlistSection({
                   ) : (
                     <>
                       <Copy className="size-4" />
-                      Convidar amigos para furar a fila
+                      Convidar amigos
                     </>
                   )}
                 </Button>
@@ -248,7 +248,7 @@ export function WaitlistSection({
                     setEmail("");
                   }}
                 >
-                  Simular outro cadastro
+                  Novo cadastro
                 </Button>
               </div>
             </div>
@@ -281,7 +281,7 @@ export function WaitlistSection({
               {/* Segment selector */}
               <div className="space-y-2.5">
                 <Label className="text-sm font-semibold">
-                  1. Como você quer usar a Tribes?
+                  1. Como pretende usar a Tribes?
                 </Label>
                 <div className="grid gap-3 sm:grid-cols-3">
                   {SEGMENT_OPTIONS.map((opt) => {
@@ -355,7 +355,7 @@ export function WaitlistSection({
               {/* Interests chips */}
               <div className="space-y-2.5">
                 <Label className="text-sm font-semibold">
-                  2. Quais interesses você quer viver em grupo? *
+                  2. Quais são seus interesses? *
                 </Label>
                 <div className="flex flex-wrap gap-2">
                   {INTEREST_CATEGORIES.map((cat) => {
@@ -381,7 +381,7 @@ export function WaitlistSection({
               {/* Main pain point validation */}
               <div className="space-y-2">
                 <Label htmlFor="lead-pain" className="text-sm font-semibold">
-                  3. O que mais te atrapalha hoje para participar ou organizar grupos?
+                  3. O que você procura?
                 </Label>
                 <select
                   id="lead-pain"
@@ -406,7 +406,7 @@ export function WaitlistSection({
                   className="mt-0.5 size-4 rounded border-input accent-primary"
                 />
                 <span className="leading-relaxed">
-                  Concordo em receber o convite de acesso antecipado da Tribes. Seus dados pessoais ficam salvos apenas no seu navegador nesta para organizar o acesso antecipado. Usaremos os dados somente para contato sobre o lançamento e validação da Tribes.
+                  Concordo em receber novidades e informações sobre o acesso à Tribes.
                 </span>
               </label>
 
