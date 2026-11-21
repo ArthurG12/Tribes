@@ -1,5 +1,3 @@
-"use client";
-
 import MyTribesClient from "./page-client";
 
 export const instant = false;
