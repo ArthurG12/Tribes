@@ -221,11 +221,18 @@ export function TribeExplorer({
                   const accent = accents[index % accents.length];
                   const spotsLeft = tribe.nextEvent.maxSpots - tribe.nextEvent.confirmedCount;
                   return (
-                    <article key={"identity-" + tribe.id} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#eee3df] bg-white shadow-[0_5px_18px_rgba(65,35,30,0.045)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_12px_30px_rgba(65,35,30,0.09)]">
-                      <div className="relative flex h-24 items-end overflow-hidden bg-gradient-to-br from-[#f9e9e6] via-[#fff8f6] to-[#f4e5df] px-5 pb-3"><div aria-hidden="true" className="absolute -right-5 -top-10 size-32 rounded-full border-[18px] border-white/55" /><div aria-hidden="true" className="absolute right-12 -top-8 size-20 rounded-full bg-white/45" /><span className="relative flex size-11 items-center justify-center rounded-2xl bg-white/85 font-heading text-xl font-extrabold text-primary shadow-sm">{tribe.name.slice(0, 1)}</span><span className="absolute bottom-0 left-0 h-1 w-full" style={{ backgroundColor: accent }} /></div>
+                    <article key={"identity-" + tribe.id} className="group relative flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[#eee3df] bg-white shadow-[0_6px_20px_rgba(65,35,30,0.055)] transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/35 hover:shadow-[0_18px_38px_rgba(125,45,38,0.13)]">
+                      <div className="relative flex h-28 items-end overflow-hidden bg-gradient-to-br from-[#f8e4df] via-[#fff8f5] to-[#f0d9d2] px-5 pb-3 transition-colors">
+                        <div aria-hidden="true" className="absolute -right-7 -top-14 size-40 rounded-full border-[22px] border-white/55 transition-transform duration-500 group-hover:scale-110" />
+                        <div aria-hidden="true" className="absolute right-16 -top-9 size-24 rounded-full bg-white/45 blur-[1px]" />
+                        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white/35 to-transparent" />
+                        <span aria-hidden="true" className="absolute right-5 bottom-0 translate-y-1/3 font-heading text-8xl font-black leading-none text-white/45 transition-transform duration-500 group-hover:-translate-y-1/4">{tribe.name.slice(0, 1)}</span>
+                        <span className="relative z-10 flex size-12 items-center justify-center rounded-2xl border border-white/80 bg-white/90 font-heading text-xl font-extrabold text-primary shadow-[0_5px_15px_rgba(110,45,35,0.10)] transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105">{tribe.name.slice(0, 1)}</span>
+                        <span className="absolute bottom-0 left-0 h-1 w-full" style={{ background: `linear-gradient(90deg, ${accent}, #e9a18f 58%, #f4d4c9)` }} />
+                      </div>
                       <div className="flex flex-1 flex-col p-5">
                         <div className="flex items-center justify-between gap-2"><Badge variant="secondary">{tribe.categoryLabel}</Badge><div className="flex items-center gap-2"><span className="text-[11px] font-semibold text-muted-foreground">{tribe.format}</span><TribeFavoriteButton tribeId={tribe.id} compact /></div></div>
-                        <h4 className="mt-4 font-heading text-xl font-bold text-foreground group-hover:text-primary">{tribe.name}</h4>
+                        <h4 className="mt-4 font-heading text-xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">{tribe.name}</h4>
                         <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{tribe.tagline}</p>
                         <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
                           <span className="inline-flex items-center gap-1"><MapPin className="size-3.5 text-primary" />{tribe.neighborhood}</span>
