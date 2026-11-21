@@ -30,7 +30,8 @@ export default async function TribeDetailPage({
             <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex flex-wrap gap-2">
               <Badge variant="secondary">{tribe.categoryLabel}</Badge>
               <Badge variant="outline">{tribe.format}</Badge>
-              {tribe.beginnerFriendly && <Badge className="bg-[#dce8d2] text-[#45613c]">Aberto para iniciantes</Badge>}
+              {tribe.beginnerFriendly && <Badge className="bg-primary/10 text-primary">Aberto para iniciantes</Badge>}
+            </div><TribeFavoriteButton tribeId={tribe.id} />
             </div>
 
             <h1 className="mt-4 font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">{tribe.name}</h1>
@@ -56,7 +57,7 @@ export default async function TribeDetailPage({
                   <p className="mt-2 text-sm font-semibold text-foreground">{tribe.nextEvent.dateLabel}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{tribe.weeklyFrequency}</p>
                 </div>
-                <div className="rounded-xl border border-border/70 bg-[#f5f8f1] p-4">
+                <div className="rounded-xl border border-border/70 bg-[#fff8f6] p-4">
                   <MapPin className="size-5 text-primary" />
                   <p className="mt-2 text-sm font-semibold text-foreground">{tribe.nextEvent.locationLabel}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{tribe.nextEvent.costLabel}</p>
