@@ -300,7 +300,7 @@ export async function getUserProfileImage(userId) {
   return rows[0] ? { mimeType: rows[0].mime_type, data: rows[0].image_data } : null;
 }
 
-export async function searchTribes(userId, { query = "", mine = false, limit = 40 }) {
+export async function searchTribes(userId, { query = "", mine = false, managed = false, limit = 40 }) {
   const { rows } = await pool.query(
     `SELECT t.id, t.name, t.description, t.category, t.format, t.city, t.neighborhood,
             t.created_at,
@@ -314,10 +314,11 @@ export async function searchTribes(userId, { query = "", mine = false, limit = 4
      ))
        AND ($3 = '' OR t.name ILIKE $4 OR t.description ILIKE $4 OR t.category ILIKE $4
             OR t.city ILIKE $4 OR t.neighborhood ILIKE $4)
+       AND ($6::boolean = false OR t.created_by = $1)
      GROUP BY t.id
      ORDER BY t.created_at DESC, t.id DESC
      LIMIT $5`,
-    [userId, mine, query, `%${query}%`, limit]
+    [userId, mine, query, `%${query}%`, limit, managed]
   );
   return rows.map((row) => ({
     id: row.id,
@@ -355,6 +356,17 @@ export async function createTribe(userId, tribe) {
   } finally {
     client.release();
   }
+}
+
+export async function updateTribe(userId, tribeId, tribe) {
+  const { rows } = await pool.query(
+    `UPDATE tribes
+     SET name = $3, description = $4, category = $5, format = $6, city = $7, neighborhood = $8
+     WHERE id = $1 AND created_by = $2
+     RETURNING id, name, description, category, format, city, neighborhood, created_at`,
+    [tribeId, userId, tribe.name, tribe.description, tribe.category, tribe.format, tribe.city, tribe.neighborhood]
+  );
+  return rows[0] ?? null;
 }
 
 export async function joinTribe(userId, tribeId) {
