@@ -105,12 +105,12 @@ export function FeedComposer({ tribes, open, onOpenChange, error, onError, onPub
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-2xl overflow-y-auto rounded-2xl p-5 sm:p-6">
+      <DialogContent className="box-border w-[calc(100%-2rem)] max-w-2xl min-w-0 max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto rounded-2xl p-5 sm:p-6">
         <DialogHeader>
           <DialogTitle className="font-heading text-xl font-bold">Compartilhe com sua tribo</DialogTitle>
           <DialogDescription>Publique uma novidade ou crie um evento para os membros da sua tribo.</DialogDescription>
         </DialogHeader>
-        <form className="space-y-3" onSubmit={(event) => void submitContent(event)}>
+        <form className="w-full min-w-0 space-y-3" onSubmit={(event) => void submitContent(event)}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex gap-2">
               <button type="button" onClick={() => setEventMode(false)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Publicação</button>
