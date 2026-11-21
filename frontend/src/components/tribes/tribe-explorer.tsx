@@ -131,7 +131,7 @@ export function TribeExplorer({
                   className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
                     selectedFormat === fmt
                       ? "bg-foreground text-background"
-                      : "bg-white text-foreground/75 hover:bg-[#e6efe0]"
+                      : "bg-white text-foreground/75 hover:bg-[#f5e9e6]"
                   }`}
                 >
                   {fmt}
