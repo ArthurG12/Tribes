@@ -128,7 +128,7 @@ async function authenticatedUser(request) {
 }
 
 export async function handleSocialRequest(request, response, url) {
-  const { pathname } = url;
+  const pathname = url.pathname.replace(/\/+$/, "") || "/";
   const method = request.method ?? "GET";
   const routeKnown = pathname.startsWith("/api/auth/") ||
     pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
@@ -398,7 +398,7 @@ export async function handleSocialRequest(request, response, url) {
     }
 
     const tribeMatch = pathname.match(/^\/api\/tribes\/([^/]+)$/);
-    if (tribeMatch && method === "PATCH") {
+    if (tribeMatch && ["PATCH", "PUT"].includes(method)) {
       const tribeId = requireUuid(tribeMatch[1], "Tribo");
       const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });
       const format = payload.format;
