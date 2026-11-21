@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Compass, Flame, LogOut, Plus } from "lucide-react";
+import { Compass, Flame, LogOut, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CurrentUser } from "@/components/social/auth-guard";
 import { UserAvatar } from "@/components/social/user-avatar";
@@ -18,6 +18,7 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
   const nav = [
     { href: "/feed", label: "Feed", icon: Flame },
     { href: "/tribos", label: "Explorar tribos", icon: Compass },
+    { href: "/minhas-tribos", label: "Minhas tribos", icon: Users },
     { href: "/tribos/nova", label: "Criar tribo", icon: Plus },
   ];
   return (
