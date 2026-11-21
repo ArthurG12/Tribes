@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
   { href: "/explorar", label: "Explorar tribos" },
-  { href: "/minha-agenda", label: "Agenda" },
   { href: "/planos", label: "Planos" },
 ];
 
