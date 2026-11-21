@@ -38,7 +38,7 @@ export default function MyAgendaPage() {
       />
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
         {!ready ? (
-          <div className="metric-card mt-8 text-center text-sm text-muted-foreground">Carregando sua agenda...</div>
+          <div className="metric-card mt-8 text-center text-sm text-muted-foreground"><span className="mx-auto mb-3 block h-2 w-32 animate-pulse rounded-full bg-muted" /><span className="mx-auto block h-2 w-48 animate-pulse rounded-full bg-muted" />Carregando sua agenda...</div>
         ) : selectedTribes.length === 0 ? (
           <div className="surface-card mt-8 border-dashed px-6 py-14 text-center">
             <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><CalendarDays className="size-6" /></span>
