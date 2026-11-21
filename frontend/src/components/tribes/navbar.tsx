@@ -21,7 +21,7 @@ export function Navbar() {
       <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" aria-label="Tribes — página inicial" className="flex shrink-0 items-center gap-2.5">
           <span className="relative h-11 w-36 shrink-0">
-            <Image src="/tribes-logo.svg" alt="Tribes" fill priority sizes="116px" className="object-contain" />
+            <Image src="/tribes-logo.png" alt="Tribes" fill priority sizes="116px" className="object-contain" />
           </span>
         </Link>
         <nav aria-label="Navegação principal" className="hidden items-center gap-6 lg:flex">
