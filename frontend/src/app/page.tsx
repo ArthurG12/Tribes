@@ -44,6 +44,7 @@ export default function TribesLandingPage() {
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#f7efed] to-transparent" />
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
             <TribeExplorer
+              compact
               onSelectTribeForWaitlist={(tribe) => { window.location.href = "/lista-de-espera?tribo=" + encodeURIComponent(tribe.id); }}
               onExplorerInteract={(interest) => { void trackMvpEvent({ event: "explorer_interaction", interests: interest ? [interest] : undefined }); }}
             />
