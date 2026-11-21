@@ -43,20 +43,20 @@ const SEGMENT_OPTIONS: {
 }[] = [
   {
     id: "participante",
-    title: "Quero participar de tribos",
-    subtitle: "Encontrar pessoas e companhia p/ hobbies",
+    title: "Participar",
+    subtitle: "Encontrar minha comunidade",
     icon: Users,
   },
   {
     id: "organizador",
-    title: "Quero criar / organizar grupos",
-    subtitle: "Gerenciar encontros, vagas e recorrência",
+    title: "Organizar grupos",
+    subtitle: "Criar encontros",
     icon: CalendarPlus,
   },
   {
     id: "parceiro",
-    title: "Tenho um espaço parceiro",
-    subtitle: "Café, ludoteca, quadra, livraria ou clube",
+    title: "Sou um espaço parceiro",
+    subtitle: "Divulgar meu espaço",
     icon: Store,
   },
 ];
@@ -160,25 +160,25 @@ export function WaitlistSection({
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Badge className="mb-3 bg-primary/12 text-primary hover:bg-primary/15">
-            Acesso Antecipado · Lote Fundador
+            Acesso antecipado
           </Badge>
           <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Entre nas primeiras tribos da sua cidade
+            Sua próxima comunidade começa aqui.
           </h2>
           <p className="mt-3 text-base text-muted-foreground">
-            Estamos abrindo o acesso por ondas para garantir grupos ativos, acolhedores e cheios de gente com os mesmos interesses que você.
+            Conte um pouco sobre você e seus interesses.
           </p>
         </div>
 
-        <div className="mt-10 rounded-[1.75rem] border border-[#d5e1ce] bg-white p-6 shadow-[0_18px_50px_rgba(48,66,45,0.10)] backdrop-blur-xl sm:p-9">
+        <div className="mt-10 rounded-[1.75rem] border border-[#eadbd7] bg-white p-6 shadow-[0_18px_50px_rgba(48,66,45,0.10)] backdrop-blur-xl sm:p-9">
           {submittedState ? (
             <div className="space-y-6 py-2 text-center">
-              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#e8f1e4] text-primary">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#f8eae7] text-primary">
                 <CheckCircle2 className="size-8" />
               </div>
 
               <div>
-                <Badge className="bg-[#e8f1e4] text-primary">
+                <Badge className="bg-[#f8eae7] text-primary">
                   Convite #{submittedState.queuePosition} reservado
                 </Badge>
                 <h3 className="mt-2 font-heading text-2xl font-extrabold text-foreground">
@@ -197,7 +197,7 @@ export function WaitlistSection({
                 </p>
               </div>
 
-              <div className="mx-auto max-w-xl rounded-2xl border border-[#c8d3be] bg-white p-4 text-left">
+              <div className="mx-auto max-w-xl rounded-2xl border border-[#eadbd7] bg-white p-4 text-left">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Sugestões para você
                 </p>
@@ -205,7 +205,7 @@ export function WaitlistSection({
                   {submittedState.recommendedTribes.map((tribe) => (
                     <div
                       key={tribe.id}
-                      className="rounded-xl border border-[#d5e1ce] bg-[#f4f7f1] p-3"
+                      className="rounded-xl border border-[#eadbd7] bg-[#faf5f3] p-3"
                     >
                       <p className="font-heading text-sm font-bold text-foreground">
                         {tribe.name}
@@ -295,7 +295,7 @@ export function WaitlistSection({
                         className={`flex flex-col items-start rounded-2xl border p-3.5 text-left transition-all ${
                           active
                             ? "border-primary bg-primary/[0.05] ring-2 ring-primary/20"
-                            : "border-[#d5e1ce] bg-white hover:border-primary/40 hover:bg-[#f5f9f2]"
+                            : "border-[#eadbd7] bg-white hover:border-primary/40 hover:bg-[#f5f9f2]"
                         }`}
                       >
                         <Icon
@@ -368,7 +368,7 @@ export function WaitlistSection({
                         className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all ${
                           selected
                             ? "border-primary bg-primary text-primary-foreground shadow-xs"
-                            : "border-[#d5e1ce] bg-white text-foreground/80 hover:border-primary/40 hover:bg-[#f5f9f2]"
+                            : "border-[#eadbd7] bg-white text-foreground/80 hover:border-primary/40 hover:bg-[#f5f9f2]"
                         }`}
                       >
                         {cat.label}
