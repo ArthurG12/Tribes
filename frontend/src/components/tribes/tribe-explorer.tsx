@@ -57,6 +57,7 @@ export function TribeExplorer({
   const [onlyBeginners, setOnlyBeginners] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"relevancia" | "membros" | "nome">("relevancia");
+  const [urlReady, setUrlReady] = useState(false);
   const [activeTribe, setActiveTribe] = useState<TribePreview | null>(null);
 
   const filteredTribes = useMemo(() => {
@@ -93,19 +94,22 @@ export function TribeExplorer({
     if (category === "todos" || INTEREST_CATEGORIES.some(item => item.id === category)) setSelectedCategory(category as "todos" | InterestId);
     if (format === "Presencial" || format === "Híbrido" || format === "Online") setSelectedFormat(format);
     if (query) setSearchQuery(query);
+    if (params.get("iniciantes") === "1") setOnlyBeginners(true);
     if (sort === "membros" || sort === "nome") setSortBy(sort);
+    setUrlReady(true);
   }, [compact]);
 
   useEffect(() => {
-    if (compact) return;
+    if (compact || !urlReady) return;
     const params = new URLSearchParams();
     if (selectedCategory !== "todos") params.set("categoria", selectedCategory);
     if (selectedFormat !== "Todos") params.set("formato", selectedFormat);
     if (searchQuery.trim()) params.set("busca", searchQuery.trim());
     if (sortBy !== "relevancia") params.set("ordem", sortBy);
+    if (onlyBeginners) params.set("iniciantes", "1");
     const query = params.toString();
     window.history.replaceState(null, "", query ? `/explorar?${query}` : "/explorar");
-  }, [compact, selectedCategory, selectedFormat, searchQuery, sortBy]);
+  }, [compact, urlReady, selectedCategory, selectedFormat, searchQuery, sortBy, onlyBeginners]);
 
   const activeFilterCount = Number(selectedCategory !== "todos") + Number(selectedFormat !== "Todos") + Number(onlyBeginners) + Number(searchQuery.trim().length > 0);
 
