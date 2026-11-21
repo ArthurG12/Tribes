@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tribes — Encontre sua tribo. Viva seus interesses fora do feed.",
+  title: "Tribes",
   description:
     "A rede social feita para conectar pessoas pelos mesmos hobbies e organizar encontros reais, presenciais ou online, sem bagunça no chat.",
   icons: {
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     apple: "/tribes-emblem.png",
   },
   openGraph: {
-    title: "Tribes — Encontre sua tribo e tire os encontros do papel",
+    title: "Tribes",
     description:
       "Descubra comunidades perto de você, entre sem timidez e organize encontros com lista real de presença.",
     images: [{ url: "/tribes-logo.png", width: 1536, height: 1024, alt: "Tribes — Comunidade e Natureza" }],
