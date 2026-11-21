@@ -27,7 +27,7 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
         <Link href="/feed" className="flex shrink-0 items-center gap-2 font-heading text-lg font-extrabold">
           <span className="relative h-11 w-36 shrink-0">
             <Image
-              src="/tribes-logo.svg"
+              src="/tribes-logo.png"
               alt="Tribes"
               fill
               sizes="116px"
