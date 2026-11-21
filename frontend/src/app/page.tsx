@@ -40,8 +40,8 @@ export default function TribesLandingPage() {
             <div className="lg:col-span-6"><HeroMockup /></div>
           </div>
         </section>
-        <section className="relative overflow-hidden bg-[#f8faf6] py-14 sm:py-18">
-          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#edf4e8] to-transparent" />
+        <section className="relative overflow-hidden bg-[#faf9f7] py-12 sm:py-16">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#f7efed] to-transparent" />
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
             <TribeExplorer
               onSelectTribeForWaitlist={(tribe) => { window.location.href = "/lista-de-espera?tribo=" + encodeURIComponent(tribe.id); }}
@@ -55,7 +55,7 @@ export default function TribesLandingPage() {
       </main>
       <footer className="border-t border-border bg-card py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-center sm:flex-row sm:text-left">
-          <p className="text-xs text-muted-foreground">Tribes · Conexões reais a partir de interesses em comum · Belo Horizonte, MG</p>
+          <p className="text-xs text-muted-foreground">Tribes · Encontros reais, interesses em comum.</p>
           <Link href="/metricas" className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"><BarChart3 className="size-4" /> Métricas</Link>
         </div>
       </footer>
