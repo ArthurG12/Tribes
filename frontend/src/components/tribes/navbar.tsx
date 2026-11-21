@@ -4,17 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, BarChart3, ArrowRight, LogIn } from "lucide-react";
+import { Menu, X, ArrowRight, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
   { href: "/explorar", label: "Explorar tribos" },
-  { href: "/minha-agenda", label: "Minha agenda" },
-  { href: "/como-funciona", label: "Como funciona" },
-  { href: "/sobre", label: "Por que Tribes" },
-  { href: "/para-quem", label: "Para quem" },
+  { href: "/minha-agenda", label: "Agenda" },
   { href: "/planos", label: "Planos" },
-  { href: "/faq", label: "Dúvidas" },
 ];
 
 export function Navbar() {
@@ -28,7 +24,6 @@ export function Navbar() {
           <span className="relative h-12 w-[7.25rem] overflow-hidden">
             <Image src="/tribes-logo.png" alt="Tribes — Comunidade e Natureza" fill priority sizes="116px" className="object-cover object-[center_40%]" />
           </span>
-          <span className="hidden rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary sm:inline-block">MVP Beta</span>
         </Link>
         <nav aria-label="Navegação principal" className="hidden items-center gap-6 lg:flex">
           {NAV_LINKS.map((item) => (
@@ -39,9 +34,6 @@ export function Navbar() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 md:flex">
-          <Button variant="ghost" size="sm" className="text-muted-foreground" nativeButton={false} render={<Link href="/metricas" />}>
-            <BarChart3 className="size-4" /> Métricas
-          </Button>
           <Button size="lg" className="rounded-full px-4 font-semibold" nativeButton={false} render={<Link href="/lista-de-espera" />}>
             Começar <ArrowRight className="size-4" />
           </Button>
@@ -62,9 +54,6 @@ export function Navbar() {
             ))}
             <Link href="/entrar" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
               <LogIn className="size-4" /> Entrar / Rede social
-            </Link>
-            <Link href="/metricas" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted">
-              <BarChart3 className="size-4" /> Métricas MVP
             </Link>
             <Button size="lg" className="mt-2 w-full rounded-full font-semibold" nativeButton={false} onClick={() => setMobileOpen(false)} render={<Link href="/lista-de-espera" />}>
               Entrar na lista de espera <ArrowRight className="size-4" />
