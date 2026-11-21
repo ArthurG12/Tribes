@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     title: "Tribes",
     description:
       "Descubra comunidades perto de você, entre sem timidez e organize encontros com lista real de presença.",
-    images: [{ url: "/tribes-logo.svg", width: 456, height: 169, alt: "Tribes" }],
+    images: [{ url: "/tribes-logo.png", width: 456, height: 169, alt: "Tribes" }],
     locale: "pt_BR",
     type: "website",
   },
