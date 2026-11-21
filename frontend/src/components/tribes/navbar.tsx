@@ -23,14 +23,14 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" aria-label="Tribes — página inicial" className="flex shrink-0 items-center gap-2.5">
           <span className="relative h-12 w-[7.25rem] overflow-hidden">
             <Image src="/tribes-logo.png" alt="Tribes — Comunidade e Natureza" fill priority sizes="116px" className="object-cover object-[center_40%]" />
           </span>
           <span className="hidden rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary sm:inline-block">MVP Beta</span>
         </Link>
-        <nav aria-label="Navegação principal" className="hidden items-center gap-4 xl:flex">
+        <nav aria-label="Navegação principal" className="hidden items-center gap-6 lg:flex">
           {NAV_LINKS.map((item) => (
             <Link key={item.href} href={item.href} aria-current={pathname === item.href ? "page" : undefined}
               className={`relative py-2 text-[13px] font-semibold transition-colors hover:text-foreground ${pathname === item.href ? "text-primary after:absolute after:inset-x-0 after:-bottom-[2px] after:h-[3px] after:rounded-full after:bg-primary" : "text-muted-foreground"}`}>
@@ -43,7 +43,7 @@ export function Navbar() {
             <BarChart3 className="size-4" /> Métricas
           </Button>
           <Button size="lg" className="rounded-full px-4 font-semibold" nativeButton={false} render={<Link href="/lista-de-espera" />}>
-            Garantir acesso <ArrowRight className="size-4" />
+            Começar <ArrowRight className="size-4" />
           </Button>
           <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/entrar" />}>
             <LogIn className="size-4" /> Entrar
