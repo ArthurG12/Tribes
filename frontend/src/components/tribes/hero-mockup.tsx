@@ -145,7 +145,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                     key={initials + idx}
                     className={`flex size-8 items-center justify-center rounded-full border-2 border-card text-[11px] font-bold ${
                       initials === "VC"
-                        ? "bg-[#a9c47c] text-[#344b39]"
+                        ? "bg-[#bd5148] text-[#ffffff]"
                         : "bg-secondary text-secondary-foreground"
                     }`}
                   >
