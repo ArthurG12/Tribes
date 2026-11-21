@@ -96,18 +96,18 @@ export function TribeExplorer({
             variant="outline"
             className="mb-3 border-primary/30 bg-primary/8 px-3 py-1 text-xs font-semibold text-primary"
           >
-            Protótipo Interativo · Experimente agora
+            Explore
           </Badge>
           <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Explore como funcionam as tribos na prática
+            Encontre sua tribo
           </h2>
           <p className="mt-3 text-base text-muted-foreground sm:text-lg">
-            Filtre pelos seus hobbies, veja a agenda do próximo encontro fixado e reserve seu acesso nas comunidades inaugurais.
+            Descubra grupos por interesse e encontre sua próxima atividade.
           </p>
         </div>
 
         {/* Search + Format + Beginner filter bar */}
-        <div className="mt-10 rounded-xl border border-primary/20 bg-[#f0f5eb] p-4 shadow-[0_16px_40px_rgba(48,66,45,0.08)] backdrop-blur-xl sm:p-5">
+        <div className="mt-10 rounded-xl border border-primary/20 bg-[#faf7f5] p-4 shadow-[0_16px_40px_rgba(48,66,45,0.08)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -147,7 +147,7 @@ export function TribeExplorer({
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
                   onlyBeginners
                     ? "border-primary bg-primary text-primary-foreground"
-                    : "border-[#cbdac3] bg-white text-[#496644] hover:bg-[#f5f8f2]"
+                    : "border-[#eadbd7] bg-white text-primary hover:bg-[#f5f8f2]"
                 }`}
               >
                 <Sparkles className="size-3.5" />
@@ -158,7 +158,7 @@ export function TribeExplorer({
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-3.5 text-xs">
             <span className="font-medium text-muted-foreground">{filteredTribes.length} {filteredTribes.length === 1 ? "tribo encontrada" : "tribos encontradas"}{activeFilterCount > 0 ? ` · ${activeFilterCount} filtros ativos` : " · vitrine completa"}</span>
-            {activeFilterCount > 0 && <button type="button" onClick={() => { setSelectedCategory("todos"); setSelectedFormat("Todos"); setOnlyBeginners(false); setSearchQuery(""); }} className="font-bold text-primary underline decoration-dotted underline-offset-4 hover:text-[#315b39]">Limpar filtros</button>}
+            {activeFilterCount > 0 && <button type="button" onClick={() => { setSelectedCategory("todos"); setSelectedFormat("Todos"); setOnlyBeginners(false); setSearchQuery(""); }} className="font-bold text-primary underline decoration-dotted underline-offset-4 hover:text-primary">Limpar filtros</button>}
           </div>
 
           {/* Category pills */}
@@ -171,7 +171,7 @@ export function TribeExplorer({
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   selectedCategory === filter.id
                     ? "bg-primary text-primary-foreground shadow-xs"
-                    : "bg-[#e8f0e3] text-foreground/75 hover:bg-white hover:text-foreground"
+                    : "bg-[#f5eeeb] text-foreground/75 hover:bg-white hover:text-foreground"
                 }`}
               >
                 {filter.label}
@@ -182,19 +182,19 @@ export function TribeExplorer({
 
         {filteredTribes.length > 0 && (
           <div className="mt-8">
-            <section className="rounded-3xl border border-[#dce8d4] bg-gradient-to-br from-[#edf4e8] via-[#fbfcf9] to-[#f1f6ed] px-4 py-7 shadow-[0_12px_36px_rgba(45,75,40,0.055)] sm:px-6 sm:py-8">
+            <section className="rounded-3xl border border-[#dce8d4] bg-gradient-to-br from-[#faf7f5] via-white to-[#f8f3f0] px-4 py-7 shadow-[0_12px_36px_rgba(45,75,40,0.055)] sm:px-6 sm:py-8">
               <div className="mb-6">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Comunidades</p>
-                <h3 className="mt-1 font-heading text-2xl font-extrabold text-foreground">Identidade de comunidade</h3>
-                <p className="mt-1 text-sm text-muted-foreground">Conheça comunidades, interesses e próximos encontros.</p>
+                <h3 className="mt-1 font-heading text-2xl font-extrabold text-foreground">Comunidades em destaque</h3>
+                <p className="mt-1 text-sm text-muted-foreground"></p>
               </div>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredTribes.map((tribe, index) => {
-                  const accents = ["#668b54", "#c58a4c", "#8aa078", "#b49b68", "#78916b"];
+                  const accents = ["#bd463e", "#d28a62", "#9d5a50", "#c77b70", "#a94b43"];
                   const accent = accents[index % accents.length];
                   const spotsLeft = tribe.nextEvent.maxSpots - tribe.nextEvent.confirmedCount;
                   return (
-                    <article key={"identity-" + tribe.id} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#d9e4d3] bg-white shadow-[0_6px_20px_rgba(45,75,40,0.055)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_14px_32px_rgba(45,75,40,0.11)]">
+                    <article key={"identity-" + tribe.id} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#eadfdb] bg-white shadow-[0_6px_20px_rgba(45,75,40,0.055)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_14px_32px_rgba(45,75,40,0.11)]">
                       <div className="h-2" style={{ backgroundColor: accent }} />
                       <div className="flex flex-1 flex-col p-5">
                         <div className="flex items-center justify-between gap-2"><Badge variant="secondary">{tribe.categoryLabel}</Badge><span className="text-[11px] font-semibold text-muted-foreground">{tribe.format}</span></div>
@@ -249,7 +249,7 @@ export function TribeExplorer({
                   <Badge variant="secondary">{activeTribe.categoryLabel}</Badge>
                   <Badge variant="outline">{activeTribe.format}</Badge>
                   {activeTribe.beginnerFriendly && (
-                    <Badge className="bg-[#e8f1e4] text-primary">
+                    <Badge className="bg-[#f8eae7] text-primary">
                       Aberto p/ iniciantes
                     </Badge>
                   )}
