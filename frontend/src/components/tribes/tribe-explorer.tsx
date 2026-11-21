@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Search,
   MapPin,
@@ -75,6 +76,8 @@ export function TribeExplorer({
     });
   }, [selectedCategory, selectedFormat, onlyBeginners, searchQuery]);
 
+  const activeFilterCount = Number(selectedCategory !== "todos") + Number(selectedFormat !== "Todos") + Number(onlyBeginners) + Number(searchQuery.trim().length > 0);
+
   const handleCategoryClick = (cat: "todos" | InterestId) => {
     setSelectedCategory(cat);
     onExplorerInteract(cat === "todos" ? undefined : cat);
@@ -86,7 +89,7 @@ export function TribeExplorer({
   };
 
   return (
-    <section id="explorar" className="py-20 sm:py-24">
+    <section id="explorar" className="pt-6 pb-20 sm:pt-8 sm:pb-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Badge
@@ -104,13 +107,13 @@ export function TribeExplorer({
         </div>
 
         {/* Search + Format + Beginner filter bar */}
-        <div className="mt-8 rounded-2xl border border-border bg-card p-4 shadow-xs">
+        <div className="mt-10 rounded-xl border border-primary/20 bg-[#eaf2e3] p-4 shadow-[0_16px_40px_rgba(48,66,45,0.08)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); onExplorerInteract(); }}
                 placeholder="Buscar por hobby, bairro (ex: Pampulha, Savassi) ou atividade..."
                 className="h-10 rounded-xl pl-9"
               />
@@ -128,7 +131,7 @@ export function TribeExplorer({
                   className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
                     selectedFormat === fmt
                       ? "bg-foreground text-background"
-                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                      : "bg-[#e0ebd7] text-muted-foreground hover:bg-[#dce9d1]"
                   }`}
                 >
                   {fmt}
@@ -143,14 +146,19 @@ export function TribeExplorer({
                 }}
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
                   onlyBeginners
-                    ? "border-brand-green bg-brand-green text-white"
-                    : "border-brand-green/30 bg-brand-green/8 text-brand-green-dark hover:bg-brand-green/15"
+                    ? "border-[#8eaa70] bg-[#b7d58b] text-[#344b39]"
+                    : "border-[#c3d7b5] bg-[#a9c47c]/10 text-[#536c43] hover:bg-[#a9c47c]/15"
                 }`}
               >
                 <Sparkles className="size-3.5" />
                 Aberto p/ iniciantes
               </button>
             </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-3.5 text-xs">
+            <span className="font-medium text-muted-foreground">{filteredTribes.length} {filteredTribes.length === 1 ? "tribo encontrada" : "tribos encontradas"}{activeFilterCount > 0 ? ` · ${activeFilterCount} filtros ativos` : " · vitrine completa"}</span>
+            {activeFilterCount > 0 && <button type="button" onClick={() => { setSelectedCategory("todos"); setSelectedFormat("Todos"); setOnlyBeginners(false); setSearchQuery(""); }} className="font-bold text-[#526b40] underline decoration-dotted underline-offset-4 hover:text-[#3f6045]">Limpar filtros</button>}
           </div>
 
           {/* Category pills */}
@@ -163,7 +171,7 @@ export function TribeExplorer({
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   selectedCategory === filter.id
                     ? "bg-primary text-primary-foreground shadow-xs"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                    : "bg-[#e8f1e1] text-muted-foreground hover:bg-white/[0.09] hover:text-foreground"
                 }`}
               >
                 {filter.label}
@@ -172,114 +180,43 @@ export function TribeExplorer({
           </div>
         </div>
 
-        {/* Tribe cards grid */}
-        {filteredTribes.length === 0 ? (
-          <div className="mt-8 rounded-3xl border border-dashed border-border bg-card p-10 text-center">
-            <p className="font-heading text-lg font-bold text-foreground">
-              Ainda não listamos uma tribo com esse filtro exato na vitrine inicial
-            </p>
-            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Quer fundar ou sugerir essa comunidade na sua região? Entre na lista como organizador ou participante e nós conectamos os primeiros membros!
-            </p>
-            <div className="mt-5 flex flex-wrap justify-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSelectedCategory("todos");
-                  setSelectedFormat("Todos");
-                  setOnlyBeginners(false);
-                  setSearchQuery("");
-                }}
-              >
-                Limpar filtros
-              </Button>
-              <Button render={<a href="#lista-espera" />}>
-                Sugerir nova tribo no lançamento
-                <ArrowRight className="size-4" />
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredTribes.map((tribe) => {
-              const spotsLeft = tribe.nextEvent.maxSpots - tribe.nextEvent.confirmedCount;
-              return (
-                <article
-                  key={tribe.id}
-                  className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-                >
-                  <div>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Badge variant="secondary" className="font-medium">
-                        {tribe.categoryLabel}
-                      </Badge>
-                      <span className="rounded-full border border-border px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                        {tribe.format}
-                      </span>
-                    </div>
-
-                    <h3 className="mt-3.5 font-heading text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                      {tribe.name}
-                    </h3>
-                    <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">
-                      {tribe.tagline}
-                    </p>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="size-3.5 text-primary" />
-                        {tribe.neighborhood}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Users className="size-3.5 text-primary" />
-                        {tribe.membersCount} membros
-                      </span>
-                    </div>
-
-                    {/* Mini pinned event preview */}
-                    <div className="mt-4 rounded-2xl border border-border/80 bg-secondary/45 p-3.5">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-primary">
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar className="size-3.5" />
-                          {tribe.nextEvent.dateLabel}
-                        </span>
-                        <span className="text-brand-green-dark">
-                          {spotsLeft} vagas
-                        </span>
+        {filteredTribes.length > 0 && (
+          <div className="mt-8">
+            <section className="rounded-3xl border border-[#dce8d4] bg-gradient-to-br from-[#f0f6eb] via-[#f8faf5] to-[#edf4e8] px-4 py-7 shadow-[0_12px_36px_rgba(45,75,40,0.055)] sm:px-6 sm:py-8">
+              <div className="mb-6">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Comunidades</p>
+                <h3 className="mt-1 font-heading text-2xl font-extrabold text-foreground">Identidade de comunidade</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Conheça comunidades, interesses e próximos encontros.</p>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredTribes.map((tribe, index) => {
+                  const accents = ["#77a85b", "#d69b55", "#7c9ec4", "#a18ac7", "#d17f83"];
+                  const accent = accents[index % accents.length];
+                  const spotsLeft = tribe.nextEvent.maxSpots - tribe.nextEvent.confirmedCount;
+                  return (
+                    <article key={"identity-" + tribe.id} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#d7e5ce] bg-white shadow-[0_6px_20px_rgba(45,75,40,0.055)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_14px_32px_rgba(45,75,40,0.11)]">
+                      <div className="h-2" style={{ backgroundColor: accent }} />
+                      <div className="flex flex-1 flex-col p-5">
+                        <div className="flex items-center justify-between gap-2"><Badge variant="secondary">{tribe.categoryLabel}</Badge><span className="text-[11px] font-semibold text-muted-foreground">{tribe.format}</span></div>
+                        <h4 className="mt-4 font-heading text-xl font-bold text-foreground group-hover:text-primary">{tribe.name}</h4>
+                        <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{tribe.tagline}</p>
+                        <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                          <span className="inline-flex items-center gap-1"><MapPin className="size-3.5 text-primary" />{tribe.neighborhood}</span>
+                          <span className="inline-flex items-center gap-1"><Users className="size-3.5 text-primary" />{tribe.membersCount} membros</span>
+                        </div>
+                        <div className="mt-4 rounded-xl border border-[#e2eadc] bg-[#f4f7f1] p-3">
+                          <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-[#64814f]"><span className="inline-flex items-center gap-1"><Calendar className="size-3.5" />{tribe.nextEvent.dateLabel}</span><span>{spotsLeft} vagas</span></div>
+                          <p className="mt-1 text-sm font-semibold text-foreground">{tribe.nextEvent.title}</p><p className="mt-0.5 text-xs text-muted-foreground">{tribe.nextEvent.locationLabel}</p>
+                        </div>
+                        <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-4"><span className="text-xs text-muted-foreground">{tribe.beginnerFriendly ? "✓ Iniciantes bem-vindos" : tribe.weeklyFrequency}</span><Button size="sm" variant="outline" onClick={() => handleOpenTribe(tribe)}>Ver detalhes</Button></div>
                       </div>
-                      <p className="mt-1 line-clamp-1 text-xs font-semibold text-foreground">
-                        {tribe.nextEvent.title}
-                      </p>
-                      <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
-                        {tribe.nextEvent.locationLabel}
-                      </p>
-                    </div>
-                  </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
 
-                  <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/60 pt-4">
-                    {tribe.beginnerFriendly ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-green-dark">
-                        <CheckCircle2 className="size-3.5" />
-                        Iniciantes bem-vindos
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        {tribe.weeklyFrequency}
-                      </span>
-                    )}
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-xl border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground"
-                      onClick={() => handleOpenTribe(tribe)}
-                    >
-                      Ver detalhes
-                    </Button>
-                  </div>
-                </article>
-              );
-            })}
+            
           </div>
         )}
 
@@ -304,7 +241,7 @@ export function TribeExplorer({
           if (!open) setActiveTribe(null);
         }}
       >
-        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl p-6 sm:max-w-lg">
+        <DialogContent className="w-[min(92vw,900px)] max-w-none max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-3xl p-5 sm:max-w-none sm:p-7">
           {activeTribe && (
             <>
               <DialogHeader>
@@ -312,7 +249,7 @@ export function TribeExplorer({
                   <Badge variant="secondary">{activeTribe.categoryLabel}</Badge>
                   <Badge variant="outline">{activeTribe.format}</Badge>
                   {activeTribe.beginnerFriendly && (
-                    <Badge className="bg-brand-green/15 text-brand-green-dark">
+                    <Badge className="bg-emerald-500/15 text-[#536c43]">
                       Aberto p/ iniciantes
                     </Badge>
                   )}
@@ -325,14 +262,14 @@ export function TribeExplorer({
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="mt-2 space-y-4">
+              <div className="mt-2 min-w-0 space-y-4">
                 <div className="rounded-2xl border border-primary/25 bg-primary/[0.04] p-4">
-                  <div className="flex items-center justify-between text-xs font-semibold text-primary">
+                  <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs font-semibold text-primary">
                     <span className="inline-flex items-center gap-1">
                       <Pin className="size-3.5" />
                       Card de Encontro Fixado
                     </span>
-                    <span className="font-mono">
+                    <span className="font-mono whitespace-normal">
                       {activeTribe.nextEvent.confirmedCount}/{activeTribe.nextEvent.maxSpots} confirmados
                     </span>
                   </div>
@@ -348,7 +285,7 @@ export function TribeExplorer({
                       <MapPin className="size-3.5 text-primary" />
                       {activeTribe.nextEvent.locationLabel}
                     </p>
-                    <p className="flex items-center gap-2 font-medium text-brand-green-dark">
+                    <p className="flex items-center gap-2 font-medium text-[#536c43]">
                       <Sparkles className="size-3.5" />
                       Custo: {activeTribe.nextEvent.costLabel}
                     </p>
@@ -380,18 +317,18 @@ export function TribeExplorer({
                   </p>
                   {activeTribe.recentMessages.map((msg, index) => (
                     <div key={msg.author + index} className="rounded-xl bg-muted/60 p-3 text-xs">
-                      <div className="flex items-center justify-between">
+                      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
                         <span className="font-semibold text-foreground">
                           {msg.author} · <span className="font-normal text-muted-foreground">{msg.role}</span>
                         </span>
-                        <span className="text-[11px] text-muted-foreground">{msg.time}</span>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">{msg.time}</span>
                       </div>
                       <p className="mt-1 text-muted-foreground">{msg.text}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-end">
+                <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:justify-end">
                   <Button
                     variant="outline"
                     onClick={() => setActiveTribe(null)}
@@ -399,15 +336,23 @@ export function TribeExplorer({
                     Continuar explorando
                   </Button>
                   <Button
+                    variant="outline"
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl"
+                    nativeButton={false}
+                    render={<Link href={`/tribos/${activeTribe.id}`} />}
+                  >
+                    Página da tribo <ArrowRight className="size-4" />
+                  </Button>
+                  <Button
                     size="lg"
-                    className="rounded-xl font-semibold"
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold"
                     onClick={() => {
                       const chosen = activeTribe;
                       setActiveTribe(null);
                       onSelectTribeForWaitlist(chosen);
                     }}
                   >
-                    Participar desta tribo no lançamento
+                    Participar no lançamento
                     <ArrowRight className="size-4" />
                   </Button>
                 </div>
