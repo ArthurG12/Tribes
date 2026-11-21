@@ -35,7 +35,7 @@ export function Navbar() {
             </Link>
           ))}
         </nav>
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <Button size="lg" className="rounded-full px-4 font-semibold" nativeButton={false} render={<Link href="/lista-de-espera" />}>
             Começar <ArrowRight className="size-4" />
           </Button>
@@ -44,12 +44,12 @@ export function Navbar() {
           </Button>
         </div>
         <button type="button" aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"} onClick={() => setMobileOpen((prev) => !prev)}
-          className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-card text-foreground md:hidden">
+          className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-card text-foreground lg:hidden">
           {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
       {mobileOpen && (
-        <div className="border-t border-border bg-background px-4 py-4 md:hidden">
+        <div className="border-t border-border bg-background px-4 py-4 lg:hidden">
           <nav className="mx-auto flex max-w-7xl flex-col gap-1">
             {NAV_LINKS.map((item) => (
               <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} aria-current={pathname === item.href ? "page" : undefined} className={`rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${pathname === item.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{item.label}</Link>
