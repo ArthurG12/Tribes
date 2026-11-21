@@ -7,7 +7,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="flex-1 bg-[#f8faf6]">{children}</main>
+      <main className="flex-1 bg-[#faf9f7]">{children}</main>
       <footer className="border-t border-border bg-white py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 sm:flex-row">
           <Link href="/" className="flex items-center gap-2 font-heading font-extrabold text-foreground"><TribesMark className="size-5 text-primary" /> Tribes</Link>
