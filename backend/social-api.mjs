@@ -306,10 +306,17 @@ export async function handleSocialRequest(request, response, url) {
         throw invalid("O campo sobre mim deve ter até 500 caracteres.");
       }
       const aboutMe = payload.aboutMe.trim();
+      const city = typeof payload.city === "string" ? payload.city.trim() : "";
+      if (city.length > 100) throw invalid("A cidade deve ter até 100 caracteres.");
+      if (!Array.isArray(payload.interests) || payload.interests.length > 20 ||
+        payload.interests.some((interest) => typeof interest !== "string" || interest.trim().length < 1 || interest.trim().length > 30)) {
+        throw invalid("Informe até 20 interesses, com no máximo 30 caracteres cada.");
+      }
+      const interests = [...new Set(payload.interests.map((interest) => interest.trim()))];
       const avatar = Object.hasOwn(payload, "avatar")
         ? payload.avatar === null ? null : parseImage(payload.avatar)
         : undefined;
-      const updatedUser = await updateUserProfile(user.id, { name, aboutMe, avatar });
+      const updatedUser = await updateUserProfile(user.id, { name, aboutMe, city, interests, avatar });
       if (!updatedUser) {
         sendJson(response, 404, { error: "Usuário não encontrado." });
         return true;
