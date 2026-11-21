@@ -75,7 +75,7 @@ export default function ProfileSettingsPage() {
   }
 
   function addInterest(value = interestInput) {
-    const normalized = value.trim().replace(/\\s+/g, " ").slice(0, 30);
+    const normalized = value.trim().replace(/\s+/g, " ").slice(0, 30);
     if (!normalized || interests.some((item) => item.toLocaleLowerCase("pt-BR") === normalized.toLocaleLowerCase("pt-BR")) || interests.length >= 20) return;
     setInterests((current) => [...current, normalized]);
     setInterestInput("");
