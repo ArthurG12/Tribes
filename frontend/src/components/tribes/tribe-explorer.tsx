@@ -33,6 +33,7 @@ import {
 interface TribeExplorerProps {
   onSelectTribeForWaitlist: (tribe: TribePreview) => void;
   onExplorerInteract: (interest?: InterestId) => void;
+  compact?: boolean;
 }
 
 const FEATURED_FILTERS: { id: "todos" | InterestId; label: string }[] = [
@@ -48,6 +49,7 @@ const FEATURED_FILTERS: { id: "todos" | InterestId; label: string }[] = [
 export function TribeExplorer({
   onSelectTribeForWaitlist,
   onExplorerInteract,
+  compact = false,
 }: TribeExplorerProps) {
   const [selectedCategory, setSelectedCategory] = useState<"todos" | InterestId>("todos");
   const [selectedFormat, setSelectedFormat] = useState<"Todos" | "Presencial" | "Híbrido" | "Online">("Todos");
@@ -76,6 +78,8 @@ export function TribeExplorer({
     });
   }, [selectedCategory, selectedFormat, onlyBeginners, searchQuery]);
 
+  const displayedTribes = compact ? filteredTribes.slice(0, 3) : filteredTribes;
+
   const activeFilterCount = Number(selectedCategory !== "todos") + Number(selectedFormat !== "Todos") + Number(onlyBeginners) + Number(searchQuery.trim().length > 0);
 
   const handleCategoryClick = (cat: "todos" | InterestId) => {
@@ -91,6 +95,7 @@ export function TribeExplorer({
   return (
     <section id="explorar" className="pt-2 pb-20 sm:pt-4 sm:pb-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        {!compact && <>
         {/* Search + Format + Beginner filter bar */}
         <div className="mt-0 rounded-xl border border-primary/20 bg-[#faf7f5] p-4 shadow-[0_16px_40px_rgba(48,66,45,0.08)] backdrop-blur-xl sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -164,17 +169,18 @@ export function TribeExplorer({
             ))}
           </div>
         </div>
+        </>}
 
-        {filteredTribes.length > 0 && (
+        {displayedTribes.length > 0 && (
           <div className="mt-8">
             <section className="rounded-3xl border border-[#dce8d4] bg-gradient-to-br from-[#faf7f5] via-white to-[#f8f3f0] px-4 py-7 shadow-[0_12px_36px_rgba(45,75,40,0.055)] sm:px-6 sm:py-8">
               <div className="mb-6">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Comunidades</p>
-                <h3 className="mt-1 font-heading text-2xl font-extrabold text-foreground">Comunidades em destaque</h3>
+                <h3 className="mt-1 font-heading text-2xl font-extrabold text-foreground">{compact ? "Algumas comunidades" : "Comunidades em destaque"}</h3>
                 <p className="mt-1 text-sm text-muted-foreground"></p>
               </div>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredTribes.map((tribe, index) => {
+                {displayedTribes.map((tribe, index) => {
                   const accents = ["#bd463e", "#d28a62", "#9d5a50", "#c77b70", "#a94b43"];
                   const accent = accents[index % accents.length];
                   const spotsLeft = tribe.nextEvent.maxSpots - tribe.nextEvent.confirmedCount;
@@ -205,8 +211,7 @@ export function TribeExplorer({
           </div>
         )}
 
-        {/* Extra Categories Counter Strip */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+        {!compact && <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
           <span>Categorias mapeadas na validação inicial:</span>
           {INTEREST_CATEGORIES.map((cat) => (
             <span
@@ -216,7 +221,7 @@ export function TribeExplorer({
               {cat.shortLabel}
             </span>
           ))}
-        </div>
+        </div>}
       </div>
 
       {/* Modal detail of selected tribe */}
