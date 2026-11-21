@@ -24,13 +24,13 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <Link href="/feed" className="flex shrink-0 items-center gap-2 font-heading text-lg font-extrabold">
-          <span className="relative h-10 w-[7.25rem] overflow-hidden">
+          <span className="relative h-11 w-36 shrink-0">
             <Image
-              src="/tribes-logo.png"
-              alt="Tribes — Comunidade e Natureza"
+              src="/tribes-logo.svg"
+              alt="Tribes"
               fill
               sizes="116px"
-              className="object-cover object-[center_40%]"
+              className="object-contain"
             />
           </span>
         </Link>
