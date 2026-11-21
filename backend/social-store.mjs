@@ -206,7 +206,7 @@ export async function createSession(userId, token, expiresAt) {
 export async function getSessionUser(token) {
   if (!token) return null;
   const { rows } = await pool.query(
-    `SELECT u.id, u.display_name, u.email, u.about_me,
+    `SELECT u.id, u.display_name, u.email, u.about_me, u.city, u.interests,
             EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id) AS has_avatar
      FROM user_sessions s
      JOIN users u ON u.id = s.user_id
@@ -227,19 +227,21 @@ function toUser(row) {
     name: row.display_name,
     email: row.email,
     aboutMe: row.about_me ?? "",
+    city: row.city ?? "",
+    interests: Array.isArray(row.interests) ? row.interests : [],
     avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
   };
 }
 
-export async function updateUserProfile(userId, { name, aboutMe, avatar }) {
+export async function updateUserProfile(userId, { name, aboutMe, city, interests, avatar }) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const { rows } = await client.query(
-      `UPDATE users SET display_name = $2, about_me = $3
+      `UPDATE users SET display_name = $2, about_me = $3, city = $4, interests = $5::jsonb
        WHERE id = $1
-       RETURNING id, display_name, email, about_me`,
-      [userId, name, aboutMe]
+       RETURNING id, display_name, email, about_me, city, interests`,
+      [userId, name, aboutMe, city, JSON.stringify(interests)]
     );
     if (rows.length === 0) {
       await client.query("ROLLBACK");
@@ -257,7 +259,7 @@ export async function updateUserProfile(userId, { name, aboutMe, avatar }) {
       );
     }
     const { rows: updated } = await client.query(
-      `SELECT u.id, u.display_name, u.email, u.about_me,
+      `SELECT u.id, u.display_name, u.email, u.about_me, u.city, u.interests,
               EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id) AS has_avatar
        FROM users u WHERE u.id = $1`,
       [userId]
@@ -274,7 +276,7 @@ export async function updateUserProfile(userId, { name, aboutMe, avatar }) {
 
 export async function getPublicUserProfile(userId) {
   const { rows } = await pool.query(
-    `SELECT u.id, u.display_name, u.about_me,
+    `SELECT u.id, u.display_name, u.about_me, u.city, u.interests,
             EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id) AS has_avatar
      FROM users u WHERE u.id = $1`,
     [userId]
@@ -284,6 +286,8 @@ export async function getPublicUserProfile(userId) {
     id: row.id,
     name: row.display_name,
     aboutMe: row.about_me,
+    city: row.city ?? "",
+    interests: Array.isArray(row.interests) ? row.interests : [],
     avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
   } : null;
 }
