@@ -9,7 +9,6 @@ import {
   Users,
   CalendarPlus,
   Store,
-  Shield,
 } from "lucide-react";
 import {
   INTEREST_CATEGORIES,
@@ -71,7 +70,7 @@ export function WaitlistSection({
 }: WaitlistSectionProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [city, setCity] = useState("Belo Horizonte - MG");
+  const [city, setCity] = useState("");
   const [painPoint, setPainPoint] = useState<PainPointId>("encontrar-grupos-locais");
   const [consentChecked, setConsentChecked] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -315,7 +314,7 @@ export function WaitlistSection({
                     id="lead-name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex: Arthur Mendes"
+                    placeholder="Seu nome"
                     className="h-10 rounded-xl"
                     required
                   />
@@ -327,7 +326,7 @@ export function WaitlistSection({
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="voce@exemplo.com"
+                    placeholder="seuemail@exemplo.com"
                     className="h-10 rounded-xl"
                     required
                   />
@@ -338,7 +337,7 @@ export function WaitlistSection({
                     id="lead-city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="Belo Horizonte - Pampulha"
+                    placeholder="Cidade - UF"
                     className="h-10 rounded-xl"
                   />
                 </div>
@@ -409,10 +408,6 @@ export function WaitlistSection({
               )}
 
               <div className="flex flex-col items-center justify-between gap-3 pt-1 sm:flex-row">
-                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Shield className="size-4 text-primary" />
-                </span>
-
                 <Button
                   type="submit"
                   size="lg"
