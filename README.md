@@ -44,6 +44,17 @@ O Compose inicia frontend, backend, PostgreSQL, MailHog e RustFS. As portas loca
 
 O backend carrega `backend/.env` quando o arquivo existe. Para conectar uma instância local ao R2 real, copie `backend/.env.example` para `backend/.env` e preencha as credenciais. Sem esse arquivo, o Compose usa RustFS e credenciais de desenvolvimento. `.env` é ignorado pelo Git e excluído do contexto Docker.
 
+Por padrão, `EMAIL_PROVIDER=mailhog` envia os e-mails ao MailHog local, disponível em `http://localhost:8026`. Para testar com o Resend, configure somente no `backend/.env`:
+
+```dotenv
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=re_sua_chave_privada
+EMAIL_FROM="Tribes <onboarding@resend.dev>"
+FRONTEND_URL=http://localhost:4317
+```
+
+Reinicie o backend depois de alterar as variáveis. `onboarding@resend.dev` é um remetente de teste e não deve ser usado em produção; nesse modo, o Resend restringe os destinatários permitidos (por exemplo, ao endereço da própria conta enquanto não houver domínio verificado). A aplicação não tenta contornar essas regras e informa falha se o Resend recusar o envio. Para voltar ao MailHog, defina `EMAIL_PROVIDER=mailhog`; no Compose o SMTP é `smtp://mailhog:1025`. A chave do Resend é privada: mantenha-a apenas no backend e nunca a configure no frontend ou em arquivos versionados.
+
 Para produção, crie um token S3 em **Cloudflare Dashboard → R2 → Manage R2 API Tokens** com permissões de leitura e gravação limitadas ao bucket privado `tribes-media`. Configure no serviço backend do Render `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME=tribes-media` e `R2_ENDPOINT=https://88f67df82791b16d9aa1f5c4be6a2685.r2.cloudflarestorage.com`. O ID da conta e as chaves são obtidos na Cloudflare; nunca configure essas variáveis no frontend. Não habilite Public Development URL nem domínio público para este bucket. O backend autoriza a solicitação e redireciona para uma URL assinada de leitura com validade de cinco minutos.
 
 ## Feed e API social
@@ -65,7 +76,7 @@ SELECT 'avatares', count(*)
 FROM user_profile_images WHERE image_key IS NULL AND is_deleted = FALSE;
 ```
 
-A remoção dos binários antigos fica para uma migration posterior, depois de validar as cópias e com aprovação explícita. Os links de cadastro e redefinição de senha expiram em 30 minutos, só podem ser usados uma vez, e seus tokens são armazenados como hash. Ao redefinir uma senha, as sessões anteriores são encerradas. O MailHog recebe e-mails apenas no ambiente local; para outros ambientes, configure `SMTP_URL`, `EMAIL_FROM` e `FRONTEND_URL` no backend. Curtidas são únicas por usuário/conteúdo; comentários só podem ser alterados pelo autor. O feed, as tribos e as interações exigem sessão autenticada.
+A remoção dos binários antigos fica para uma migration posterior, depois de validar as cópias e com aprovação explícita. Os links de cadastro e redefinição de senha expiram em 30 minutos, só podem ser usados uma vez, e seus tokens são armazenados como hash. Ao redefinir uma senha, as sessões anteriores são encerradas. O provedor de e-mail é selecionado por `EMAIL_PROVIDER` (`mailhog` ou `resend`); para Resend, configure `RESEND_API_KEY`, `EMAIL_FROM` e `FRONTEND_URL` no backend. Curtidas são únicas por usuário/conteúdo; comentários só podem ser alterados pelo autor. O feed, as tribos e as interações exigem sessão autenticada.
 
 Para executar testes unitários do backend: `docker compose exec backend npm test`. Com o Compose ativo, os testes de integração contra PostgreSQL, API e RustFS são executados com `docker compose exec backend npm run test:integration`.
 

@@ -11,6 +11,19 @@ const origin = process.env.TRIBES_TEST_ORIGIN;
 const mailhogApi = process.env.MAILHOG_API_URL;
 const integrationTest = origin && mailhogApi && process.env.R2_ENDPOINT && process.env.R2_BUCKET_NAME ? test : test.skip;
 
+function decodeMailhogBodies(parts) {
+  return parts.map((part) => {
+    const body = part.Body ?? "";
+    const transferEncoding = part.Headers?.["Content-Transfer-Encoding"]?.[0]?.toLowerCase();
+    if (transferEncoding === "base64") {
+      return Buffer.from(body.replace(/\s/g, ""), "base64").toString("utf8");
+    }
+    return body
+      .replace(/=\r?\n/g, "")
+      .replace(/=([0-9a-f]{2})/gi, (_, byte) => String.fromCharCode(Number.parseInt(byte, 16)));
+  }).join("\n");
+}
+
 integrationTest("authenticated social feed, event attendance, likes, comments and cursor pagination", async (t) => {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const marker = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -43,11 +56,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
     for (let attempt = 0; attempt < 20 && !registrationLink; attempt += 1) {
       const search = await fetch(`${mailhogApi}/api/v2/search?kind=to&query=${encodeURIComponent(email)}`);
       const messages = await search.json();
-      const body = (messages.items?.[0]?.MIME?.Parts ?? [])
-        .map((part) => part.Body)
-        .join("\n")
-        .replace(/=\r?\n/g, "")
-        .replace(/=([0-9a-f]{2})/gi, (_, byte) => String.fromCharCode(Number.parseInt(byte, 16)));
+      const body = decodeMailhogBodies(messages.items?.[0]?.MIME?.Parts ?? []);
       const match = body.match(/https?:\/\/[^\s<"]+\/cadastro\/confirmar\?token=[^\s<"]+/);
       if (match) registrationLink = match[0];
       else await new Promise((resolve) => setTimeout(resolve, 100));
@@ -168,12 +177,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   for (let attempt = 0; attempt < 20 && !resetLink; attempt += 1) {
     const search = await fetch(`${mailhogApi}/api/v2/search?kind=to&query=${encodeURIComponent(alice.user.email)}`);
     const messages = await search.json();
-    const body = (messages.items ?? [])
-      .flatMap((message) => message.MIME?.Parts ?? [])
-      .map((part) => part.Body)
-      .join("\n")
-      .replace(/=\r?\n/g, "")
-      .replace(/=([0-9a-f]{2})/gi, (_, byte) => String.fromCharCode(Number.parseInt(byte, 16)));
+    const body = decodeMailhogBodies((messages.items ?? []).flatMap((message) => message.MIME?.Parts ?? []));
     const match = body.match(/https?:\/\/[^\s<"]+\/senha\/redefinir\?token=[^\s<"]+/);
     if (match) resetLink = match[0];
     else await new Promise((resolve) => setTimeout(resolve, 100));
@@ -208,7 +212,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   const profileImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII=";
   const profileUpdate = await call(alice, "/api/profile", {
     method: "PATCH",
-    body: JSON.stringify({ name: "Alice Perfil", aboutMe: "Gosto de jogos e comunidades.", avatar: profileImage }),
+    body: JSON.stringify({ name: "Alice Perfil", aboutMe: "Gosto de jogos e comunidades.", interests: [], avatar: profileImage }),
   });
   assert.equal(profileUpdate.response.status, 200, JSON.stringify(profileUpdate.data));
   assert.equal(profileUpdate.data.user.name, "Alice Perfil");

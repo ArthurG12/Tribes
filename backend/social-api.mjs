@@ -5,6 +5,7 @@ import { MAX_IMAGE_DATA_URL_SIZE, parseImage } from "./images.mjs";
 import { getObjectStorage } from "./object-storage.mjs";
 import { sendRegistrationEmail } from "./registration-email.mjs";
 import { sendPasswordResetEmail } from "./password-reset-email.mjs";
+import { EmailDeliveryError } from "./email-provider.mjs";
 import {
   addComment,
   completePasswordReset,
@@ -558,7 +559,11 @@ export async function handleSocialRequest(request, response, url) {
     sendJson(response, 404, { error: "Rota não encontrada." });
     return true;
   } catch (error) {
-    if ((error.statusCode ?? 500) >= 500) console.error("Falha na API social:", error);
+    if (error instanceof EmailDeliveryError) {
+      console.error("Falha no envio de e-mail:", error.message);
+    } else if ((error.statusCode ?? 500) >= 500) {
+      console.error("Falha na API social:", error);
+    }
     sendJson(response, error.statusCode ?? 500, {
       error: error.statusCode ? error.message : "Não foi possível concluir a operação.",
     });
