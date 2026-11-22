@@ -1,8 +1,10 @@
+import "./load-env.mjs";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { digestSessionToken } from "./security.mjs";
+import { getObjectStorage } from "./object-storage.mjs";
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -207,7 +209,7 @@ export async function getSessionUser(token) {
   if (!token) return null;
   const { rows } = await pool.query(
     `SELECT u.id, u.display_name, u.email, u.about_me, u.city, u.interests,
-            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id) AS has_avatar
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar
      FROM user_sessions s
      JOIN users u ON u.id = s.user_id
      WHERE s.token_hash = $1 AND s.expires_at > CURRENT_TIMESTAMP`,
@@ -235,6 +237,8 @@ function toUser(row) {
 
 export async function updateUserProfile(userId, { name, aboutMe, city, interests, avatar }) {
   const client = await pool.connect();
+  let newImageKey = null;
+  let oldImageKey = null;
   try {
     await client.query("BEGIN");
     const { rows } = await client.query(
@@ -247,37 +251,70 @@ export async function updateUserProfile(userId, { name, aboutMe, city, interests
       await client.query("ROLLBACK");
       return null;
     }
+
     if (avatar === null) {
-      await client.query("DELETE FROM user_profile_images WHERE user_id = $1", [userId]);
+      const { rows: existingImages } = await client.query(
+        "SELECT image_key, image_data FROM user_profile_images WHERE user_id = $1 FOR UPDATE",
+        [userId]
+      );
+      const existing = existingImages[0];
+      if (existing) {
+        oldImageKey = existing.image_key;
+        if (existing.image_data !== null) {
+          await client.query(
+            "UPDATE user_profile_images SET image_key = NULL, is_deleted = TRUE WHERE user_id = $1",
+            [userId]
+          );
+        } else {
+          await client.query("DELETE FROM user_profile_images WHERE user_id = $1", [userId]);
+        }
+      }
     } else if (avatar) {
+      const { rows: existingImages } = await client.query(
+        "SELECT image_key FROM user_profile_images WHERE user_id = $1 FOR UPDATE",
+        [userId]
+      );
+      oldImageKey = existingImages[0]?.image_key ?? null;
+      newImageKey = await getObjectStorage().putImage("avatar", avatar, userId);
       await client.query(
-        `INSERT INTO user_profile_images (user_id, mime_type, image_data, byte_size)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO user_profile_images (user_id, mime_type, image_data, byte_size, image_key, is_deleted)
+         VALUES ($1, $2, NULL, $3, $4, FALSE)
          ON CONFLICT (user_id) DO UPDATE
-         SET mime_type = EXCLUDED.mime_type, image_data = EXCLUDED.image_data, byte_size = EXCLUDED.byte_size`,
-        [userId, avatar.mimeType, avatar.data, avatar.data.length]
+         SET mime_type = EXCLUDED.mime_type, byte_size = EXCLUDED.byte_size,
+             image_key = EXCLUDED.image_key, is_deleted = FALSE`,
+        [userId, avatar.mimeType, avatar.data.length, newImageKey]
       );
     }
     const { rows: updated } = await client.query(
       `SELECT u.id, u.display_name, u.email, u.about_me, u.city, u.interests,
-              EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id) AS has_avatar
+              EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar
        FROM users u WHERE u.id = $1`,
       [userId]
     );
     await client.query("COMMIT");
+    if (oldImageKey && oldImageKey !== newImageKey) await removeObjectBestEffort(oldImageKey);
     return toUser(updated[0]);
   } catch (error) {
     await client.query("ROLLBACK");
+    if (newImageKey) await removeObjectBestEffort(newImageKey);
     throw error;
   } finally {
     client.release();
   }
 }
 
+async function removeObjectBestEffort(imageKey) {
+  try {
+    await getObjectStorage().deleteObject(imageKey);
+  } catch {
+    console.warn("Não foi possível remover um objeto R2 substituído ou removido.");
+  }
+}
+
 export async function getPublicUserProfile(userId) {
   const { rows } = await pool.query(
     `SELECT u.id, u.display_name, u.about_me, u.city, u.interests,
-            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id) AS has_avatar
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar
      FROM users u WHERE u.id = $1`,
     [userId]
   );
@@ -294,10 +331,15 @@ export async function getPublicUserProfile(userId) {
 
 export async function getUserProfileImage(userId) {
   const { rows } = await pool.query(
-    "SELECT mime_type, image_data FROM user_profile_images WHERE user_id = $1",
+    `SELECT mime_type, image_data, image_key
+     FROM user_profile_images WHERE user_id = $1 AND is_deleted = FALSE`,
     [userId]
   );
-  return rows[0] ? { mimeType: rows[0].mime_type, data: rows[0].image_data } : null;
+  return rows[0] ? {
+    mimeType: rows[0].mime_type,
+    data: rows[0].image_data,
+    imageKey: rows[0].image_key,
+  } : null;
 }
 
 export async function searchTribes(userId, { query = "", mine = false, managed = false, limit = 40 }) {
@@ -408,7 +450,7 @@ export async function getFeed(userId, { tribeId, cursor, limit }) {
   const { rows } = await pool.query(
     `SELECT f.id, f.kind, f.body, f.created_at, f.edited_at,
             author.id AS author_id, author.display_name AS author_name,
-            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = author.id) AS author_has_avatar,
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = author.id AND i.is_deleted = FALSE) AS author_has_avatar,
             t.id AS tribe_id, t.name AS tribe_name,
             e.title AS event_title, e.starts_at, e.ends_at, e.location, e.cost, e.max_attendees,
             EXISTS (SELECT 1 FROM content_images i WHERE i.content_id = f.id) AS has_image,
@@ -487,6 +529,7 @@ export function decodeCursor(value) {
 
 export async function createContent(userId, tribeId, { type, body, event, image }) {
   const client = await pool.connect();
+  let imageKey = null;
   try {
     await client.query("BEGIN");
     const { rows: membership } = await client.query(
@@ -505,10 +548,11 @@ export async function createContent(userId, tribeId, { type, body, event, image 
       [tribeId, userId, type, body]
     );
     if (image) {
+      imageKey = await getObjectStorage().putImage("content", image);
       await client.query(
-        `INSERT INTO content_images (content_id, mime_type, image_data, byte_size)
-         VALUES ($1, $2, $3, $4)`,
-        [rows[0].id, image.mimeType, image.data, image.data.length]
+        `INSERT INTO content_images (content_id, mime_type, image_data, byte_size, image_key)
+         VALUES ($1, $2, NULL, $3, $4)`,
+        [rows[0].id, image.mimeType, image.data.length, imageKey]
       );
     }
     if (type === "event") {
@@ -519,9 +563,11 @@ export async function createContent(userId, tribeId, { type, body, event, image 
       );
     }
     await client.query("COMMIT");
+    imageKey = null;
     return rows[0];
   } catch (error) {
     await client.query("ROLLBACK");
+    if (imageKey) await removeObjectBestEffort(imageKey);
     throw error;
   } finally {
     client.release();
@@ -530,14 +576,18 @@ export async function createContent(userId, tribeId, { type, body, event, image 
 
 export async function getContentImage(userId, contentId) {
   const { rows } = await pool.query(
-    `SELECT i.mime_type, i.image_data
+    `SELECT i.mime_type, i.image_data, i.image_key
      FROM content_images i
      JOIN feed_items f ON f.id = i.content_id
      JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $1 AND m.status = 'active'
      WHERE i.content_id = $2`,
     [userId, contentId]
   );
-  return rows[0] ? { mimeType: rows[0].mime_type, data: rows[0].image_data } : null;
+  return rows[0] ? {
+    mimeType: rows[0].mime_type,
+    data: rows[0].image_data,
+    imageKey: rows[0].image_key,
+  } : null;
 }
 
 export async function canAccessContent(userId, contentId) {
@@ -615,7 +665,7 @@ export async function listComments(userId, contentId) {
   const { rows } = await pool.query(
     `SELECT c.id, c.body, c.created_at, c.edited_at,
             u.id AS author_id, u.display_name AS author_name,
-            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id) AS author_has_avatar,
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS author_has_avatar,
             (c.user_id = $2) AS is_mine
      FROM content_comments c JOIN users u ON u.id = c.user_id
      WHERE c.content_id = $1 ORDER BY c.created_at ASC, c.id ASC LIMIT 200`,

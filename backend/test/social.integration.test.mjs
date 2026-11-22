@@ -1,11 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import http from "node:http";
+import https from "node:https";
 import pg from "pg";
+import { createObjectStorage, getObjectStorage } from "../object-storage.mjs";
+import { transferLegacyImageRow } from "../legacy-image-migration.mjs";
 
 const { Pool } = pg;
 const origin = process.env.TRIBES_TEST_ORIGIN;
 const mailhogApi = process.env.MAILHOG_API_URL;
-const integrationTest = origin && mailhogApi ? test : test.skip;
+const integrationTest = origin && mailhogApi && process.env.R2_ENDPOINT && process.env.R2_BUCKET_NAME ? test : test.skip;
 
 integrationTest("authenticated social feed, event attendance, likes, comments and cursor pagination", async (t) => {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -88,7 +92,58 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
     return data.id;
   }
 
+  async function requestImage(actor, contentPath) {
+    return fetch(`${origin}${contentPath}`, {
+      headers: actor ? { Cookie: actor.cookie } : {},
+      redirect: "manual",
+    });
+  }
+
+  async function requestSignedImage(location) {
+    const signedUrl = new URL(location);
+    const storageEndpoint = new URL(process.env.R2_ENDPOINT);
+    const transport = storageEndpoint.protocol === "https:" ? https : http;
+    return new Promise((resolve, reject) => {
+      const request = transport.request({
+        hostname: storageEndpoint.hostname,
+        port: storageEndpoint.port || undefined,
+        method: "GET",
+        path: `${signedUrl.pathname}${signedUrl.search}`,
+        headers: { host: signedUrl.host },
+      }, (response) => {
+        const chunks = [];
+        response.on("data", (chunk) => chunks.push(chunk));
+        response.on("end", () => resolve({
+          statusCode: response.statusCode,
+          headers: response.headers,
+          data: Buffer.concat(chunks),
+        }));
+      });
+      request.on("error", reject);
+      request.end();
+    });
+  }
+
   t.after(async () => {
+    if (tribeIds.length) {
+      const { rows } = await pool.query(
+        `SELECT i.image_key FROM content_images i JOIN feed_items f ON f.id = i.content_id
+         WHERE f.tribe_id = ANY($1::uuid[]) AND i.image_key IS NOT NULL`,
+        [tribeIds]
+      );
+      for (const row of rows) {
+        try { await getObjectStorage().deleteObject(row.image_key); } catch {}
+      }
+    }
+    if (userIds.length) {
+      const { rows } = await pool.query(
+        "SELECT image_key FROM user_profile_images WHERE user_id = ANY($1::uuid[]) AND image_key IS NOT NULL",
+        [userIds]
+      );
+      for (const row of rows) {
+        try { await getObjectStorage().deleteObject(row.image_key); } catch {}
+      }
+    }
     if (tribeIds.length) await pool.query("DELETE FROM tribes WHERE id = ANY($1::uuid[])", [tribeIds]);
     if (userIds.length) await pool.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [userIds]);
     await pool.query("DELETE FROM registration_tokens WHERE email LIKE $1", [`${marker}-%`]);
@@ -162,6 +217,13 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   const currentProfile = await call(alice, "/api/auth/me");
   assert.equal(currentProfile.data.user.name, "Alice Perfil");
   assert.equal(currentProfile.data.user.avatarUrl, `/api/users/${alice.user.id}/avatar`);
+  const storedAvatar = await pool.query(
+    "SELECT image_key, image_data, byte_size FROM user_profile_images WHERE user_id = $1",
+    [alice.user.id]
+  );
+  assert.match(storedAvatar.rows[0].image_key, new RegExp(`^avatars/${alice.user.id}/`));
+  assert.equal(storedAvatar.rows[0].image_data, null);
+  assert.equal(storedAvatar.rows[0].byte_size, Buffer.from(profileImage.split(",")[1], "base64").length);
   const publicProfile = await call(bob, `/api/users/${alice.user.id}/profile`);
   assert.equal(publicProfile.response.status, 200);
   assert.deepEqual(publicProfile.data.profile, {
@@ -171,16 +233,51 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
     avatarUrl: `/api/users/${alice.user.id}/avatar`,
   });
   assert.equal("email" in publicProfile.data.profile, false);
-  const publicAvatar = await fetch(`${origin}/api/users/${alice.user.id}/avatar`, { headers: { Cookie: bob.cookie } });
-  assert.equal(publicAvatar.status, 200);
-  assert.equal(publicAvatar.headers.get("content-type"), "image/png");
-  assert.equal((await publicAvatar.arrayBuffer()).byteLength, Buffer.from(profileImage.split(",")[1], "base64").length);
+  const publicAvatar = await requestImage(bob, `/api/users/${alice.user.id}/avatar`);
+  assert.equal(publicAvatar.status, 302);
+  assert.equal(new URL(publicAvatar.headers.get("location")).searchParams.get("X-Amz-Expires"), "300");
+  const avatarBytes = await getObjectStorage().getObject(storedAvatar.rows[0].image_key);
+  assert.equal(avatarBytes.mimeType, "image/png");
+  assert.equal(avatarBytes.data.length, Buffer.from(profileImage.split(",")[1], "base64").length);
   const removedAvatar = await call(alice, "/api/profile", {
     method: "PATCH",
     body: JSON.stringify({ name: "Alice Perfil", aboutMe: "Gosto de jogos e comunidades.", avatar: null }),
   });
   assert.equal(removedAvatar.response.status, 200);
   assert.equal(removedAvatar.data.user.avatarUrl, null);
+  assert.equal((await call(bob, `/api/users/${alice.user.id}/avatar`)).response.status, 404);
+  assert.equal((await pool.query("SELECT 1 FROM user_profile_images WHERE user_id = $1", [alice.user.id])).rowCount, 0);
+  const legacyAvatarBytes = Buffer.from(profileImage.split(",")[1], "base64");
+  await pool.query(
+    `INSERT INTO user_profile_images (user_id, mime_type, image_data, byte_size)
+     VALUES ($1, 'image/png', $2, $3)`,
+    [alice.user.id, legacyAvatarBytes, legacyAvatarBytes.length]
+  );
+  const transferredAvatar = await transferLegacyImageRow(pool, {
+    table: "user_profile_images",
+    id: alice.user.id,
+  });
+  assert.equal(transferredAvatar.transferred, true);
+  const legacyAvatarRecord = await pool.query(
+    "SELECT image_key, image_data FROM user_profile_images WHERE user_id = $1",
+    [alice.user.id]
+  );
+  assert.ok(legacyAvatarRecord.rows[0].image_key);
+  assert.deepEqual(legacyAvatarRecord.rows[0].image_data, legacyAvatarBytes);
+  assert.equal((await requestImage(bob, `/api/users/${alice.user.id}/avatar`)).status, 302);
+  const removeLegacyAvatar = await call(alice, "/api/profile", {
+    method: "PATCH",
+    body: JSON.stringify({ name: "Alice Perfil", aboutMe: "Gosto de jogos e comunidades.", avatar: null }),
+  });
+  assert.equal(removeLegacyAvatar.response.status, 200);
+  const preservedAvatarRecord = await pool.query(
+    "SELECT image_key, image_data, is_deleted FROM user_profile_images WHERE user_id = $1",
+    [alice.user.id]
+  );
+  assert.equal(preservedAvatarRecord.rows[0].image_key, null);
+  assert.equal(preservedAvatarRecord.rows[0].is_deleted, true);
+  assert.deepEqual(preservedAvatarRecord.rows[0].image_data, legacyAvatarBytes);
+  assert.equal((await call(alice, "/api/auth/me")).data.user.avatarUrl, null);
   assert.equal((await call(bob, `/api/users/${alice.user.id}/avatar`)).response.status, 404);
   assert.equal((await call(null, "/api/profile", { method: "PATCH", body: JSON.stringify({ name: "Hacker", aboutMe: "" }) })).response.status, 401);
   assert.equal((await call(alice, "/api/profile", {
@@ -195,6 +292,13 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   const tribeOne = await createTribe(alice, "one");
   const tribeTwo = await createTribe(alice, "two");
   const outsiderTribe = await createTribe(bob, "private-to-bob");
+
+  assert.equal((await call(null, `/api/tribes/${tribeOne.id}/posts`, {
+    method: "POST", body: JSON.stringify({ body: "Sem sessão" }),
+  })).response.status, 401);
+  assert.equal((await call(empty, `/api/tribes/${tribeOne.id}/posts`, {
+    method: "POST", body: JSON.stringify({ body: "Sem associação" }),
+  })).response.status, 403);
 
   const { response: loginResponse, data: loginData } = await call(null, "/api/auth/login", {
     method: "POST",
@@ -213,17 +317,82 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
 
   const postId = await createPost(alice, tribeOne, "Uma publicação para todos os membros.");
   const imageData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII=";
+  assert.equal((await call(empty, `/api/tribes/${tribeOne.id}/posts`, {
+    method: "POST", body: JSON.stringify({ body: "Sem associação", image: imageData }),
+  })).response.status, 403);
   const imagePostId = await createPost(alice, tribeOne, "Publicação com imagem.", imageData);
+  const storedPostImage = await pool.query(
+    "SELECT image_key, image_data, byte_size FROM content_images WHERE content_id = $1",
+    [imagePostId]
+  );
+  assert.match(storedPostImage.rows[0].image_key, /^content\//);
+  assert.equal(storedPostImage.rows[0].image_data, null);
+  assert.equal(storedPostImage.rows[0].byte_size, Buffer.from(imageData.split(",")[1], "base64").length);
+
+  const legacyPostId = await createPost(alice, tribeOne, "Publicação legada com imagem.");
+  const legacyImageBytes = Buffer.from(imageData.split(",")[1], "base64");
+  await pool.query(
+    `INSERT INTO content_images (content_id, mime_type, image_data, byte_size)
+     VALUES ($1, 'image/png', $2, $3)`,
+    [legacyPostId, legacyImageBytes, legacyImageBytes.length]
+  );
+  const transferredPost = await transferLegacyImageRow(pool, {
+    table: "content_images",
+    id: legacyPostId,
+  });
+  assert.equal(transferredPost.transferred, true);
+  const preservedLegacyPost = await pool.query(
+    "SELECT image_key, image_data FROM content_images WHERE content_id = $1",
+    [legacyPostId]
+  );
+  assert.ok(preservedLegacyPost.rows[0].image_key);
+  assert.deepEqual(preservedLegacyPost.rows[0].image_data, legacyImageBytes);
+  assert.equal((await requestImage(alice, `/api/content/${legacyPostId}/image`)).status, 302);
+  const failedTransferPostId = await createPost(alice, tribeOne, "Publicação cuja transferência falhará.");
+  await pool.query(
+    `INSERT INTO content_images (content_id, mime_type, image_data, byte_size)
+     VALUES ($1, 'image/png', $2, $3)`,
+    [failedTransferPostId, legacyImageBytes, legacyImageBytes.length]
+  );
+  const unavailableStorage = createObjectStorage({
+    accountId: "integration-test",
+    accessKeyId: "integration-test-access",
+    secretAccessKey: "integration-test-secret",
+    bucketName: "tribes-media",
+    endpoint: "http://127.0.0.1:1",
+  });
+  await assert.rejects(
+    transferLegacyImageRow(pool, {
+      table: "content_images",
+      id: failedTransferPostId,
+      storage: unavailableStorage,
+    }),
+    { statusCode: 503 }
+  );
+  const failedTransferRecord = await pool.query(
+    "SELECT image_key, image_data FROM content_images WHERE content_id = $1",
+    [failedTransferPostId]
+  );
+  assert.equal(failedTransferRecord.rows[0].image_key, null);
+  assert.deepEqual(failedTransferRecord.rows[0].image_data, legacyImageBytes);
   const invalidImage = await call(alice, `/api/tribes/${tribeOne.id}/posts`, {
     method: "POST",
     body: JSON.stringify({ body: "Imagem inválida.", image: "data:image/png;base64,ZmFrZQ==" }),
   });
   assert.equal(invalidImage.response.status, 400);
-  const imageResponse = await fetch(`${origin}/api/content/${imagePostId}/image`, { headers: { Cookie: alice.cookie } });
-  assert.equal(imageResponse.status, 200);
-  assert.equal(imageResponse.headers.get("content-type"), "image/png");
-  assert.equal((await imageResponse.arrayBuffer()).byteLength, Buffer.from(imageData.split(",")[1], "base64").length);
-  assert.equal((await fetch(`${origin}/api/content/${imagePostId}/image`, { headers: { Cookie: bob.cookie } })).status, 200);
+  const imageResponse = await requestImage(alice, `/api/content/${imagePostId}/image`);
+  assert.equal(imageResponse.status, 302);
+  const signedImageUrl = imageResponse.headers.get("location");
+  assert.equal(new URL(signedImageUrl).searchParams.get("X-Amz-Expires"), "300");
+  assert.equal((await requestImage(null, `/api/content/${imagePostId}/image`)).status, 401);
+  const signedImageResponse = await requestSignedImage(signedImageUrl);
+  assert.equal(signedImageResponse.statusCode, 200);
+  assert.equal(signedImageResponse.headers["content-type"], "image/png");
+  assert.deepEqual(signedImageResponse.data, Buffer.from(imageData.split(",")[1], "base64"));
+  const postImageBytes = await getObjectStorage().getObject(storedPostImage.rows[0].image_key);
+  assert.equal(postImageBytes.mimeType, "image/png");
+  assert.equal(postImageBytes.data.length, Buffer.from(imageData.split(",")[1], "base64").length);
+  assert.equal((await requestImage(bob, `/api/content/${imagePostId}/image`)).status, 302);
   assert.equal((await call(empty, `/api/content/${imagePostId}/image`)).response.status, 404);
   await new Promise((resolve) => setTimeout(resolve, 10));
   const eventResponse = await call(alice, `/api/tribes/${tribeOne.id}/events`, {

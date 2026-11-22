@@ -32,6 +32,13 @@ services:
       SMTP_URL: smtp://mailhog:1025
       EMAIL_FROM: Tribes <no-reply@tribes.local>
       MAILHOG_API_URL: http://mailhog:8025
+      R2_ACCOUNT_ID: local
+      R2_ACCESS_KEY_ID: tribes-local-access
+      R2_SECRET_ACCESS_KEY: tribes-local-secret
+      R2_BUCKET_NAME: tribes-media
+      R2_ENDPOINT: http://rustfs:9000
+      R2_PUBLIC_ENDPOINT: http://localhost:9000
+      R2_REGION: us-east-1
     volumes:
       - ./backend:/app
       - backend_node_modules:/app/node_modules
@@ -41,6 +48,8 @@ services:
         condition: service_healthy
       mailhog:
         condition: service_started
+      object-storage-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:4000/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 5s
@@ -70,8 +79,53 @@ services:
     expose:
       - "1025"
 
+  rustfs-data-init:
+    image: busybox:1.36
+    user: "0:0"
+    command: ["sh", "-c", "chown -R 10001:10001 /data /logs"]
+    volumes:
+      - rustfs_data:/data
+      - rustfs_logs:/logs
+    restart: "no"
+
+  rustfs:
+    image: rustfs/rustfs:1.0.5
+    environment:
+      RUSTFS_ACCESS_KEY: tribes-local-access
+      RUSTFS_SECRET_KEY: tribes-local-secret
+    volumes:
+      - rustfs_data:/data
+      - rustfs_logs:/logs
+    depends_on:
+      rustfs-data-init:
+        condition: service_completed_successfully
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    expose:
+      - "9000"
+
+  object-storage-init:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["npm", "run", "init:local-bucket"]
+    environment:
+      R2_ACCOUNT_ID: local
+      R2_ACCESS_KEY_ID: tribes-local-access
+      R2_SECRET_ACCESS_KEY: tribes-local-secret
+      R2_BUCKET_NAME: tribes-media
+      R2_ENDPOINT: http://rustfs:9000
+      R2_REGION: us-east-1
+    depends_on:
+      rustfs:
+        condition: service_started
+    restart: "no"
+
 volumes:
   frontend_node_modules:
   frontend_next_cache:
   backend_node_modules:
   postgres_data:
+  rustfs_data:
+  rustfs_logs:

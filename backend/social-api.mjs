@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { hashPassword, verifyPassword, createSessionToken, digestSessionToken } from "./security.mjs";
 import { readJson, sendJson } from "./http-utils.mjs";
+import { MAX_IMAGE_DATA_URL_SIZE, parseImage } from "./images.mjs";
+import { getObjectStorage } from "./object-storage.mjs";
 import { sendRegistrationEmail } from "./registration-email.mjs";
 import { sendPasswordResetEmail } from "./password-reset-email.mjs";
 import {
@@ -37,30 +39,11 @@ const SESSION_COOKIE = "tribes_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const REGISTRATION_TOKEN_TTL_MS = 30 * 60 * 1000;
 const PASSWORD_RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const MAX_POST_PAYLOAD_SIZE = Math.ceil(MAX_IMAGE_SIZE / 3) * 4 + 64 * 1024;
+const MAX_POST_PAYLOAD_SIZE = MAX_IMAGE_DATA_URL_SIZE;
 const MAX_PROFILE_PAYLOAD_SIZE = MAX_POST_PAYLOAD_SIZE;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const authAttempts = new Map();
 const dummyPasswordHash = hashPassword("tribes-invalid-account-password");
-
-function parseImage(value) {
-  if (value === undefined || value === null) return null;
-  if (typeof value !== "string") throw invalid("Imagem inválida.");
-  const match = value.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]*={0,2})$/);
-  if (!match) throw invalid("A imagem deve estar no formato JPEG, PNG ou WebP.");
-  const data = Buffer.from(match[2], "base64");
-  if (data.length === 0 || data.length > MAX_IMAGE_SIZE || data.toString("base64") !== match[2]) {
-    throw invalid("A imagem deve ter no máximo 5 MB.");
-  }
-  const signatures = {
-    jpeg: data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff,
-    png: data.length >= 8 && data.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
-    webp: data.length >= 12 && data.toString("ascii", 0, 4) === "RIFF" && data.toString("ascii", 8, 12) === "WEBP",
-  };
-  if (!signatures[match[1]]) throw invalid("O conteúdo do arquivo não corresponde a uma imagem válida.");
-  return { data, mimeType: `image/${match[1]}` };
-}
 
 function readCookie(request, name) {
   const cookies = request.headers.cookie?.split(";") ?? [];
@@ -315,7 +298,7 @@ export async function handleSocialRequest(request, response, url) {
       }
       const interests = [...new Set(payload.interests.map((interest) => interest.trim()))];
       const avatar = Object.hasOwn(payload, "avatar")
-        ? payload.avatar === null ? null : parseImage(payload.avatar)
+        ? payload.avatar === null ? null : await parseImage(payload.avatar)
         : undefined;
       const updatedUser = await updateUserProfile(user.id, { name, aboutMe, city, interests, avatar });
       if (!updatedUser) {
@@ -344,6 +327,12 @@ export async function handleSocialRequest(request, response, url) {
         sendJson(response, 404, { error: "Foto de perfil não encontrada." });
         return true;
       }
+      if (avatar.imageKey) {
+        const location = await getObjectStorage().createReadUrl(avatar.imageKey, avatar.mimeType);
+        response.writeHead(302, { Location: location, "Cache-Control": "private, no-store" });
+        response.end();
+        return true;
+      }
       response.writeHead(200, {
         "Content-Type": avatar.mimeType,
         "Content-Length": avatar.data.length,
@@ -360,6 +349,12 @@ export async function handleSocialRequest(request, response, url) {
       const image = await getContentImage(user.id, contentId);
       if (!image) {
         sendJson(response, 404, { error: "Imagem não encontrada ou sem acesso." });
+        return true;
+      }
+      if (image.imageKey) {
+        const location = await getObjectStorage().createReadUrl(image.imageKey, image.mimeType);
+        response.writeHead(302, { Location: location, "Cache-Control": "private, no-store" });
+        response.end();
         return true;
       }
       response.writeHead(200, {
@@ -459,7 +454,7 @@ export async function handleSocialRequest(request, response, url) {
         invalidMessage: "Objeto JSON inválido.",
       });
       const body = requiredString(payload.body, "texto", 1, 5000);
-      const image = type === "post" ? parseImage(payload.image) : null;
+      const image = type === "post" ? await parseImage(payload.image) : null;
       let event;
       if (type === "event") {
         const startsAt = requiredString(payload.startsAt, "data do evento", 10, 40);

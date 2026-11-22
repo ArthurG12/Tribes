@@ -1,3 +1,4 @@
+import "./load-env.mjs";
 import { createServer } from "node:http";
 import { readJson, sendJson } from "./http-utils.mjs";
 import {

@@ -21,6 +21,7 @@ Landing Page de validação (Smoke Test + Protótipo Interativo) para a rede soc
 - `backend/`: API Node.js, acesso ao PostgreSQL e configuração do container de backend.
 - `backend/migrations/`: esquema versionado das contas, tribos, participações, publicações/eventos e interações.
 - PostgreSQL roda como o serviço `database` do Compose e persiste os dados da aplicação no volume `postgres_data`.
+- Imagens de publicações e avatares são armazenadas em um bucket S3 privado; PostgreSQL guarda referências, MIME e tamanho. Em desenvolvimento, o serviço RustFS fornece armazenamento S3 local no volume `rustfs_data`.
 - A Landing Page continua em `/` para visitantes. Cadastro e login levam à área autenticada, que oferece feed, busca e criação de tribos.
 - Contas, sessões, tribos, participações, publicações/eventos, curtidas e comentários são persistidos no PostgreSQL. O cadastro da lista de espera continua separado e seus dados pessoais permanecem apenas no `localStorage` do navegador.
 
@@ -39,7 +40,11 @@ Landing Page de validação (Smoke Test + Protótipo Interativo) para a rede soc
 docker compose up
 ```
 
-O Compose inicia quatro containers: `frontend` (porta `4317`), `backend` (porta interna `4000`), `database` (PostgreSQL na porta interna `5432`) e MailHog (interface na porta `8026`, SMTP interno na porta `1025`). O Next.js encaminha as chamadas `/api/*` para a API. Acesse `http://localhost:4317` para a Landing Page; usuários podem criar conta em `/cadastro` ou entrar em `/entrar`. No cadastro, a pessoa informa o e-mail e recebe um link; ao abri-lo, define o nome e a senha, e entra automaticamente no feed. No login, o link **Esqueci minha senha** envia instruções por e-mail para contas cadastradas e informa quando o e-mail não está cadastrado; após escolher a nova senha pelo link, a pessoa também entra automaticamente no feed. Em desenvolvimento, veja os e-mails capturados em `http://localhost:8026`. Após autenticar, a aplicação abre `/feed`, com atalhos para explorar e criar tribos. O painel de validação continua em `/metricas`. As alterações no frontend e no backend são refletidas durante o desenvolvimento.
+O Compose inicia frontend, backend, PostgreSQL, MailHog e RustFS. As portas locais são `4317` (frontend), `8026` (MailHog), `9000` (API S3 do RustFS) e `9001` (console RustFS). O bucket privado `tribes-media` é criado automaticamente com credenciais exclusivas de desenvolvimento. O Next.js encaminha as chamadas `/api/*` para a API. Acesse `http://localhost:4317` para a Landing Page; usuários podem criar conta em `/cadastro` ou entrar em `/entrar`. No cadastro, a pessoa informa o e-mail e recebe um link; ao abri-lo, define o nome e a senha, e entra automaticamente no feed. No login, o link **Esqueci minha senha** envia instruções por e-mail para contas cadastradas e informa quando o e-mail não está cadastrado; após escolher a nova senha pelo link, a pessoa também entra automaticamente no feed. Em desenvolvimento, veja os e-mails capturados em `http://localhost:8026`. Após autenticar, a aplicação abre `/feed`, com atalhos para explorar e criar tribos. O painel de validação continua em `/metricas`. As alterações no frontend e no backend são refletidas durante o desenvolvimento.
+
+O backend carrega `backend/.env` quando o arquivo existe. Para conectar uma instância local ao R2 real, copie `backend/.env.example` para `backend/.env` e preencha as credenciais. Sem esse arquivo, o Compose usa RustFS e credenciais de desenvolvimento. `.env` é ignorado pelo Git e excluído do contexto Docker.
+
+Para produção, crie um token S3 em **Cloudflare Dashboard → R2 → Manage R2 API Tokens** com permissões de leitura e gravação limitadas ao bucket privado `tribes-media`. Configure no serviço backend do Render `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME=tribes-media` e `R2_ENDPOINT=https://88f67df82791b16d9aa1f5c4be6a2685.r2.cloudflarestorage.com`. O ID da conta e as chaves são obtidos na Cloudflare; nunca configure essas variáveis no frontend. Não habilite Public Development URL nem domínio público para este bucket. O backend autoriza a solicitação e redireciona para uma URL assinada de leitura com validade de cinco minutos.
 
 ## Feed e API social
 
@@ -47,12 +52,22 @@ O Compose inicia quatro containers: `frontend` (porta `4317`), `backend` (porta 
 - `GET /api/feed?tribeId=<uuid>&cursor=<cursor>&limit=20` — timeline cronológica paginada por cursor; o filtro de tribo é validado pela associação ativa do usuário.
 - `GET /api/tribes?q=<busca>&mine=true` e `POST /api/tribes`; `POST /api/tribes/:id/join` e `DELETE /api/tribes/:id/membership`
 - `POST /api/tribes/:id/posts` e `POST /api/tribes/:id/events`
-- Publicações podem incluir uma imagem JPEG, PNG ou WebP de até 5 MB. As imagens são armazenadas no PostgreSQL e só podem ser carregadas por membros ativos da tribo.
+- Publicações e perfis podem incluir uma imagem JPEG, PNG ou WebP de até 5 MB. O backend confere o tipo real do arquivo, gera object keys e grava imagens no bucket privado. Imagens de publicações só são assinadas para leitura após validar sessão e associação ativa à tribo; avatares continuam disponíveis apenas a usuários autenticados.
 - `POST|DELETE /api/content/:id/like`, `GET|POST /api/content/:id/comments` e `PATCH|DELETE /api/comments/:id`
 
-As migrações são aplicadas no início do backend e registradas em `schema_migrations`. Os links de cadastro e redefinição de senha expiram em 30 minutos, só podem ser usados uma vez, e seus tokens são armazenados como hash. Ao redefinir uma senha, as sessões anteriores são encerradas. O MailHog recebe e-mails apenas no ambiente local; para outros ambientes, configure `SMTP_URL`, `EMAIL_FROM` e `FRONTEND_URL` no backend. Curtidas são únicas por usuário/conteúdo; comentários só podem ser alterados pelo autor. O feed, as tribos e as interações exigem sessão autenticada.
+As migrações são aplicadas no início do backend e registradas em `schema_migrations`. A migration `008_r2_image_references.sql` é aditiva: permite novas imagens referenciadas no R2 e mantém os binários antigos no PostgreSQL. Após configurar o bucket e as credenciais, transfira os arquivos antigos com `docker compose exec backend npm run migrate:legacy-images`. O comando só associa uma object key após comparar tamanho, MIME detectado e SHA-256 do objeto copiado; em falhas, mantém a imagem original. Ele não apaga os binários do banco. Para verificar o progresso:
 
-Para executar testes unitários do backend: `docker compose exec backend npm test`. Com o Compose ativo, os testes de integração contra o PostgreSQL e API são executados com `docker compose exec backend npm run test:integration`.
+```sql
+SELECT 'publicações' AS tipo, count(*) AS sem_referencia
+FROM content_images WHERE image_key IS NULL
+UNION ALL
+SELECT 'avatares', count(*)
+FROM user_profile_images WHERE image_key IS NULL AND is_deleted = FALSE;
+```
+
+A remoção dos binários antigos fica para uma migration posterior, depois de validar as cópias e com aprovação explícita. Os links de cadastro e redefinição de senha expiram em 30 minutos, só podem ser usados uma vez, e seus tokens são armazenados como hash. Ao redefinir uma senha, as sessões anteriores são encerradas. O MailHog recebe e-mails apenas no ambiente local; para outros ambientes, configure `SMTP_URL`, `EMAIL_FROM` e `FRONTEND_URL` no backend. Curtidas são únicas por usuário/conteúdo; comentários só podem ser alterados pelo autor. O feed, as tribos e as interações exigem sessão autenticada.
+
+Para executar testes unitários do backend: `docker compose exec backend npm test`. Com o Compose ativo, os testes de integração contra PostgreSQL, API e RustFS são executados com `docker compose exec backend npm run test:integration`.
 
 Para encerrar, pressione `Ctrl+C` ou execute `docker compose down` em outro terminal. Os dados do PostgreSQL são mantidos no volume `postgres_data`. Para atualizar dependências depois de alterar os manifests, atualize os volumes de dependências e recrie os containers:
 
