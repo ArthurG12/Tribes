@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { apiRequest, type Tribe } from "@/lib/social-types";
+import { SAMPLE_TRIBES } from "@/lib/tribes-data";
 
 type TribeMember = {
   id: string;
@@ -29,6 +30,23 @@ function TribeDetailContent() {
 
   useEffect(() => {
     let active = true;
+    const sample = SAMPLE_TRIBES.find((item) => item.id === id);
+    if (sample) {
+      setTribe({
+        id: sample.id,
+        name: sample.name,
+        description: sample.tagline,
+        category: sample.categoryLabel,
+        format: sample.format,
+        city: sample.city,
+        neighborhood: sample.neighborhood,
+        createdAt: "",
+        memberCount: sample.membersCount,
+        isMember: false,
+      });
+      setLoading(false);
+      return () => { active = false; };
+    }
     apiRequest<{ tribe: Tribe }>(`/api/tribes/${id}`).then(async ({ tribe: current }) => {
       if (!active) return;
       setTribe(current);
@@ -47,6 +65,8 @@ function TribeDetailContent() {
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [id]);
+
+  const isSampleTribe = SAMPLE_TRIBES.some((sample) => sample.id === id);
 
   if (loading) return <main className="flex justify-center py-20"><LoaderCircle className="size-6 animate-spin text-primary" /></main>;
 
@@ -67,9 +87,9 @@ function TribeDetailContent() {
             </div>
             {isOwner && <Button nativeButton={false} render={<Link href={`/minhas-tribos/${tribe.id}`} />} variant="outline" className="shrink-0"><Pencil className="size-4" />Gerenciar tribo</Button>}
           </div>
-          <Button nativeButton={false} render={<Link href={`/feed?tribeId=${tribe.id}`} />} className="mt-5 w-full sm:w-auto">Ver publicações e eventos</Button>
+          {!isSampleTribe && <Button nativeButton={false} render={<Link href={`/feed?tribeId=${tribe.id}`} />} className="mt-5 w-full sm:w-auto">Ver publicações e eventos</Button>}
         </section>
-        <section className="rounded-3xl border border-border bg-card p-5 sm:p-7">
+        {!isSampleTribe && <section className="rounded-3xl border border-border bg-card p-5 sm:p-7">
           <div className="flex items-center justify-between gap-3">
             <div><h2 className="font-heading text-xl font-bold">Ver membros</h2><p className="mt-1 text-sm text-muted-foreground">{members.length} participantes</p></div>
             <Badge variant="outline"><Users className="size-3" />{members.length}</Badge>
@@ -82,7 +102,7 @@ function TribeDetailContent() {
             </div>)}
             {!members.length && <p className="py-6 text-sm text-muted-foreground">Ainda não há membros para exibir.</p>}
           </div>
-        </section>
+        </section>}
       </>}
     </main>
   );
