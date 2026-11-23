@@ -117,7 +117,7 @@ async function authenticatedUser(request) {
   return getSessionUser(readCookie(request, SESSION_COOKIE));
 }
 
-function allowApiAttempt(request, user, method, pathname) {
+function allowApiAttempt(request, user, method) {
   const now = Date.now();
   if (apiAttempts.size > 10_000) {
     for (const [key, attempt] of apiAttempts) {
@@ -294,7 +294,7 @@ export async function handleSocialRequest(request, response, url) {
       sendJson(response, 401, { error: "Autenticação necessária." });
       return true;
     }
-    if (!allowApiAttempt(request, user, method, pathname)) {
+    if (!allowApiAttempt(request, user, method)) {
       sendJson(response, 429, { error: "Muitas requisições. Aguarde um minuto e tente novamente." }, { "Retry-After": "60" });
       return true;
     }
