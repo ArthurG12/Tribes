@@ -51,7 +51,7 @@ export function SocialHeader({
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-1 px-3 py-2.5 sm:flex-nowrap sm:gap-3 sm:px-6 sm:py-3">
         <Link href="/feed" className="flex shrink-0 items-center gap-2 font-heading text-lg font-extrabold">
-          <span className="relative h-12 w-[7.25rem] shrink-0 overflow-hidden">
+          <span className="relative h-10 w-24 shrink-0 overflow-hidden sm:h-11 sm:w-[6.5rem] lg:h-12 lg:w-[7.25rem]">
             <Image
               src="/tribes-logo.png"
               alt="Tribes"
@@ -61,26 +61,27 @@ export function SocialHeader({
             />
           </span>
         </Link>
-        <nav aria-label="Navegação principal" className="order-3 flex w-full min-w-0 items-center justify-start gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:order-none sm:w-auto sm:overflow-visible sm:px-0 sm:pb-0 sm:gap-2">
+        <nav aria-label="Navegação principal" className="order-3 flex w-full min-w-0 items-center justify-around gap-1 px-1 pb-1 sm:order-none sm:w-auto sm:flex-1 sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0 sm:gap-1 lg:gap-2">
           {nav.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href || (item.href === "/minhas-tribos" && pathname.startsWith("/minhas-tribos/"));
             return (
               <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-semibold transition-colors sm:px-3 sm:text-sm ${active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
-                <Icon className="size-4" /><span className="whitespace-nowrap">{item.label}</span>
+                title={item.label}
+                className={`inline-flex min-w-9 shrink-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-semibold transition-colors sm:min-w-9 sm:px-2 lg:min-w-0 lg:px-3 lg:text-sm ${active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
+                <Icon className="size-4 shrink-0" /><span className="hidden whitespace-nowrap lg:inline">{item.label}</span>
               </Link>
             );
           })}
         </nav>
-        <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5 lg:gap-2">
           <Link href="/notificacoes" aria-label={unreadCount ? `Notificações, ${unreadCount} não lidas` : "Notificações"} className="relative inline-flex size-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
             <Bell className="size-4" />
             {unreadCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-4 text-primary-foreground">{unreadCount > 99 ? "99+" : unreadCount}</span>}
           </Link>
           <Link href="/perfil" aria-label="Meu perfil" className="flex min-w-0 items-center gap-2 rounded-xl p-1 transition-colors hover:bg-muted">
             <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-8 text-xs" />
-            <span className="hidden max-w-32 truncate text-xs font-medium text-muted-foreground md:inline">{user.name}</span>
+            <span className="hidden max-w-32 truncate text-xs font-medium text-muted-foreground xl:inline">{user.name}</span>
           </Link>
           <Button
             variant="ghost"
