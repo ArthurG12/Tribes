@@ -6,6 +6,9 @@ import { wakeEmailQueueWorker } from "./email-queue-worker.mjs";
 import { registrationMessageForDelivery } from "./registration-message.mjs";
 import {
   addComment,
+  listNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
   completePasswordReset,
   completeRegistration,
   createContent,
@@ -110,7 +113,7 @@ export async function handleSocialRequest(request, response, url) {
   const method = request.method ?? "GET";
   const routeKnown = pathname.startsWith("/api/auth/") ||
     pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
-    pathname === "/api/feed" || pathname === "/api/tribes" ||
+    pathname === "/api/feed" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
     /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events)$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance)$/.test(pathname) ||
@@ -337,6 +340,29 @@ export async function handleSocialRequest(request, response, url) {
         "X-Content-Type-Options": "nosniff",
       });
       response.end(image.data);
+      return true;
+    }
+
+    if (pathname === "/api/notifications" && method === "GET") {
+      sendJson(response, 200, await listNotifications(user.id));
+      return true;
+    }
+
+    if (pathname === "/api/notifications/read-all" && method === "POST") {
+      const updated = await markAllNotificationsRead(user.id);
+      sendJson(response, 200, { updated, unreadCount: 0 });
+      return true;
+    }
+
+    const notificationReadMatch = pathname.match(/^\/api\/notifications\/([^/]+)\/read$/);
+    if (notificationReadMatch && method === "POST") {
+      const notificationId = requireUuid(notificationReadMatch[1], "Notificação");
+      const updated = await markNotificationRead(user.id, notificationId);
+      if (!updated) {
+        sendJson(response, 404, { error: "Notificação não encontrada." });
+        return true;
+      }
+      sendJson(response, 200, { ok: true });
       return true;
     }
 
