@@ -25,7 +25,9 @@ type EventItem = {
 };
 
 function dateKey(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value));
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Data indisponível";
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(date);
 }
 
 function escapeIcs(value: string) {
@@ -33,7 +35,9 @@ function escapeIcs(value: string) {
 }
 
 function toIcsDate(value: string) {
-  return new Date(value).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 }
 
 export default function EventsPage() {
@@ -98,18 +102,23 @@ export default function EventsPage() {
       "VERSION:2.0",
       "PRODID:-//Tribes//Agenda//PT-BR",
       "CALSCALE:GREGORIAN",
-      ...visibleEvents.flatMap((event) => [
-        "BEGIN:VEVENT",
-        `UID:${event.id}@tribes`,
-        `DTSTAMP:${toIcsDate(new Date().toISOString())}`,
-        `DTSTART:${toIcsDate(event.startsAt)}`,
-        ...(event.endsAt ? [`DTEND:${toIcsDate(event.endsAt)}`] : []),
-        `SUMMARY:${escapeIcs(event.title)}`,
-        `DESCRIPTION:${escapeIcs(event.body)}`,
-        `LOCATION:${escapeIcs(event.location)}`,
-        `CATEGORIES:${escapeIcs(event.tribe.name)}`,
-        "END:VEVENT",
-      ]),
+      ...visibleEvents.flatMap((event) => {
+        const start = toIcsDate(event.startsAt);
+        const end = event.endsAt ? toIcsDate(event.endsAt) : null;
+        if (!start) return [];
+        return [
+          "BEGIN:VEVENT",
+          `UID:${event.id}@tribes`,
+          `DTSTAMP:${toIcsDate(new Date().toISOString())}`,
+          `DTSTART:${start}`,
+          ...(end ? [`DTEND:${end}`] : []),
+          `SUMMARY:${escapeIcs(event.title)}`,
+          `DESCRIPTION:${escapeIcs(event.body)}`,
+          `LOCATION:${escapeIcs(event.location)}`,
+          `CATEGORIES:${escapeIcs(event.tribe.name)}`,
+          "END:VEVENT",
+        ];
+      }),
       "END:VCALENDAR",
     ];
     const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
@@ -134,18 +143,18 @@ export default function EventsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6">
+    <main className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6 sm:space-y-6 sm:px-6 sm:py-8">
       <section className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Agenda da comunidade</p>
-          <h1 className="mt-2 font-heading text-3xl font-extrabold">Próximos eventos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Tudo que vai acontecer nas tribos das quais você participa.</p>
+          <h1 className="mt-2 font-heading text-2xl font-extrabold sm:text-3xl">Próximos eventos</h1>
+          <p className="mt-1 max-w-lg text-sm leading-relaxed text-muted-foreground">Tudo que vai acontecer nas tribos das quais você participa.</p>
         </div>
         <Button variant="outline" className="w-full sm:w-auto" onClick={exportCalendar} disabled={!visibleEvents.length}>
           <Download className="size-4" />Exportar calendário
         </Button>
       </section>
-      <section className="grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-[1fr_220px_auto] sm:items-end">
+      <section className="grid min-w-0 gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_220px_auto] sm:items-end sm:p-5">
         <div className="space-y-2">
           <label htmlFor="event-search" className="text-sm font-semibold">Pesquisar eventos</label>
           <div className="relative">
@@ -166,24 +175,24 @@ export default function EventsPage() {
       {loading ? <div className="flex justify-center py-12"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : visibleEvents.length ? (
         <div className="space-y-4">
           {visibleEvents.map((event) => (
-            <article key={event.id} className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+            <article key={event.id} className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Badge className="bg-primary/10 text-primary"><CalendarDays className="size-3" />{dateKey(event.startsAt)}</Badge>
                 <span className="text-xs text-muted-foreground">por {event.authorName}</span>
               </div>
               <h2 className="mt-3 font-heading text-xl font-bold">{event.title}</h2>
               <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{event.body}</p>
-              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
+              <div className="mt-4 flex min-w-0 flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4 text-primary" />{formatDateTime(event.startsAt)}{event.endsAt ? ` – ${formatDateTime(event.endsAt)}` : ""}</span>
-                <span className="inline-flex items-center gap-1.5"><MapPin className="size-4 text-primary" />{event.location}</span>
+                <span className="inline-flex min-w-0 items-start gap-1.5 break-words"><MapPin className="size-4 shrink-0 text-primary" /><span className="min-w-0 break-words">{event.location}</span></span>
                 {event.cost && <span>{event.cost}</span> }
                 <span className="inline-flex items-center gap-1.5"><Users className="size-4 text-primary" />{event.attendeesCount}{event.maxAttendees ? `/${event.maxAttendees}` : ""} confirmados</span>
                 {event.waitlistCount > 0 && <span>{event.waitlistCount} na lista de espera</span>}
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
                 <span className="text-xs font-semibold text-muted-foreground">{event.tribe.name}</span>
-                <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
-                  <Link href={`/feed?focus=${event.id}`} className="text-sm font-semibold text-primary hover:underline">Ver no feed</Link>
+                <div className="flex w-full min-w-0 flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
+                  <Link href={`/feed?focus=${event.id}`} className="text-center text-sm font-semibold text-primary hover:underline sm:text-left">Ver no feed</Link>
                   <Button className="w-full sm:w-auto" size="sm" variant={event.attendingByMe ? "outline" : "default"} disabled={pendingEvent !== null} onClick={() => void toggleAttendance(event)}>
                     {pendingEvent === event.id ? <LoaderCircle className="size-4 animate-spin" /> : null}
                     {event.attendingByMe ? "Cancelar presença" : event.waitlistedByMe ? "Sair da espera" : event.maxAttendees && event.attendeesCount >= event.maxAttendees ? "Entrar na lista de espera" : "Confirmar presença"}
@@ -194,7 +203,7 @@ export default function EventsPage() {
           ))}
         </div>
       ) : (
-        <section className="rounded-3xl border border-dashed border-border bg-card px-5 py-12 text-center">
+        <section className="rounded-3xl border border-dashed border-border bg-card px-4 py-10 text-center sm:px-5 sm:py-12">
           <CalendarDays className="mx-auto size-8 text-primary" />
           <h2 className="mt-3 font-heading text-xl font-bold">Nenhum evento encontrado</h2>
           <p className="mt-2 text-sm text-muted-foreground">Tente mudar a pesquisa ou o filtro de tribo.</p>

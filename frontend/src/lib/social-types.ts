@@ -64,9 +64,6 @@ export interface PublicProfile {
   city: string;
   interests: string[];
   avatarUrl: string | null;
-  followersCount: number;
-  followingCount: number;
-  isFollowing: boolean;
   isMe: boolean;
 }
 
@@ -79,13 +76,23 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
     },
   });
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error ?? "Não foi possível completar a solicitação.");
+  if (!response.ok) {
+    const message = payload.error === "Origem da requisição não permitida."
+      ? "Não foi possível validar a origem desta solicitação. Atualize a página e tente novamente. Se continuar, verifique a configuração do endereço do site."
+      : payload.error === "Invalid time value"
+        ? "Uma data informada é inválida. Confira a data e o horário e tente novamente."
+        : payload.error ?? "Não foi possível completar a solicitação.";
+    throw new Error(message);
+  }
   return payload as T;
 }
 
-export function formatDateTime(value: string) {
+export function formatDateTime(value: string | null | undefined) {
+  if (!value) return "Data indisponível";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Data indisponível";
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(value));
+  }).format(date);
 }

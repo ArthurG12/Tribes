@@ -37,7 +37,6 @@ import {
   setEventAttendance,
   setPollVote,
   toggleLike,
-  toggleFollow,
   updateUserProfile,
   updateTribe,
 } from "./social-store.mjs";
@@ -137,34 +136,18 @@ function allowApiAttempt(request, user, method) {
   return attempt.count <= limit;
 }
 
-function originAllowed(request) {
-  const origin = request.headers.origin;
-  if (!origin) return request.headers["sec-fetch-site"] !== "cross-site";
-  let expected;
-  try {
-    expected = new URL(process.env.FRONTEND_URL ?? "http://localhost:4317").origin;
-  } catch {
-    return false;
-  }
-  return origin === expected;
-}
 
 export async function handleSocialRequest(request, response, url) {
   const pathname = url.pathname.replace(/\/+$/, "") || "/";
   const method = request.method ?? "GET";
   const routeKnown = pathname.startsWith("/api/auth/") ||
-    pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar|follow)$/.test(pathname) ||
+    pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
     pathname === "/api/feed" || pathname === "/api/saved" || /^\/api\/content\/[^/]+$/.test(pathname) || /^\/api\/content\/[^/]+\/save$/.test(pathname) || pathname === "/api/events" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
     /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members)$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance|vote)$/.test(pathname) ||
     /^\/api\/comments\/[^/]+$/.test(pathname);
   if (!routeKnown) return false;
-
-  if (!["GET", "HEAD", "OPTIONS"].includes(method) && !originAllowed(request)) {
-    sendJson(response, 403, { error: "Origem da requisição não permitida." });
-    return true;
-  }
 
   try {
     if (pathname === "/api/auth/me" && method === "GET") {
@@ -318,12 +301,14 @@ export async function handleSocialRequest(request, response, url) {
         throw invalid("Informe até 20 interesses, com no máximo 30 caracteres cada.");
       }
       const interests = [...new Set(payload.interests.map((interest) => interest.trim()))];
-      const visibilityValues = ["public", "followers", "private"];
-      const profileVisibility = payload.profileVisibility;
-      if (!profileVisibility || typeof profileVisibility !== "object" ||
-        !["aboutMe", "city", "interests"].every((field) => visibilityValues.includes(profileVisibility[field])) ||
-        Object.keys(profileVisibility).some((field) => !["aboutMe", "city", "interests"].includes(field))) {
-        throw invalid("Configurações de privacidade inválidas.");
+      const visibilityFields = ["aboutMe", "city", "interests"];
+      let profileVisibility;
+      if (Object.hasOwn(payload, "profileVisibility")) {
+        if (!payload.profileVisibility || typeof payload.profileVisibility !== "object" ||
+          visibilityFields.some((field) => !["public", "private"].includes(payload.profileVisibility[field]))) {
+          throw invalid("As configurações de privacidade são inválidas.");
+        }
+        profileVisibility = Object.fromEntries(visibilityFields.map((field) => [field, payload.profileVisibility[field]]));
       }
       const avatar = Object.hasOwn(payload, "avatar")
         ? payload.avatar === null ? null : await parseImage(payload.avatar)
@@ -348,18 +333,6 @@ export async function handleSocialRequest(request, response, url) {
       return true;
     }
 
-    const followMatch = pathname.match(/^\/api\/users\/([^/]+)\/follow$/);
-    if (followMatch && ["POST", "DELETE"].includes(method)) {
-      const targetId = requireUuid(followMatch[1], "Usuário");
-      const result = await toggleFollow(user.id, targetId, method === "POST");
-      if (!result) {
-        sendJson(response, 404, { error: "Usuário não encontrado." });
-        return true;
-      }
-      if (result.invalid) throw invalid("Você não pode seguir seu próprio perfil.");
-      sendJson(response, 200, result);
-      return true;
-    }
 
     const profileAvatarMatch = pathname.match(/^\/api\/users\/([^/]+)\/avatar$/);
     if (profileAvatarMatch && method === "GET") {

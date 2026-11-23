@@ -416,7 +416,11 @@ function toUser(row) {
     aboutMe: row.about_me ?? "",
     city: row.city ?? "",
     interests: Array.isArray(row.interests) ? row.interests : [],
-    profileVisibility: row.profile_visibility ?? { aboutMe: "public", city: "public", interests: "public" },
+    profileVisibility: {
+      aboutMe: row.profile_visibility?.aboutMe === "public" ? "public" : "private",
+      city: row.profile_visibility?.city === "public" ? "public" : "private",
+      interests: row.profile_visibility?.interests === "public" ? "public" : "private",
+    },
     avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
   };
 }
@@ -428,7 +432,7 @@ export async function updateUserProfile(userId, { name, aboutMe, city, interests
   try {
     await client.query("BEGIN");
     const { rows } = await client.query(
-      `UPDATE users SET display_name = $2, about_me = $3, city = $4, interests = $5::jsonb, profile_visibility = $6::jsonb
+      `UPDATE users SET display_name = $2, about_me = $3, city = $4, interests = $5::jsonb, profile_visibility = COALESCE($6::jsonb, profile_visibility)
        WHERE id = $1
        RETURNING id, display_name, email, about_me, city, interests, profile_visibility`,
       [userId, name, aboutMe, city, JSON.stringify(interests), JSON.stringify(profileVisibility)]
@@ -501,18 +505,12 @@ export async function getPublicUserProfile(userId, viewerId) {
   const { rows } = await pool.query(
     `SELECT u.id, u.display_name,
             CASE WHEN u.id = $2 OR u.profile_visibility->>'aboutMe' = 'public'
-              OR (u.profile_visibility->>'aboutMe' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $2 AND f.followed_id = u.id))
               THEN u.about_me ELSE '' END AS about_me,
             CASE WHEN u.id = $2 OR u.profile_visibility->>'city' = 'public'
-              OR (u.profile_visibility->>'city' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $2 AND f.followed_id = u.id))
               THEN u.city ELSE '' END AS city,
             CASE WHEN u.id = $2 OR u.profile_visibility->>'interests' = 'public'
-              OR (u.profile_visibility->>'interests' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $2 AND f.followed_id = u.id))
               THEN u.interests ELSE '[]'::jsonb END AS interests,
-            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar,
-            (SELECT COUNT(*)::int FROM user_follows f WHERE f.followed_id = u.id) AS followers_count,
-            (SELECT COUNT(*)::int FROM user_follows f WHERE f.follower_id = u.id) AS following_count,
-            EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $2 AND f.followed_id = u.id) AS is_following
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar
      FROM users u WHERE u.id = $1`,
     [userId, viewerId]
   );
@@ -524,51 +522,10 @@ export async function getPublicUserProfile(userId, viewerId) {
     city: row.city ?? "",
     interests: Array.isArray(row.interests) ? row.interests : [],
     avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
-    followersCount: row.followers_count,
-    followingCount: row.following_count,
-    isFollowing: row.is_following,
     isMe: userId === viewerId,
   } : null;
 }
 
-export async function toggleFollow(followerId, followedId, following) {
-  if (followerId === followedId) return { invalid: true };
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    const { rowCount: targetExists } = await client.query("SELECT 1 FROM users WHERE id = $1 FOR SHARE", [followedId]);
-    if (!targetExists) {
-      await client.query("ROLLBACK");
-      return null;
-    }
-    if (following) {
-      const inserted = await client.query(
-        "INSERT INTO user_follows (follower_id, followed_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING follower_id",
-        [followerId, followedId]
-      );
-      if (inserted.rowCount) {
-        await client.query(
-          "INSERT INTO notifications (recipient_id, actor_id, type) VALUES ($1, $2, 'follow')",
-          [followedId, followerId]
-        );
-      }
-    } else {
-      await client.query("DELETE FROM user_follows WHERE follower_id = $1 AND followed_id = $2", [followerId, followedId]);
-    }
-    const { rows } = await client.query(
-      `SELECT (SELECT COUNT(*)::int FROM user_follows WHERE followed_id = $1) AS followers_count,
-              (SELECT COUNT(*)::int FROM user_follows WHERE follower_id = $1) AS following_count`,
-      [followedId]
-    );
-    await client.query("COMMIT");
-    return { isFollowing: following, followersCount: rows[0].followers_count, followingCount: rows[0].following_count };
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
-}
 
 export async function getUserProfileImage(userId) {
   const { rows } = await pool.query(
@@ -1263,13 +1220,10 @@ export async function listTribeMembers(userId, tribeId) {
   const { rows } = await pool.query(
     `SELECT u.id, u.display_name,
             CASE WHEN u.id = $1 OR u.profile_visibility->>'aboutMe' = 'public'
-              OR (u.profile_visibility->>'aboutMe' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $1 AND f.followed_id = u.id))
               THEN u.about_me ELSE '' END AS about_me,
             CASE WHEN u.id = $1 OR u.profile_visibility->>'city' = 'public'
-              OR (u.profile_visibility->>'city' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $1 AND f.followed_id = u.id))
               THEN u.city ELSE '' END AS city,
             CASE WHEN u.id = $1 OR u.profile_visibility->>'interests' = 'public'
-              OR (u.profile_visibility->>'interests' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $1 AND f.followed_id = u.id))
               THEN u.interests ELSE '[]'::jsonb END AS interests,
             m.joined_at,
             EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar,
