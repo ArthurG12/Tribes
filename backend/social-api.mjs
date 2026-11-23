@@ -301,10 +301,16 @@ export async function handleSocialRequest(request, response, url) {
         throw invalid("Informe até 20 interesses, com no máximo 30 caracteres cada.");
       }
       const interests = [...new Set(payload.interests.map((interest) => interest.trim()))];
+      const visibilityFields = ["aboutMe", "city", "interests"];
+      if (!payload.profileVisibility || typeof payload.profileVisibility !== "object" ||
+        visibilityFields.some((field) => !["public", "private"].includes(payload.profileVisibility[field]))) {
+        throw invalid("As configurações de privacidade são inválidas.");
+      }
+      const profileVisibility = Object.fromEntries(visibilityFields.map((field) => [field, payload.profileVisibility[field]]));
       const avatar = Object.hasOwn(payload, "avatar")
         ? payload.avatar === null ? null : await parseImage(payload.avatar)
         : undefined;
-      const updatedUser = await updateUserProfile(user.id, { name, aboutMe, city, interests, avatar });
+      const updatedUser = await updateUserProfile(user.id, { name, aboutMe, city, interests, profileVisibility, avatar });
       if (!updatedUser) {
         sendJson(response, 404, { error: "Usuário não encontrado." });
         return true;
