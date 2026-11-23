@@ -52,6 +52,7 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [error, setError] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const messageCardsRef = useRef(new Map<string, HTMLElement>());
   const menuTriggersRef = useRef(new Map<string, HTMLButtonElement>());
   const messageRevisionRef = useRef(0);
 
@@ -107,6 +108,31 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
     const container = messagesContainerRef.current;
     if (container) container.scrollTop = container.scrollHeight;
   }, [latestMessageId]);
+
+  useEffect(() => {
+    const messageId = editingMessage ?? confirmDelete;
+    if (!messageId) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const container = messagesContainerRef.current;
+      const messageCard = messageCardsRef.current.get(messageId);
+      if (!container || !messageCard) return;
+
+      const containerBounds = container.getBoundingClientRect();
+      const cardBounds = messageCard.getBoundingClientRect();
+      const visibleTop = containerBounds.top + container.clientTop;
+      const visibleBottom = visibleTop + container.clientHeight;
+      const bottomOverflow = cardBounds.bottom - (visibleBottom - 12);
+
+      if (bottomOverflow > 0) {
+        container.scrollBy({ top: bottomOverflow, behavior: "smooth" });
+      } else if (cardBounds.top < visibleTop + 12) {
+        container.scrollBy({ top: cardBounds.top - visibleTop - 12, behavior: "smooth" });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [editingMessage, confirmDelete]);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -186,7 +212,14 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
         {loading ? (
           <div className="flex min-h-28 items-center justify-center"><LoaderCircle className="size-5 animate-spin text-primary" /></div>
         ) : messages.length ? messages.map((message) => (
-          <article key={message.id} className="flex min-w-0 items-start gap-2.5">
+          <article
+            key={message.id}
+            ref={(element) => {
+              if (element) messageCardsRef.current.set(message.id, element);
+              else messageCardsRef.current.delete(message.id);
+            }}
+            className="flex min-w-0 items-start gap-2.5"
+          >
             <UserAvatar name={message.author.name} avatarUrl={message.author.avatarUrl} />
             <div className="min-w-0 flex-1 rounded-2xl bg-card px-3 py-2.5 shadow-xs">
               <div className="flex min-w-0 items-start justify-between gap-2">
