@@ -393,7 +393,7 @@ export async function createSession(userId, token, expiresAt) {
 export async function getSessionUser(token) {
   if (!token) return null;
   const { rows } = await pool.query(
-    `SELECT u.id, u.display_name, u.email, u.about_me, u.city, u.interests,
+    `SELECT u.id, u.display_name, u.email, u.about_me, u.city, u.interests, u.profile_visibility,
             EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar
      FROM user_sessions s
      JOIN users u ON u.id = s.user_id
@@ -416,21 +416,22 @@ function toUser(row) {
     aboutMe: row.about_me ?? "",
     city: row.city ?? "",
     interests: Array.isArray(row.interests) ? row.interests : [],
+    profileVisibility: row.profile_visibility ?? { aboutMe: "public", city: "public", interests: "public" },
     avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
   };
 }
 
-export async function updateUserProfile(userId, { name, aboutMe, city, interests, avatar }) {
+export async function updateUserProfile(userId, { name, aboutMe, city, interests, profileVisibility, avatar }) {
   const client = await pool.connect();
   let newImageKey = null;
   let oldImageKey = null;
   try {
     await client.query("BEGIN");
     const { rows } = await client.query(
-      `UPDATE users SET display_name = $2, about_me = $3, city = $4, interests = $5::jsonb
+      `UPDATE users SET display_name = $2, about_me = $3, city = $4, interests = $5::jsonb, profile_visibility = $6::jsonb
        WHERE id = $1
-       RETURNING id, display_name, email, about_me, city, interests`,
-      [userId, name, aboutMe, city, JSON.stringify(interests)]
+       RETURNING id, display_name, email, about_me, city, interests, profile_visibility`,
+      [userId, name, aboutMe, city, JSON.stringify(interests), JSON.stringify(profileVisibility)]
     );
     if (rows.length === 0) {
       await client.query("ROLLBACK");
@@ -471,7 +472,7 @@ export async function updateUserProfile(userId, { name, aboutMe, city, interests
       );
     }
     const { rows: updated } = await client.query(
-      `SELECT u.id, u.display_name, u.email, u.about_me, u.city, u.interests,
+      `SELECT u.id, u.display_name, u.email, u.about_me, u.city, u.interests, u.profile_visibility,
               EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar
        FROM users u WHERE u.id = $1`,
       [userId]
@@ -498,7 +499,16 @@ async function removeObjectBestEffort(imageKey) {
 
 export async function getPublicUserProfile(userId, viewerId) {
   const { rows } = await pool.query(
-    `SELECT u.id, u.display_name, u.about_me, u.city, u.interests,
+    `SELECT u.id, u.display_name,
+            CASE WHEN u.id = $2 OR u.profile_visibility->>'aboutMe' = 'public'
+              OR (u.profile_visibility->>'aboutMe' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $2 AND f.followed_id = u.id))
+              THEN u.about_me ELSE '' END AS about_me,
+            CASE WHEN u.id = $2 OR u.profile_visibility->>'city' = 'public'
+              OR (u.profile_visibility->>'city' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $2 AND f.followed_id = u.id))
+              THEN u.city ELSE '' END AS city,
+            CASE WHEN u.id = $2 OR u.profile_visibility->>'interests' = 'public'
+              OR (u.profile_visibility->>'interests' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $2 AND f.followed_id = u.id))
+              THEN u.interests ELSE '[]'::jsonb END AS interests,
             EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar,
             (SELECT COUNT(*)::int FROM user_follows f WHERE f.followed_id = u.id) AS followers_count,
             (SELECT COUNT(*)::int FROM user_follows f WHERE f.follower_id = u.id) AS following_count,
@@ -1251,7 +1261,17 @@ export async function toggleSavedContent(userId, contentId, saved) {
 
 export async function listTribeMembers(userId, tribeId) {
   const { rows } = await pool.query(
-    `SELECT u.id, u.display_name, u.about_me, u.city, u.interests, m.joined_at,
+    `SELECT u.id, u.display_name,
+            CASE WHEN u.id = $1 OR u.profile_visibility->>'aboutMe' = 'public'
+              OR (u.profile_visibility->>'aboutMe' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $1 AND f.followed_id = u.id))
+              THEN u.about_me ELSE '' END AS about_me,
+            CASE WHEN u.id = $1 OR u.profile_visibility->>'city' = 'public'
+              OR (u.profile_visibility->>'city' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $1 AND f.followed_id = u.id))
+              THEN u.city ELSE '' END AS city,
+            CASE WHEN u.id = $1 OR u.profile_visibility->>'interests' = 'public'
+              OR (u.profile_visibility->>'interests' = 'followers' AND EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $1 AND f.followed_id = u.id))
+              THEN u.interests ELSE '[]'::jsonb END AS interests,
+            m.joined_at,
             EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar,
             (t.created_by = u.id) AS is_owner
      FROM tribe_memberships m
