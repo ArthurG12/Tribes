@@ -887,12 +887,33 @@ export async function updateContent(userId, contentId, body, event) {
       return null;
     }
     if (event && rows[0].kind === "event") {
+      const { rows: attendance } = await client.query(
+        "SELECT COUNT(*)::int AS count FROM event_attendees WHERE content_id = $1",
+        [contentId]
+      );
+      if (event.maxAttendees !== null && attendance[0].count > event.maxAttendees) {
+        const error = new Error("O limite não pode ser menor que o número de presenças confirmadas.");
+        error.statusCode = 400;
+        throw error;
+      }
       await client.query(
         `UPDATE tribe_events
          SET title = $2, starts_at = $3, ends_at = $4, location = $5, cost = $6, max_attendees = $7
          WHERE content_id = $1`,
         [contentId, event.title, event.startsAt, event.endsAt, event.location, event.cost, event.maxAttendees]
       );
+      let currentCount = attendance[0].count;
+      while (event.maxAttendees === null || currentCount < event.maxAttendees) {
+        const { rows: next } = await client.query(
+          `SELECT user_id FROM event_waitlist WHERE content_id = $1
+           ORDER BY created_at ASC, user_id ASC LIMIT 1 FOR UPDATE`,
+          [contentId]
+        );
+        if (!next.length) break;
+        await client.query("DELETE FROM event_waitlist WHERE content_id = $1 AND user_id = $2", [contentId, next[0].user_id]);
+        await client.query("INSERT INTO event_attendees (content_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [contentId, next[0].user_id]);
+        currentCount += 1;
+      }
     }
     await client.query("COMMIT");
     return rows[0];
