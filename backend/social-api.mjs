@@ -302,11 +302,14 @@ export async function handleSocialRequest(request, response, url) {
       }
       const interests = [...new Set(payload.interests.map((interest) => interest.trim()))];
       const visibilityFields = ["aboutMe", "city", "interests"];
-      if (!payload.profileVisibility || typeof payload.profileVisibility !== "object" ||
-        visibilityFields.some((field) => !["public", "private"].includes(payload.profileVisibility[field]))) {
-        throw invalid("As configurações de privacidade são inválidas.");
+      let profileVisibility;
+      if (Object.hasOwn(payload, "profileVisibility")) {
+        if (!payload.profileVisibility || typeof payload.profileVisibility !== "object" ||
+          visibilityFields.some((field) => !["public", "private"].includes(payload.profileVisibility[field]))) {
+          throw invalid("As configurações de privacidade são inválidas.");
+        }
+        profileVisibility = Object.fromEntries(visibilityFields.map((field) => [field, payload.profileVisibility[field]]));
       }
-      const profileVisibility = Object.fromEntries(visibilityFields.map((field) => [field, payload.profileVisibility[field]]));
       const avatar = Object.hasOwn(payload, "avatar")
         ? payload.avatar === null ? null : await parseImage(payload.avatar)
         : undefined;
