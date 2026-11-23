@@ -633,6 +633,19 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(interactedEvent.likesCount, 1);
   assert.equal(interactedEvent.commentsCount, 0);
 
+  const editablePostId = await createPost(alice, tribeOne, "Publicação editável.");
+  assert.equal((await call(bob, `/api/content/${editablePostId}`, {
+    method: "PATCH", body: JSON.stringify({ body: "Edição não autorizada" }),
+  })).response.status, 404);
+  const editedPost = await call(alice, `/api/content/${editablePostId}`, {
+    method: "PATCH", body: JSON.stringify({ body: "Publicação atualizada" }),
+  });
+  assert.equal(editedPost.response.status, 200);
+  assert.equal(editedPost.data.item.body, "Publicação atualizada");
+  assert.equal((await call(bob, `/api/content/${editablePostId}`, { method: "DELETE" })).response.status, 404);
+  assert.equal((await call(alice, `/api/content/${editablePostId}`, { method: "DELETE" })).response.status, 200);
+  assert.ok(!(await call(alice, `/api/feed?tribeId=${tribeOne.id}&limit=50`)).data.items.some((item) => item.id === editablePostId));
+
   const paginatedIds = [];
   let cursor = null;
   do {
