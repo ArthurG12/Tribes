@@ -119,7 +119,7 @@ export function SocialHeader({
     {menuOpen && createPortal(
       <div className="fixed inset-0 z-[100] lg:hidden">
         <button type="button" aria-label="Fechar menu" onClick={() => setMenuOpen(false)} className="absolute inset-0 bg-black/50" />
-        <aside role="dialog" aria-modal="true" aria-label="Menu lateral" className="absolute inset-y-0 left-0 flex max-h-[100dvh] w-[min(20rem,88vw)] flex-col overflow-y-auto border-r border-border bg-background p-5 shadow-2xl">
+        <aside role="dialog" aria-modal="true" aria-label="Menu lateral" className="absolute inset-y-0 right-0 flex max-h-[100dvh] w-[min(20rem,88vw)] flex-col overflow-y-auto border-l border-border bg-background p-5 shadow-2xl">
           <div className="flex items-center justify-between border-b border-border pb-4">
             <span className="font-heading text-lg font-extrabold">Menu</span>
             <Button variant="ghost" size="icon-sm" aria-label="Fechar menu" onClick={() => setMenuOpen(false)}><X className="size-4" /></Button>
