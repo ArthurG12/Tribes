@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, Clock3, MapPin, Users, LoaderCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { apiRequest, formatDateTime } from "@/lib/social-types";
 
 type EventItem = {
@@ -37,6 +38,17 @@ export default function EventsPage() {
     return () => { active = false; };
   }, []);
 
+  async function toggleAttendance(event: EventItem) {
+    try {
+      const result = await apiRequest<{ attendeesCount: number; attendingByMe: boolean }>(`/api/content/${event.id}/attendance`, {
+        method: event.attendingByMe ? "DELETE" : "POST",
+      });
+      setEvents((current) => current.map((item) => item.id === event.id ? { ...item, ...result } : item));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível atualizar sua presença.");
+    }
+  }
+
   return (
     <main className="mx-auto max-w-3xl space-y-6">
       <section>
@@ -60,9 +72,14 @@ export default function EventsPage() {
                 <span className="inline-flex items-center gap-1.5"><MapPin className="size-4 text-primary" />{event.location}</span>
                 <span className="inline-flex items-center gap-1.5"><Users className="size-4 text-primary" />{event.attendeesCount} confirmados</span>
               </div>
-              <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
                 <span className="text-xs font-semibold text-muted-foreground">{event.tribe.name}</span>
-                <Link href="/feed" className="text-sm font-semibold text-primary hover:underline">Ver no feed</Link>
+                <div className="flex items-center gap-3">
+                  <Link href="/feed" className="text-sm font-semibold text-primary hover:underline">Ver no feed</Link>
+                  <Button size="sm" variant={event.attendingByMe ? "outline" : "default"} onClick={() => void toggleAttendance(event)}>
+                    {event.attendingByMe ? "Cancelar presença" : "Confirmar presença"}
+                  </Button>
+                </div>
               </div>
             </article>
           ))}
