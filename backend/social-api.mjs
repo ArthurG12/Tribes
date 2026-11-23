@@ -301,7 +301,7 @@ export async function handleSocialRequest(request, response, url) {
       return true;
     }
 
-    const followMatch = pathname.match(/^\\/api\\/users\\/([^/]+)\\/follow$/);
+    const followMatch = pathname.match(/^\/api\/users\/([^/]+)\/follow$/);
     if (followMatch && ["POST", "DELETE"].includes(method)) {
       const targetId = requireUuid(followMatch[1], "Usuário");
       const result = await toggleFollow(user.id, targetId, method === "POST");
