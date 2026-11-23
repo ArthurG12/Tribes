@@ -4,9 +4,9 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import Image from "next/image";
 import {
   BarChart3,
-  CalendarDays,
   ImagePlus,
   LoaderCircle,
+  PartyPopper,
   Send,
   X,
 } from "lucide-react";
@@ -37,6 +37,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
   const [eventMode, setEventMode] = useState(false);
   const [pollMode, setPollMode] = useState(false);
   const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [pollMultiple, setPollMultiple] = useState(false);
   const [eventTitle, setEventTitle] = useState("");
   const [eventStartsAt, setEventStartsAt] = useState("");
   const [eventEndsAt, setEventEndsAt] = useState("");
@@ -61,13 +62,11 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
     setPollMode(false);
     setComposerError("");
     setImageError("");
-    if (nextMode) setImage(null);
   }
 
   function changePollMode(nextMode: boolean) {
     setPollMode(nextMode);
     setEventMode(false);
-    setImage(null);
     setComposerError("");
     setImageError("");
   }
@@ -78,8 +77,6 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
     setComposerError("");
     if (!file) return;
 
-    changeEventMode(false);
-    setPollMode(false);
     setImage(null);
     try {
       setImage(await readImageAsDataUrl(file));
@@ -115,7 +112,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
       if (pollMode) {
         await apiRequest(`/api/tribes/${selectedTribeId}/posts`, {
           method: "POST",
-          body: JSON.stringify({ body, pollOptions: pollOptions.map((option) => option.trim()) }),
+          body: JSON.stringify({ body, pollOptions: pollOptions.map((option) => option.trim()), pollMultiple, image: image ?? undefined }),
         });
       } else if (eventMode) {
         await apiRequest(`/api/tribes/${selectedTribeId}/events`, {
@@ -130,6 +127,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
             lon: eventLocationCoordinates?.lon ?? null,
             cost: eventCost,
             maxAttendees: eventCapacity ? Number(eventCapacity) : null,
+            image: image ?? undefined,
           }),
         });
       } else {
@@ -141,6 +139,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
 
       setBody("");
       setPollOptions(["", ""]);
+      setPollMultiple(false);
       setImage(null);
       setImageError("");
       setEventMode(false);
@@ -208,6 +207,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
             <Input aria-label="Término do evento" type="datetime-local" value={eventEndsAt} onChange={(event) => setEventEndsAt(event.target.value)} />
             <Input aria-label="Custo do evento" placeholder="Custo (opcional)" value={eventCost} onChange={(event) => setEventCost(event.target.value)} maxLength={100} />
             <Input aria-label="Limite de participantes" type="number" min="1" max="10000" placeholder="Limite de participantes" value={eventCapacity} onChange={(event) => setEventCapacity(event.target.value)} />
+            <button type="button" disabled={creating} onClick={() => changeEventMode(false)} className="border-t border-border pt-3 text-center text-sm font-semibold text-destructive hover:underline disabled:opacity-50 sm:col-span-2">Remover evento</button>
           </div>}
 
           {pollMode && <div className="mt-2 space-y-2">
@@ -217,6 +217,11 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
               {pollOptions.length > 2 && <button type="button" aria-label={`Remover opção ${index + 1}`} onClick={() => setPollOptions((current) => current.filter((_, optionIndex) => optionIndex !== index))} className="rounded-lg px-3 text-muted-foreground hover:bg-muted"><X className="size-4" /></button>}
             </div>)}
             {pollOptions.length < 6 && <button type="button" onClick={() => setPollOptions((current) => [...current, ""])} className="text-sm font-semibold text-primary hover:underline">Adicionar opção</button>}
+            <label className="flex cursor-pointer items-center gap-2 border-t border-border pt-3 text-sm">
+              <input type="checkbox" checked={pollMultiple} disabled={creating} onChange={(event) => setPollMultiple(event.target.checked)} className="size-4 accent-primary" />
+              Permitir escolher várias opções
+            </label>
+            <button type="button" disabled={creating} onClick={() => changePollMode(false)} className="w-full border-t border-border pt-3 text-center text-sm font-semibold text-destructive hover:underline disabled:opacity-50">Remover enquete</button>
           </div>}
 
           {image && <div className="relative mt-2 w-fit max-w-full rounded-xl border border-border bg-muted/40 p-2">
@@ -239,7 +244,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
                 <BarChart3 className="size-5" />
               </button>
               <button type="button" title="Criar evento" aria-label="Criar evento" aria-pressed={eventMode} disabled={creating} onClick={() => changeEventMode(!eventMode)} className={`${toolButton} ${eventMode ? "bg-primary/10" : ""}`}>
-                <CalendarDays className="size-5" />
+                <PartyPopper className="size-5" />
               </button>
             </div>
 

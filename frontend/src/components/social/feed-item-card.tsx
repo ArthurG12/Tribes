@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   Bookmark,
   CalendarDays,
+  Check,
   Clock3,
   Heart,
   MapPin,
@@ -158,6 +159,27 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
     }
   }
 
+  async function vote(optionId: string) {
+    if (votePending) return;
+    setVotePending(true);
+    try {
+      const result = await apiRequest<{ totalVotes: number; votedOptionIds: string[]; options: { id: string; votes: number }[] }>(`/api/content/${item.id}/vote`, { method: "POST", body: JSON.stringify({ optionId }) });
+      onUpdateItem(item.id, (current) => current.poll ? {
+        ...current,
+        poll: {
+          ...current.poll,
+          totalVotes: result.totalVotes,
+          votedOptionIds: result.votedOptionIds,
+          options: current.poll.options.map((entry) => ({ ...entry, votes: result.options.find((updated) => updated.id === entry.id)?.votes ?? entry.votes })),
+        },
+      } : current);
+    } catch (voteError) {
+      onError(voteError instanceof Error ? voteError.message : "Não foi possível registrar seu voto.");
+    } finally {
+      setVotePending(false);
+    }
+  }
+
   async function toggleAttendance() {
     if (!item.event || attendancePending) return;
     setAttendancePending(true);
@@ -301,20 +323,14 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
           <div className="space-y-2">
             {item.poll.options.map((option) => {
               const percentage = item.poll!.totalVotes ? Math.round(option.votes / item.poll!.totalVotes * 100) : 0;
-              const selected = item.poll!.votedOptionId === option.id;
-              return <button key={option.id} type="button" disabled={votePending} onClick={() => {
-                setVotePending(true);
-                void apiRequest<{ totalVotes: number; votedOptionId: string }>(`/api/content/${item.id}/vote`, { method: "POST", body: JSON.stringify({ optionId: option.id }) })
-                  .then((result) => onUpdateItem(item.id, (current) => current.poll ? { ...current, poll: { ...current.poll, totalVotes: result.totalVotes, votedOptionId: result.votedOptionId, options: current.poll.options.map((entry) => ({ ...entry, votes: entry.id === option.id ? entry.votes + (selected ? 0 : 1) : entry.id === current.poll!.votedOptionId ? Math.max(0, entry.votes - 1) : entry.votes })) } } : current))
-                  .catch((error: unknown) => onError(error instanceof Error ? error.message : "Não foi possível registrar seu voto."))
-                  .finally(() => setVotePending(false));
-              }} className={`relative w-full overflow-hidden rounded-xl border px-3 py-3 text-left text-sm ${selected ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/50"}`}>
+              const selected = item.poll!.votedOptionIds.includes(option.id);
+              return <button key={option.id} type="button" aria-pressed={selected} disabled={votePending} onClick={() => void vote(option.id)} className={`relative w-full overflow-hidden rounded-xl border px-3 py-3 text-left text-sm ${selected ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/50"}`}>
                 <span className="absolute inset-y-0 left-0 bg-primary/10 transition-all" style={{ width: `${percentage}%` }} />
-                <span className="relative flex items-center justify-between gap-3"><span className="font-medium">{option.label}</span><span className="shrink-0 text-xs text-muted-foreground">{percentage}% · {option.votes}</span></span>
+                <span className="relative flex items-center justify-between gap-3"><span className="flex min-w-0 items-center gap-2 font-medium">{item.poll!.multiple && <span className={`flex size-4 shrink-0 items-center justify-center rounded border ${selected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50"}`}>{selected && <Check className="size-3" />}</span>}<span className="min-w-0 break-words">{option.label}</span></span><span className="shrink-0 text-xs text-muted-foreground">{percentage}% · {option.votes}</span></span>
               </button>;
             })}
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">{item.poll.votedOptionId ? "Você pode alterar seu voto." : "Escolha uma opção para votar."}</p>
+          <p className="mt-2 text-xs text-muted-foreground">{item.poll.multiple ? "Você pode escolher várias opções. Toque de novo para desfazer." : item.poll.votedOptionIds.length ? "Você pode alterar seu voto." : "Escolha uma opção para votar."}</p>
         </section>}
         {item.imageUrl && <Image src={item.imageUrl} alt={`Imagem da publicação de ${item.author.name}`} width={1200} height={900} unoptimized className="max-h-[32rem] w-full rounded-2xl bg-muted/30 object-contain" />}
         {item.event && <div className="border-t border-border/70 pt-3">

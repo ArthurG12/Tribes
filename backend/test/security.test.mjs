@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createSessionToken, digestSessionToken, hashPassword, verifyPassword } from "../security.mjs";
+import { createSessionToken, digestSessionToken, hashPassword, passwordPolicyError, verifyPassword } from "../security.mjs";
 import { decodeCursor } from "../social-store.mjs";
 
 test("password hashes are salted and can be verified", async () => {
@@ -26,4 +26,22 @@ test("feed cursors are validated before reaching SQL", () => {
   assert.throws(() => decodeCursor("not-a-cursor"), { statusCode: 400 });
   const invalidDate = Buffer.from(JSON.stringify({ ...expected, createdAt: "2026-99-99T30:90:00Z" })).toString("base64url");
   assert.throws(() => decodeCursor(invalidDate), { statusCode: 400 });
+});
+
+test("password policy requires 6+ characters, one uppercase letter and one special character", () => {
+  assert.equal(passwordPolicyError("Ab!def"), null);
+  assert.equal(passwordPolicyError("Áb-def"), null);
+  assert.equal(passwordPolicyError("TribesDemo2026!"), null);
+  assert.match(passwordPolicyError("Ab!de"), /entre 6 e 128/);
+  assert.match(passwordPolicyError("ab!defgh"), /maiúscula/);
+  assert.match(passwordPolicyError("Abcdefgh1"), /especial/);
+  assert.match(passwordPolicyError("Abc def 12"), /especial/);
+  assert.match(passwordPolicyError("A!".repeat(65)), /entre 6 e 128/);
+  assert.match(passwordPolicyError(undefined), /senha/);
+});
+
+test("existing hashes keep verifying regardless of the current password policy", async () => {
+  const legacy = await hashPassword("senha-antiga-sem-maiuscula");
+  assert.notEqual(passwordPolicyError("senha-antiga-sem-maiuscula"), null);
+  assert.equal(await verifyPassword("senha-antiga-sem-maiuscula", legacy), true);
 });

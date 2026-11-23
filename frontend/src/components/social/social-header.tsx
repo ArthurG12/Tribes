@@ -108,7 +108,7 @@ export function SocialHeader({
             <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-8 text-xs" />
             <span className="hidden max-w-32 truncate text-xs font-medium text-muted-foreground xl:inline">{user.name}</span>
           </Link>
-          <Button variant="ghost" size="icon-sm" aria-label="Sair da conta" onClick={() => void logout()} className="hidden sm:inline-flex"><LogOut className="size-4" /></Button>
+          <Button variant="ghost" size="icon-sm" aria-label="Sair da conta" onClick={() => void logout()} className="hidden lg:inline-flex"><LogOut className="size-4" /></Button>
           <Button variant="outline" size="icon-sm" aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} className="lg:hidden">
             {menuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
           </Button>

@@ -9,6 +9,21 @@ import { promisify } from "node:util";
 const scrypt = promisify(scryptCallback);
 const PASSWORD_KEY_LENGTH = 64;
 
+export const PASSWORD_MIN_LENGTH = 6;
+export const PASSWORD_MAX_LENGTH = 128;
+
+// Regra para NOVAS senhas (cadastro e redefinição). O login não usa esta regra,
+// para que contas criadas com a política anterior continuem entrando normalmente.
+export function passwordPolicyError(password) {
+  if (typeof password !== "string") return "Informe uma senha.";
+  if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
+    return `A senha deve ter entre ${PASSWORD_MIN_LENGTH} e ${PASSWORD_MAX_LENGTH} caracteres.`;
+  }
+  if (!/\p{Lu}/u.test(password)) return "A senha deve ter pelo menos uma letra maiúscula.";
+  if (!/[^\p{L}\p{N}\s]/u.test(password)) return "A senha deve ter pelo menos um caractere especial, como ! @ # $ ou -.";
+  return null;
+}
+
 export async function hashPassword(password) {
   const salt = randomBytes(16);
   const derived = await scrypt(password, salt, PASSWORD_KEY_LENGTH, {
