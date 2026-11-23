@@ -206,7 +206,9 @@
     overflow-x: clip;
   }
 
-  img, video, canvas {\n    max-width: 100%;\n  }
+  img, video, canvas {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 639px) {
