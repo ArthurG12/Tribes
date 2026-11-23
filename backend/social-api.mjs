@@ -296,6 +296,8 @@ export async function handleSocialRequest(request, response, url) {
         return true;
       }
       sendJson(response, 200, { tribe });
+      return true;
+    }
     if (pathname === "/api/maps-config" && method === "GET") {
       sendJson(response, 200, { apiKey: process.env.MAPS_API ?? "" }, { "Cache-Control": "no-store, max-age=0" });
       return true;
