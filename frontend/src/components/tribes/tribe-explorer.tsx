@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dialog";
 
 interface TribeExplorerProps {
-  onSelectTribeForWaitlist: (tribe: TribePreview) => void;
+  onSelectTribeForSignup: (tribe: TribePreview) => void;
   onExplorerInteract: (interest?: InterestId) => void;
   compact?: boolean;
 }
@@ -48,7 +48,7 @@ const FEATURED_FILTERS: { id: "todos" | InterestId; label: string }[] = [
 ];
 
 export function TribeExplorer({
-  onSelectTribeForWaitlist,
+  onSelectTribeForSignup,
   onExplorerInteract,
   compact = false,
 }: TribeExplorerProps) {
@@ -382,7 +382,7 @@ export function TribeExplorer({
                     onClick={() => {
                       const chosen = activeTribe;
                       setActiveTribe(null);
-                      onSelectTribeForWaitlist(chosen);
+                      onSelectTribeForSignup(chosen);
                     }}
                   >
                     Participar no lançamento

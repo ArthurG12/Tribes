@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/tribes/navbar";
 import { HeroMockup } from "@/components/tribes/hero-mockup";
@@ -10,6 +11,8 @@ import { trackMvpEvent } from "@/lib/mvp-tracker";
 import { SiteFooter } from "@/components/tribes/site-footer";
 
 export default function TribesLandingPage() {
+  const router = useRouter();
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -29,7 +32,7 @@ export default function TribesLandingPage() {
                 Pessoas com os mesmos interesses, atividades que você gosta e encontros de verdade.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Button size="lg" className="h-12 rounded-full px-7 text-base font-semibold" nativeButton={false} render={<Link href="/lista-de-espera" />}>
+                <Button size="lg" className="h-12 rounded-full px-7 text-base font-semibold" nativeButton={false} render={<Link href="/cadastro" />}>
                   Começar agora <ArrowRight className="size-4" />
                 </Button>
                 <Button variant="outline" size="lg" className="h-12 rounded-full px-6 text-base font-semibold" nativeButton={false} render={<Link href="/explorar" />}>
@@ -46,7 +49,7 @@ export default function TribesLandingPage() {
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
             <TribeExplorer
               compact
-              onSelectTribeForWaitlist={(tribe) => { window.location.href = "/lista-de-espera?tribo=" + encodeURIComponent(tribe.id); }}
+              onSelectTribeForSignup={() => { router.push("/cadastro"); }}
               onExplorerInteract={(interest) => { void trackMvpEvent({ event: "explorer_interaction", interests: interest ? [interest] : undefined }); }}
             />
             <div className="mt-2 text-center">

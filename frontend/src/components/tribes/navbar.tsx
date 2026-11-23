@@ -41,7 +41,7 @@ function NavbarContent() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 lg:flex">
-          <Button size="lg" className="rounded-full px-4 font-semibold" nativeButton={false} render={<Link href="/lista-de-espera" />}>
+          <Button size="lg" className="rounded-full px-4 font-semibold" nativeButton={false} render={<Link href="/cadastro" />}>
             Começar <ArrowRight className="size-4" />
           </Button>
           <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/entrar" />}>
@@ -62,8 +62,8 @@ function NavbarContent() {
             <Link href="/entrar" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
               <LogIn className="size-4" /> Entrar
             </Link>
-            <Button size="lg" className="mt-2 w-full rounded-full font-semibold" nativeButton={false} onClick={() => setMobileOpen(false)} render={<Link href="/lista-de-espera" />}>
-              Entrar na lista de espera <ArrowRight className="size-4" />
+            <Button size="lg" className="mt-2 w-full rounded-full font-semibold" nativeButton={false} onClick={() => setMobileOpen(false)} render={<Link href="/cadastro" />}>
+              Começar <ArrowRight className="size-4" />
             </Button>
           </nav>
         </div>
