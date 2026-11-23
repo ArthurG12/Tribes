@@ -626,7 +626,7 @@ export async function userBelongsToTribe(userId, tribeId) {
   return rowCount > 0;
 }
 
-export async function getFeed(userId, { tribeId, query, cursor, limit }) {
+export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly = false }) {
   if (tribeId && !(await userBelongsToTribe(userId, tribeId))) {
     const error = new Error("Você não participa desta tribo.");
     error.statusCode = 403;
@@ -642,6 +642,7 @@ export async function getFeed(userId, { tribeId, query, cursor, limit }) {
             (SELECT COUNT(*) FROM content_likes l WHERE l.content_id = f.id)::int AS like_count,
             (SELECT COUNT(*) FROM content_comments c WHERE c.content_id = f.id)::int AS comment_count,
             EXISTS (SELECT 1 FROM content_likes l WHERE l.content_id = f.id AND l.user_id = $1) AS liked_by_me,
+            EXISTS (SELECT 1 FROM saved_content s WHERE s.content_id = f.id AND s.user_id = $1) AS saved_by_me,
             (SELECT COUNT(*) FROM event_attendees a WHERE a.content_id = f.id)::int AS attendee_count,
             EXISTS (SELECT 1 FROM event_attendees a WHERE a.content_id = f.id AND a.user_id = $1) AS attending_by_me
      FROM feed_items f
@@ -652,9 +653,10 @@ export async function getFeed(userId, { tribeId, query, cursor, limit }) {
      WHERE ($2::uuid IS NULL OR f.tribe_id = $2)
        AND ($3::text IS NULL OR (f.body ILIKE $3 OR author.display_name ILIKE $3 OR t.name ILIKE $3 OR e.title ILIKE $3 OR e.location ILIKE $3))
        AND ($4::timestamptz IS NULL OR (f.created_at, f.id) < ($4, $5::uuid))
+       AND ($7::boolean = false OR EXISTS (SELECT 1 FROM saved_content s WHERE s.content_id = f.id AND s.user_id = $1))
      ORDER BY f.created_at DESC, f.id DESC
      LIMIT $6`,
-    [userId, tribeId ?? null, query ? `%${query}%` : null, cursor?.createdAt ?? null, cursor?.id ?? null, limit + 1]
+    [userId, tribeId ?? null, query ? `%${query}%` : null, cursor?.createdAt ?? null, cursor?.id ?? null, limit + 1, savedOnly]
   );
   const hasMore = rows.length > limit;
   const pageRows = rows.slice(0, limit);
@@ -674,6 +676,7 @@ export async function getFeed(userId, { tribeId, query, cursor, limit }) {
     likesCount: row.like_count,
     commentsCount: row.comment_count,
     likedByMe: row.liked_by_me,
+    savedByMe: row.saved_by_me,
     event: row.kind === "event" ? {
       title: row.event_title,
       startsAt: row.starts_at,
@@ -998,4 +1001,56 @@ export async function markAllNotificationsRead(userId) {
     [userId]
   );
   return rowCount;
+}
+
+
+export async function toggleSavedContent(userId, contentId, saved) {
+  if (!(await canAccessContent(userId, contentId))) return null;
+  if (saved) {
+    await pool.query("INSERT INTO saved_content (user_id, content_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [userId, contentId]);
+  } else {
+    await pool.query("DELETE FROM saved_content WHERE user_id = $1 AND content_id = $2", [userId, contentId]);
+  }
+  return { savedByMe: saved };
+}
+
+export async function listTribeMembers(userId, tribeId) {
+  const { rows } = await pool.query(
+    `SELECT u.id, u.display_name, u.about_me, u.city, m.joined_at,
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar,
+            (t.created_by = u.id) AS is_owner
+     FROM tribe_memberships m
+     JOIN users u ON u.id = m.user_id
+     JOIN tribes t ON t.id = m.tribe_id
+     WHERE m.tribe_id = $2 AND m.status = 'active'
+       AND EXISTS (SELECT 1 FROM tribe_memberships access WHERE access.tribe_id = $2 AND access.user_id = $1 AND access.status = 'active')
+     ORDER BY (t.created_by = u.id) DESC, u.display_name ASC
+     LIMIT 200`,
+    [userId, tribeId]
+  );
+  if (rows.length === 0 && !(await userBelongsToTribe(userId, tribeId))) return null;
+  return rows.map((row) => ({
+    id: row.id, name: row.display_name, aboutMe: row.about_me ?? "", city: row.city ?? "",
+    joinedAt: row.joined_at, isOwner: row.is_owner,
+    avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
+  }));
+}
+
+export async function listUpcomingEvents(userId, limit = 100) {
+  const { rows } = await pool.query(
+    `SELECT f.id, f.body, e.title, e.starts_at, e.ends_at, e.location,
+            t.id AS tribe_id, t.name AS tribe_name, u.display_name AS author_name,
+            (SELECT COUNT(*) FROM event_attendees a WHERE a.content_id = f.id)::int AS attendees_count,
+            EXISTS (SELECT 1 FROM event_attendees a WHERE a.content_id = f.id AND a.user_id = $1) AS attending_by_me
+     FROM feed_items f JOIN tribe_events e ON e.content_id = f.id
+     JOIN tribes t ON t.id = f.tribe_id JOIN users u ON u.id = f.author_id
+     JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $1 AND m.status = 'active'
+     WHERE e.starts_at >= CURRENT_TIMESTAMP ORDER BY e.starts_at ASC, f.id ASC LIMIT $2`,
+    [userId, limit]
+  );
+  return rows.map((row) => ({
+    id: row.id, body: row.body, title: row.title, startsAt: row.starts_at, endsAt: row.ends_at,
+    location: row.location, tribe: { id: row.tribe_id, name: row.tribe_name }, authorName: row.author_name,
+    attendeesCount: row.attendees_count, attendingByMe: row.attending_by_me,
+  }));
 }
