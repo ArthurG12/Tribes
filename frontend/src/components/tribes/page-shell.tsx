@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { SiteFooter } from "@/components/tribes/site-footer";
 import { Navbar } from "@/components/tribes/navbar";
 
