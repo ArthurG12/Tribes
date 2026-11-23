@@ -150,6 +150,17 @@ export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps)
         <Badge variant={item.type === "event" ? "default" : "secondary"}>{item.type === "event" ? "Evento" : item.type === "poll" ? "Enquete" : "Publicação"}</Badge>
       </header>
       <div className="space-y-4 p-4 sm:p-5">
+        {item.event && <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><CalendarDays className="size-4" />Evento da tribo</div>
+          <h2 className="mt-2 font-heading text-lg font-bold">{item.event.title}</h2>
+          <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+            <p className="flex items-center gap-2"><Clock3 className="size-4 shrink-0 text-primary" />{formatDateTime(item.event.startsAt)}{item.event.endsAt ? ` – ${new Intl.DateTimeFormat("pt-BR", { timeStyle: "short" }).format(new Date(item.event.endsAt))}` : ""}</p>
+            <p className="flex items-center gap-2"><MapPin className="size-4 shrink-0 text-primary" />{item.event.location}</p>
+            {item.event.cost && <p>{item.event.cost}</p>}
+            {item.event.maxAttendees && <p className="flex items-center gap-2"><Users className="size-4 text-primary" />Limite de {item.event.maxAttendees} participantes</p>}
+          </div>
+        </div>}
+        <p className="whitespace-pre-wrap text-sm leading-relaxed">{item.body}</p>
         {item.poll && <section className="rounded-2xl border border-primary/20 bg-primary/[0.035] p-4">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><BarChart3 className="size-4" />Enquete · {item.poll.totalVotes} {item.poll.totalVotes === 1 ? "voto" : "votos"}</div>
           <div className="space-y-2">
@@ -170,17 +181,6 @@ export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps)
           </div>
           <p className="mt-2 text-xs text-muted-foreground">{item.poll.votedOptionId ? "Você pode alterar seu voto." : "Escolha uma opção para votar."}</p>
         </section>}
-        {item.event && <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><CalendarDays className="size-4" />Evento da tribo</div>
-          <h2 className="mt-2 font-heading text-lg font-bold">{item.event.title}</h2>
-          <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-            <p className="flex items-center gap-2"><Clock3 className="size-4 shrink-0 text-primary" />{formatDateTime(item.event.startsAt)}{item.event.endsAt ? ` – ${new Intl.DateTimeFormat("pt-BR", { timeStyle: "short" }).format(new Date(item.event.endsAt))}` : ""}</p>
-            <p className="flex items-center gap-2"><MapPin className="size-4 shrink-0 text-primary" />{item.event.location}</p>
-            {item.event.cost && <p>{item.event.cost}</p>}
-            {item.event.maxAttendees && <p className="flex items-center gap-2"><Users className="size-4 text-primary" />Limite de {item.event.maxAttendees} participantes</p>}
-          </div>
-        </div>}
-        <p className="whitespace-pre-wrap text-sm leading-relaxed">{item.body}</p>
         {item.imageUrl && <Image src={item.imageUrl} alt={`Imagem da publicação de ${item.author.name}`} width={1200} height={900} unoptimized className="max-h-[32rem] w-full rounded-2xl bg-muted/30 object-contain" />}
         <div className="flex flex-wrap items-center gap-2 border-t border-border/70 pt-3">
           <Button type="button" size="sm" variant="ghost" aria-pressed={item.savedByMe} disabled={savePending} onClick={() => void toggleSaved()} className={item.savedByMe ? "text-primary" : "text-muted-foreground"}>
