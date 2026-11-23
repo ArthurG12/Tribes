@@ -16,6 +16,7 @@ export default function FeedPage() {
   const focusedItemRef = useRef<string | null>(null);
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [selectedTribe, setSelectedTribe] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -38,11 +39,12 @@ export default function FeedPage() {
     const query = new URLSearchParams({ limit: String(PAGE_SIZE) });
     if (selectedTribe !== "all") query.set("tribeId", selectedTribe);
     if (debouncedSearch) query.set("q", debouncedSearch);
+    if (selectedType !== "all") query.set("type", selectedType);
     if (cursor) query.set("cursor", cursor);
     const result = await apiRequest<{ items: FeedItem[]; nextCursor: string | null }>(`/api/feed?${query}`);
     setItems((existing) => replace ? result.items : [...existing, ...result.items]);
     setNextCursor(result.nextCursor);
-  }, [selectedTribe, debouncedSearch]);
+  }, [selectedTribe, selectedType, debouncedSearch]);
 
   useEffect(() => {
     let active = true;
@@ -114,6 +116,16 @@ export default function FeedPage() {
           <option value="all">Todas as tribos</option>
           {tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>)}
         </select>
+        </div>
+        <div>
+          <label htmlFor="content-type-filter" className="mb-2 block text-sm font-semibold">Tipo de conteúdo</label>
+          <select id="content-type-filter" value={selectedType} onChange={(event) => { setLoading(true); setSelectedType(event.target.value); }}
+            className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <option value="all">Tudo</option>
+            <option value="post">Publicações</option>
+            <option value="event">Eventos</option>
+            <option value="poll">Enquetes</option>
+          </select>
         </div>
       </section>
 
