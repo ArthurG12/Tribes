@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Crown, LoaderCircle, MapPin, Search, Users } from "lucide-react";
+import { ArrowLeft, Crown, LoaderCircle, MapPin, Search, Users } from "lucide-react";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { apiRequest, type Tribe } from "@/lib/social-types";
 
@@ -65,6 +65,10 @@ export default function MembersPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-6">
+      <Link href="/tribos" className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <ArrowLeft className="size-4" />
+        Voltar às tribos
+      </Link>
       <section>
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Comunidade</p>
         <h1 className="mt-2 font-heading text-3xl font-extrabold">Membros das tribos</h1>
