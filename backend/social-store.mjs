@@ -543,7 +543,7 @@ export async function getUserProfileImage(userId) {
 export async function searchTribes(userId, { query = "", mine = false, managed = false, limit = 40 }) {
   const { rows } = await pool.query(
     `SELECT t.id, t.name, t.description, t.category, t.format, t.city, t.neighborhood,
-            t.created_at,
+            t.created_at, (t.created_by = $1) AS is_owner,
             COUNT(DISTINCT m.user_id)::int AS member_count,
             COALESCE(bool_or(m.user_id = $1 AND m.status = 'active'), false) AS is_member
      FROM tribes t
@@ -571,6 +571,7 @@ export async function searchTribes(userId, { query = "", mine = false, managed =
     createdAt: row.created_at,
     memberCount: row.member_count,
     isMember: row.is_member,
+    isOwner: row.is_owner,
   }));
 }
 
