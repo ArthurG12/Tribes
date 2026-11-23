@@ -35,6 +35,7 @@ import {
   setEventAttendance,
   setPollVote,
   toggleLike,
+  toggleFollow,
   updateUserProfile,
   updateTribe,
 } from "./social-store.mjs";
@@ -116,7 +117,7 @@ export async function handleSocialRequest(request, response, url) {
   const pathname = url.pathname.replace(/\/+$/, "") || "/";
   const method = request.method ?? "GET";
   const routeKnown = pathname.startsWith("/api/auth/") ||
-    pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
+    pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar|follow)$/.test(pathname) ||
     pathname === "/api/feed" || pathname === "/api/saved" || /^\/api\/content\/[^/]+\/save$/.test(pathname) || pathname === "/api/events" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
     /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members)$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
@@ -291,12 +292,25 @@ export async function handleSocialRequest(request, response, url) {
 
     const publicProfileMatch = pathname.match(/^\/api\/users\/([^/]+)\/profile$/);
     if (publicProfileMatch && method === "GET") {
-      const profile = await getPublicUserProfile(requireUuid(publicProfileMatch[1], "Usuário"));
+      const profile = await getPublicUserProfile(requireUuid(publicProfileMatch[1], "Usuário"), user.id);
       if (!profile) {
         sendJson(response, 404, { error: "Perfil não encontrado." });
         return true;
       }
       sendJson(response, 200, { profile });
+      return true;
+    }
+
+    const followMatch = pathname.match(/^\\/api\\/users\\/([^/]+)\\/follow$/);
+    if (followMatch && ["POST", "DELETE"].includes(method)) {
+      const targetId = requireUuid(followMatch[1], "Usuário");
+      const result = await toggleFollow(user.id, targetId, method === "POST");
+      if (!result) {
+        sendJson(response, 404, { error: "Usuário não encontrado." });
+        return true;
+      }
+      if (result.invalid) throw invalid("Você não pode seguir seu próprio perfil.");
+      sendJson(response, 200, result);
       return true;
     }
 
