@@ -27,6 +27,7 @@ export interface FeedItem {
   createdAt: string;
   editedAt: string | null;
   author: { id: string; name: string; avatarUrl: string | null };
+  isMine: boolean;
   tribe: { id: string; name: string };
   likesCount: number;
   commentsCount: number;
