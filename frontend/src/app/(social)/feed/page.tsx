@@ -30,7 +30,10 @@ export default function FeedPage() {
   const [composerOpen, setComposerOpen] = useState(false);
 
   useEffect(() => {
-    setFocusId(new URLSearchParams(window.location.search).get("focus"));
+    const params = new URLSearchParams(window.location.search);
+    setFocusId(params.get("focus"));
+    const tribeId = params.get("tribeId");
+    if (tribeId) setSelectedTribe(tribeId);
   }, []);
 
   useEffect(() => {
