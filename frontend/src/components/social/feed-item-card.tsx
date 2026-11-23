@@ -136,7 +136,7 @@ export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps)
   }
 
   return (
-    <article className="overflow-hidden rounded-3xl border border-border bg-card shadow-xs">
+    <article id={`feed-item-${item.id}`} className="scroll-mt-28 overflow-hidden rounded-3xl border border-border bg-card shadow-xs">
       <header className="flex items-start justify-between gap-3 border-b border-border/70 p-4 sm:p-5">
         <div className="flex min-w-0 items-center gap-3">
           <Link href={`/usuarios/${item.author.id}`} aria-label={`Ver perfil de ${item.author.name}`}>
