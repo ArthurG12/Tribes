@@ -61,6 +61,10 @@ export interface PublicProfile {
   city: string;
   interests: string[];
   avatarUrl: string | null;
+  followersCount: number;
+  followingCount: number;
+  isFollowing: boolean;
+  isMe: boolean;
 }
 
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
