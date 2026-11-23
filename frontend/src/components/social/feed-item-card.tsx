@@ -252,11 +252,11 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
         {item.event && !editingPost && <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><CalendarDays className="size-4" />Evento da tribo</div>
           <h2 className="mt-2 font-heading text-lg font-bold">{item.event.title}</h2>
-          <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-            <p className="flex items-center gap-2"><Clock3 className="size-4 shrink-0 text-primary" />{formatDateTime(item.event.startsAt)}{item.event.endsAt ? ` – ${formatDateTime(item.event.endsAt)}` : ""}</p>
-            <p className="flex items-center gap-2"><MapPin className="size-4 shrink-0 text-primary" />{item.event.location}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+            <p className="inline-flex items-center gap-2"><Clock3 className="size-4 shrink-0 text-primary" />{formatDateTime(item.event.startsAt)}{item.event.endsAt ? ` – ${formatDateTime(item.event.endsAt)}` : ""}</p>
+            <p className="inline-flex items-center gap-2 break-words"><MapPin className="size-4 shrink-0 text-primary" />{item.event.location}</p>
             {item.event.cost && <p>{item.event.cost}</p>}
-            {item.event.maxAttendees && <p className="flex items-center gap-2"><Users className="size-4 text-primary" />Limite de {item.event.maxAttendees} participantes</p>}
+            {item.event.maxAttendees && <p className="inline-flex items-center gap-2"><Users className="size-4 text-primary" />Limite de {item.event.maxAttendees} participantes</p>}
           </div>
         </div>}
         {editingPost ? <div className="space-y-3">
@@ -302,7 +302,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
           <p className="mt-2 text-xs text-muted-foreground">{item.poll.votedOptionId ? "Você pode alterar seu voto." : "Escolha uma opção para votar."}</p>
         </section>}
         {item.imageUrl && <Image src={item.imageUrl} alt={`Imagem da publicação de ${item.author.name}`} width={1200} height={900} unoptimized className="max-h-[32rem] w-full rounded-2xl bg-muted/30 object-contain" />}
-        <div className="flex flex-nowrap items-center justify-between gap-0.5 border-t border-border/70 pt-3">
+        <div className="flex flex-nowrap items-center justify-between gap-0.5 border-t border-border/70 pt-3"ame="flex flex-nowrap items-center justify-between gap-0.5 border-t border-border/70 pt-3">
           <Button type="button" size="sm" variant="ghost" aria-pressed={item.savedByMe} disabled={savePending} onClick={() => void toggleSaved()} className={`min-w-0 flex-1 gap-1 px-1.5 text-xs whitespace-nowrap sm:flex-none sm:gap-2 sm:px-3 sm:text-sm ${item.savedByMe ? "text-primary" : "text-muted-foreground"}`}>
             <Bookmark className={`size-4 ${item.savedByMe ? "fill-current" : ""}`} />{item.savedByMe ? "Salva" : "Salvar"}
           </Button>
