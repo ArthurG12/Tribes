@@ -73,7 +73,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
     assert.ok(registrationExpiry.rows[0].ttl_seconds <= 25 * 60 * 60);
     const { response, data } = await call(null, "/api/auth/register/complete", {
       method: "POST",
-      body: JSON.stringify({ name: `Tester ${label}`, token, password: "integration-test-password" }),
+      body: JSON.stringify({ name: `Tester ${label}`, token, password: "Integration-test-password" }),
     });
     assert.equal(response.status, 201, JSON.stringify(data));
     const cookie = response.headers.get("set-cookie")?.split(";")[0];
@@ -198,9 +198,16 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   }
   assert.ok(resetLink, "MailHog deve receber o link de redefinição de senha");
   const resetToken = new URL(resetLink).searchParams.get("token");
+  for (const weak of ["Ab!", "semmaiuscula!", "SemEspecial1", "Sem espaço 1"]) {
+    const rejected = await call(null, "/api/auth/password-reset/complete", {
+      method: "POST",
+      body: JSON.stringify({ token: resetToken, password: weak }),
+    });
+    assert.equal(rejected.response.status, 400, `senha fraca aceita: ${weak}`);
+  }
   const { response: resetResponse, data: resetData } = await call(null, "/api/auth/password-reset/complete", {
     method: "POST",
-    body: JSON.stringify({ token: resetToken, password: "new-integration-test-password" }),
+    body: JSON.stringify({ token: resetToken, password: "New-integration-test-password" }),
   });
   assert.equal(resetResponse.status, 200, JSON.stringify(resetData));
   assert.equal(resetData.user.id, alice.user.id);
@@ -211,13 +218,13 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal((await call(resetSession, "/api/auth/me")).data.user.id, alice.user.id);
   assert.equal((await call(null, "/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email: alice.user.email, password: "integration-test-password" }),
+    body: JSON.stringify({ email: alice.user.email, password: "Integration-test-password" }),
   })).response.status, 401);
   alice.cookie = resetCookie;
 
   const reusedToken = await call(null, "/api/auth/register/complete", {
     method: "POST",
-    body: JSON.stringify({ name: "Tester alice", token: alice.token, password: "another-valid-password" }),
+    body: JSON.stringify({ name: "Tester alice", token: alice.token, password: "Another-valid-password" }),
   });
   assert.equal(reusedToken.response.status, 400);
   const bob = await register("bob");
@@ -327,7 +334,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
 
   const { response: loginResponse, data: loginData } = await call(null, "/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email: alice.user.email, password: "new-integration-test-password" }),
+    body: JSON.stringify({ email: alice.user.email, password: "New-integration-test-password" }),
   });
   assert.equal(loginResponse.status, 200);
   assert.equal(loginData.user.id, alice.user.id);

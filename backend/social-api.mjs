@@ -1,4 +1,4 @@
-import { hashPassword, verifyPassword, createSessionToken, digestSessionToken } from "./security.mjs";
+import { hashPassword, verifyPassword, createSessionToken, digestSessionToken, passwordPolicyError } from "./security.mjs";
 import { readJson, sendJson } from "./http-utils.mjs";
 import { MAX_IMAGE_DATA_URL_SIZE, parseImage } from "./images.mjs";
 import { getObjectStorage } from "./object-storage.mjs";
@@ -183,9 +183,8 @@ export async function handleSocialRequest(request, response, url) {
         return true;
       }
       const name = requiredString(payload.name, "nome", 2, 80);
-      if (typeof payload.password !== "string" || payload.password.length < 10 || payload.password.length > 128) {
-        throw invalid("A senha deve ter entre 10 e 128 caracteres.");
-      }
+      const passwordError = passwordPolicyError(payload.password);
+      if (passwordError) throw invalid(passwordError);
       const sessionToken = createSessionToken();
       let user;
       try {
@@ -233,9 +232,8 @@ export async function handleSocialRequest(request, response, url) {
         sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." }, { "Retry-After": "60" });
         return true;
       }
-      if (typeof payload.password !== "string" || payload.password.length < 10 || payload.password.length > 128) {
-        throw invalid("A senha deve ter entre 10 e 128 caracteres.");
-      }
+      const passwordError = passwordPolicyError(payload.password);
+      if (passwordError) throw invalid(passwordError);
       const sessionToken = createSessionToken();
       const user = await completePasswordReset({
         tokenHash: digestSessionToken(token),
