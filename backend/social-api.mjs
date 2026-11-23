@@ -141,8 +141,7 @@ function originAllowed(request) {
   const fetchSite = request.headers["sec-fetch-site"];
 
   if (!originHeader) {
-    return fetchSite === "same-origin" || fetchSite === "none" ||
-      (process.env.NODE_ENV !== "production" && fetchSite !== "cross-site");
+    return fetchSite !== "cross-site";
   }
 
   let requestOrigin;
