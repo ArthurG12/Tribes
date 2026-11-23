@@ -52,11 +52,13 @@ export default function MyTribesPage() {
         </Button>
       </section>
 
-      {!loading && tribes.length > 0 && (
+      {!loading && (
         <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3" aria-label="Filtrar minhas tribos">
-          <button type="button" onClick={() => setFilter("all")} aria-pressed={filter === "all"} className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${filter === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Todas</button>
-          <button type="button" onClick={() => setFilter("moderator")} aria-pressed={filter === "moderator"} className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${filter === "moderator" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Sou moderador</button>
-          <button type="button" onClick={() => setFilter("participant")} aria-pressed={filter === "participant"} className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${filter === "participant" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Sou participante</button>
+          {tribes.length > 0 && <>
+            <button type="button" onClick={() => setFilter("all")} aria-pressed={filter === "all"} className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${filter === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Todas</button>
+            <button type="button" onClick={() => setFilter("moderator")} aria-pressed={filter === "moderator"} className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${filter === "moderator" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Sou moderador</button>
+            <button type="button" onClick={() => setFilter("participant")} aria-pressed={filter === "participant"} className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${filter === "participant" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Sou participante</button>
+          </>}
           <Link href="/membros" className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">Diretório de membros</Link>
         </div>
       )}
