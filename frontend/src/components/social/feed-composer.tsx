@@ -95,9 +95,17 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
   async function submitContent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedTribeId) return;
-    if (eventMode && eventEndsAt && new Date(eventEndsAt).getTime() <= new Date(eventStartsAt).getTime()) {
-      setComposerError("A data de término deve ser posterior ao início.");
-      return;
+    if (eventMode) {
+      const startsAt = new Date(eventStartsAt);
+      const endsAt = eventEndsAt ? new Date(eventEndsAt) : null;
+      if (Number.isNaN(startsAt.getTime()) || (endsAt && Number.isNaN(endsAt.getTime()))) {
+        setComposerError("Informe uma data e um horário válidos para o evento.");
+        return;
+      }
+      if (endsAt && endsAt <= startsAt) {
+        setComposerError("A data de término deve ser posterior ao início.");
+        return;
+      }
     }
     setCreating(true);
     setComposerError("");
