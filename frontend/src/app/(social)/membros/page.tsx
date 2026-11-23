@@ -38,6 +38,8 @@ export default function MembersPage() {
   }, []);
 
   useEffect(() => {
+    setCityFilter("all");
+    setInterestFilter("all");
     if (!tribeId) { setMembers([]); return; }
     let active = true;
     setLoadingMembers(true);
