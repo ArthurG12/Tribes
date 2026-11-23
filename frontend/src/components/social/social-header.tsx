@@ -101,13 +101,13 @@ export function SocialHeader({
             <Bell className="size-4" />
             {unreadCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-4 text-primary-foreground">{unreadCount > 99 ? "99+" : unreadCount}</span>}
           </Link>
+          <Button variant="ghost" size="icon-sm" aria-label={darkMode ? "Modo escuro ativo. Ativar modo claro" : "Modo claro ativo. Ativar modo escuro"} aria-pressed={darkMode} title={darkMode ? "Modo escuro" : "Modo claro"} onClick={onToggleTheme}>
+            {darkMode ? <Moon className="size-4" /> : <Sun className="size-4" />}
+          </Button>
           <Link href="/perfil" aria-label="Meu perfil" className="flex min-w-0 items-center gap-2 rounded-xl p-1 transition-colors hover:bg-muted">
             <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-8 text-xs" />
             <span className="hidden max-w-32 truncate text-xs font-medium text-muted-foreground xl:inline">{user.name}</span>
           </Link>
-          <Button variant="ghost" size="icon-sm" aria-label={darkMode ? "Modo escuro ativo. Ativar modo claro" : "Modo claro ativo. Ativar modo escuro"} aria-pressed={darkMode} title={darkMode ? "Modo escuro" : "Modo claro"} onClick={onToggleTheme}>
-            {darkMode ? <Moon className="size-4" /> : <Sun className="size-4" />}
-          </Button>
           <Button variant="ghost" size="icon-sm" aria-label="Sair da conta" onClick={() => void logout()} className="hidden sm:inline-flex"><LogOut className="size-4" /></Button>
           <Button variant="outline" size="icon-sm" aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} className="lg:hidden">
             {menuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
