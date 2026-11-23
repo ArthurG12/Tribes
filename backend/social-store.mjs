@@ -496,12 +496,15 @@ async function removeObjectBestEffort(imageKey) {
   }
 }
 
-export async function getPublicUserProfile(userId) {
+export async function getPublicUserProfile(userId, viewerId) {
   const { rows } = await pool.query(
     `SELECT u.id, u.display_name, u.about_me, u.city, u.interests,
-            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar,
+            (SELECT COUNT(*)::int FROM user_follows f WHERE f.followed_id = u.id) AS followers_count,
+            (SELECT COUNT(*)::int FROM user_follows f WHERE f.follower_id = u.id) AS following_count,
+            EXISTS (SELECT 1 FROM user_follows f WHERE f.follower_id = $2 AND f.followed_id = u.id) AS is_following
      FROM users u WHERE u.id = $1`,
-    [userId]
+    [userId, viewerId]
   );
   const row = rows[0];
   return row ? {
@@ -511,7 +514,50 @@ export async function getPublicUserProfile(userId) {
     city: row.city ?? "",
     interests: Array.isArray(row.interests) ? row.interests : [],
     avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
+    followersCount: row.followers_count,
+    followingCount: row.following_count,
+    isFollowing: row.is_following,
+    isMe: userId === viewerId,
   } : null;
+}
+
+export async function toggleFollow(followerId, followedId, following) {
+  if (followerId === followedId) return { invalid: true };
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rowCount: targetExists } = await client.query("SELECT 1 FROM users WHERE id = $1 FOR SHARE", [followedId]);
+    if (!targetExists) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+    if (following) {
+      const inserted = await client.query(
+        "INSERT INTO user_follows (follower_id, followed_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING follower_id",
+        [followerId, followedId]
+      );
+      if (inserted.rowCount) {
+        await client.query(
+          "INSERT INTO notifications (recipient_id, actor_id, type) VALUES ($1, $2, 'follow')",
+          [followedId, followerId]
+        );
+      }
+    } else {
+      await client.query("DELETE FROM user_follows WHERE follower_id = $1 AND followed_id = $2", [followerId, followedId]);
+    }
+    const { rows } = await client.query(
+      `SELECT (SELECT COUNT(*)::int FROM user_follows WHERE followed_id = $1) AS followers_count,
+              (SELECT COUNT(*)::int FROM user_follows WHERE follower_id = $1) AS following_count`,
+      [followedId]
+    );
+    await client.query("COMMIT");
+    return { isFollowing: following, followersCount: rows[0].followers_count, followingCount: rows[0].following_count };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function getUserProfileImage(userId) {
@@ -1044,7 +1090,7 @@ export async function listNotifications(userId, limit = 40) {
       type: row.type,
       contentId: row.content_id,
       tribeId: row.tribe_id,
-      tribeName: row.tribe_name,
+      tribeName: row.tribe_name ?? null,
       createdAt: row.created_at,
       readAt: row.read_at,
       actor: { id: row.actor_id, name: row.actor_name },
@@ -1081,7 +1127,7 @@ export async function toggleSavedContent(userId, contentId, saved) {
 
 export async function listTribeMembers(userId, tribeId) {
   const { rows } = await pool.query(
-    `SELECT u.id, u.display_name, u.about_me, u.city, m.joined_at,
+    `SELECT u.id, u.display_name, u.about_me, u.city, u.interests, m.joined_at,
             EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar,
             (t.created_by = u.id) AS is_owner
      FROM tribe_memberships m
