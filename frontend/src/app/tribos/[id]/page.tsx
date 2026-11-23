@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, MapPin, Users, Sparkles, CheckCircle2, Store, MessageCircle } from "lucide-react";
@@ -9,7 +10,21 @@ import { TribeFavoriteButton } from "@/components/tribes/tribe-favorite-button";
 import { TribeShareButton } from "@/components/tribes/tribe-share-button";
 import { SAMPLE_TRIBES } from "@/lib/tribes-data";
 
-export default async function TribeDetailPage({
+export default function TribeDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <PageShell>
+      <Suspense fallback={<TribeDetailFallback />}>
+        <TribeDetailContent params={params} />
+      </Suspense>
+    </PageShell>
+  );
+}
+
+async function TribeDetailContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -20,8 +35,7 @@ export default async function TribeDetailPage({
   if (!tribe) notFound();
 
   return (
-    <PageShell>
-      <div className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
+    <div className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
         <Link href="/explorar" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-primary">
           <ArrowLeft className="size-4" /> Voltar para explorar
         </Link>
@@ -126,7 +140,28 @@ export default async function TribeDetailPage({
             </div>
           </aside>
         </div>
+    </div>
+  );
+}
+
+function TribeDetailFallback() {
+  return (
+    <div
+      className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14"
+      role="status"
+      aria-live="polite"
+    >
+      <p className="text-sm font-semibold text-muted-foreground">Carregando tribo…</p>
+      <div className="mt-7 grid gap-8 lg:grid-cols-[1fr_360px]" aria-hidden="true">
+        <div className="space-y-5">
+          <div className="h-6 w-40 animate-pulse rounded-full bg-muted" />
+          <div className="h-12 max-w-xl animate-pulse rounded-xl bg-muted" />
+          <div className="h-6 max-w-3xl animate-pulse rounded-lg bg-muted" />
+          <div className="h-64 animate-pulse rounded-2xl bg-muted" />
+          <div className="h-40 animate-pulse rounded-2xl bg-muted" />
+        </div>
+        <div className="h-72 animate-pulse rounded-2xl bg-muted" />
       </div>
-    </PageShell>
+    </div>
   );
 }

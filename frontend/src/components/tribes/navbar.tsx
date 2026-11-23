@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -13,6 +13,14 @@ const NAV_LINKS = [
 ];
 
 export function Navbar() {
+  return (
+    <Suspense fallback={<NavbarFallback />}>
+      <NavbarContent />
+    </Suspense>
+  );
+}
+
+function NavbarContent() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
@@ -60,6 +68,23 @@ export function Navbar() {
           </nav>
         </div>
       )}
+    </header>
+  );
+}
+
+function NavbarFallback() {
+  return (
+    <header
+      className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-md"
+      aria-hidden="true"
+    >
+      <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <span className="relative h-12 w-[7.25rem] shrink-0 overflow-hidden">
+          <Image src="/tribes-logo.png" alt="" fill priority sizes="116px" className="object-contain" />
+        </span>
+        <div className="size-10 animate-pulse rounded-xl bg-muted lg:hidden" />
+        <div className="hidden h-9 w-40 animate-pulse rounded-full bg-muted lg:block" />
+      </div>
     </header>
   );
 }
