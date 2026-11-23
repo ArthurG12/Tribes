@@ -120,7 +120,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
     if (!item.event || attendancePending) return;
     setAttendancePending(true);
     try {
-      const method = item.event.attendingByMe ? "DELETE" : "POST";
+      const method = item.event.attendingByMe || item.event.waitlistedByMe ? "DELETE" : "POST";
       const result = await apiRequest<{ attendeesCount: number; attendingByMe: boolean; waitlistCount: number; waitlistedByMe: boolean }>(`/api/content/${item.id}/attendance`, { method });
       onUpdateItem(item.id, (current) => current.event
         ? { ...current, event: { ...current.event, ...result } }
@@ -266,7 +266,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
             <MessageCircle className="size-4" />{item.commentsCount} {item.commentsCount === 1 ? "comentário" : "comentários"}
           </Button>
           {item.event && <Button type="button" size="sm" variant="ghost" aria-pressed={item.event.attendingByMe} disabled={attendancePending} onClick={() => void toggleAttendance()} className={item.event.attendingByMe ? "text-primary" : "text-muted-foreground"}>
-            <Users className="size-4" />{item.event.attendingByMe ? "Presença confirmada" : item.event.waitlistedByMe ? "Na lista de espera" : "Confirmar presença"} · {item.event.attendeesCount}{item.event.maxAttendees ? `/${item.event.maxAttendees}` : ""}{item.event.waitlistCount ? ` · ${item.event.waitlistCount} na espera` : ""}
+            <Users className="size-4" />{item.event.attendingByMe ? "Presença confirmada" : item.event.waitlistedByMe ? "Sair da espera" : "Confirmar presença"} · {item.event.attendeesCount}{item.event.maxAttendees ? `/${item.event.maxAttendees}` : ""}{item.event.waitlistCount ? ` · ${item.event.waitlistCount} na espera` : ""}
           </Button>}
         </div>
         {expandedComments && <div className="space-y-3 border-t border-border/70 pt-3">
