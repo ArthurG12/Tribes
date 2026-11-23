@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Bookmark, LoaderCircle, Search, Send, Users, X } from "lucide-react";
@@ -15,6 +15,7 @@ const PAGE_SIZE = 20;
 export default function FeedPage() {
   const searchParams = useSearchParams();
   const focusId = searchParams.get("focus");
+  const focusedItemRef = useRef<string | null>(null);
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [selectedTribe, setSelectedTribe] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,7 +64,12 @@ export default function FeedPage() {
   }, [fetchPage]);
 
   useEffect(() => {
-    if (loading || !focusId || !items.some((item) => item.id === focusId)) return;
+    if (!focusId) {
+      focusedItemRef.current = null;
+      return;
+    }
+    if (loading || focusedItemRef.current === focusId || !items.some((item) => item.id === focusId)) return;
+    focusedItemRef.current = focusId;
     window.requestAnimationFrame(() => {
       document.getElementById(`feed-item-${focusId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     });
