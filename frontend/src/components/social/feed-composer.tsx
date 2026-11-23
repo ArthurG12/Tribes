@@ -173,7 +173,7 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
             className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             {tribes.length ? tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>) : <option value="">Entre em uma tribo para publicar</option>}
           </select>
-          {eventMode && <div className="grid gap-3 sm:grid-cols-2">
+          {eventMode && <div className="grid min-w-0 gap-2 sm:grid-cols-2">
             <Input aria-label="Título do evento" placeholder="Título do evento" value={eventTitle} onChange={(event) => setEventTitle(event.target.value)} required />
             <Input aria-label="Local do evento" placeholder="Local" value={eventLocation} onChange={(event) => setEventLocation(event.target.value)} required />
             <Input aria-label="Início do evento" type="datetime-local" value={eventStartsAt} onChange={(event) => setEventStartsAt(event.target.value)} required />
@@ -204,7 +204,8 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
           </div>}
           {!tribes.length && <p className="text-sm text-muted-foreground">Entre em uma tribo antes de publicar.</p>}
           {composerError && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{composerError}</p>}
-          <div className="flex justify-end">
+          <div className="flex items-center justify-end gap-2 border-t border-border pt-3">
+            <Button type="button" variant="ghost" disabled={creating} onClick={() => handleOpenChange(false)} className="rounded-xl">Cancelar</Button>
             <Button type="submit" disabled={creating || !tribes.length || !body.trim() || (pollMode && (pollOptions.some((option) => !option.trim()) || new Set(pollOptions.map((option) => option.trim().toLocaleLowerCase("pt-BR"))).size !== pollOptions.length))} className="rounded-xl">
               {creating ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
               {eventMode ? "Publicar evento" : pollMode ? "Publicar enquete" : "Publicar"}

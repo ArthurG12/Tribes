@@ -59,7 +59,6 @@ export default function MyTribesPage() {
             <button type="button" onClick={() => setFilter("moderator")} aria-pressed={filter === "moderator"} className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${filter === "moderator" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Sou moderador</button>
             <button type="button" onClick={() => setFilter("participant")} aria-pressed={filter === "participant"} className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${filter === "participant" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Sou participante</button>
           </>}
-          <Link href="/membros" className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">Diretório de membros</Link>
         </div>
       )}
 
@@ -83,8 +82,8 @@ export default function MyTribesPage() {
                   <span className="inline-flex items-center gap-1"><MapPin className="size-3.5 text-primary" />{[tribe.neighborhood, tribe.city].filter(Boolean).join(" · ")}</span>
                   <span className="inline-flex items-center gap-1"><Users className="size-3.5 text-primary" />{tribe.memberCount} {tribe.memberCount === 1 ? "membro" : "membros"}</span>
                 </div>
-                <Button nativeButton={false} render={<Link href={tribe.isOwner ? `/minhas-tribos/${tribe.id}` : `/tribos/${tribe.id}`} />} className="mt-5 w-full rounded-xl">
-                  {tribe.isOwner ? "Gerenciar tribo" : "Abrir tribo"}<ArrowRight className="size-4" />
+                <Button nativeButton={false} render={<Link href={`/tribos/${tribe.id}`} />} className="mt-5 w-full rounded-xl">
+                  Abrir tribo<ArrowRight className="size-4" />
                 </Button>
               </article>
             ))}
