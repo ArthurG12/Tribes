@@ -31,9 +31,16 @@ export default function NewTribePage() {
         method: "POST",
         body: JSON.stringify({ name, description, category, format, city, neighborhood }),
       });
+      setName("");
+      setDescription("");
+      setCategory(INTEREST_CATEGORIES[0].label);
+      setFormat("Presencial");
+      setCity("");
+      setNeighborhood("");
       router.replace("/minhas-tribos");
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Não foi possível criar a tribo.");
+    } finally {
       setSubmitting(false);
     }
   }
