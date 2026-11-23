@@ -292,6 +292,7 @@ export async function handleSocialRequest(request, response, url) {
     if (publicTribeMatch && method === "GET") {
       const tribeId = requireUuid(publicTribeMatch[1], "Tribo");
       const tribe = await getPublicTribe(tribeId);
+      const tribe = await getPublicTribe(requireUuid(publicTribeMatch[1], "Tribo"));
       if (!tribe) {
         sendJson(response, 404, { error: "Tribo não encontrada." });
         return true;
