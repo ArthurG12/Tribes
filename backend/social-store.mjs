@@ -747,6 +747,13 @@ export async function createContent(userId, tribeId, { type, body, event, image 
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [rows[0].id, event.title, event.startsAt, event.endsAt, event.location, event.cost, event.maxAttendees]
       );
+      await client.query(
+        `INSERT INTO notifications (recipient_id, actor_id, type, content_id, tribe_id)
+         SELECT m.user_id, $2, 'event_created', $1, $3
+         FROM tribe_memberships m
+         WHERE m.tribe_id = $3 AND m.status = 'active' AND m.user_id <> $2`,
+        [rows[0].id, userId, tribeId]
+      );
     }
     await client.query("COMMIT");
     imageKey = null;
@@ -789,10 +796,18 @@ export async function canAccessContent(userId, contentId) {
 export async function toggleLike(userId, contentId, liked) {
   if (!(await canAccessContent(userId, contentId))) return null;
   if (liked) {
-    await pool.query(
-      "INSERT INTO content_likes (content_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+    const inserted = await pool.query(
+      "INSERT INTO content_likes (content_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING content_id",
       [contentId, userId]
     );
+    if (inserted.rowCount > 0) {
+      await pool.query(
+        `INSERT INTO notifications (recipient_id, actor_id, type, content_id, tribe_id)
+         SELECT f.author_id, $2, 'post_like', f.id, f.tribe_id
+         FROM feed_items f WHERE f.id = $1 AND f.author_id <> $2`,
+        [contentId, userId]
+      );
+    }
   } else {
     await pool.query("DELETE FROM content_likes WHERE content_id = $1 AND user_id = $2", [contentId, userId]);
   }
@@ -891,6 +906,12 @@ export async function addComment(userId, contentId, body) {
        RETURNING id, body, created_at`,
       [contentId, userId, body]
     );
+    await client.query(
+      `INSERT INTO notifications (recipient_id, actor_id, type, content_id, tribe_id)
+       SELECT f.author_id, $2, 'post_comment', f.id, f.tribe_id
+       FROM feed_items f WHERE f.id = $1 AND f.author_id <> $2`,
+      [contentId, userId]
+    );
     await client.query("COMMIT");
     return { ...rows[0], createdAt: rows[0].created_at, author: null };
   } catch (error) {
@@ -920,4 +941,53 @@ export async function editComment(userId, commentId, body, remove = false) {
 
 export async function checkDatabase() {
   await pool.query("SELECT 1");
+}
+
+
+export async function listNotifications(userId, limit = 40) {
+  const { rows } = await pool.query(
+    `SELECT n.id, n.type, n.content_id, n.tribe_id, n.created_at, n.read_at,
+            actor.id AS actor_id, actor.display_name AS actor_name,
+            t.name AS tribe_name
+     FROM notifications n
+     JOIN users actor ON actor.id = n.actor_id
+     JOIN tribes t ON t.id = n.tribe_id
+     WHERE n.recipient_id = $1
+     ORDER BY n.created_at DESC, n.id DESC
+     LIMIT $2`,
+    [userId, limit]
+  );
+  const { rows: counts } = await pool.query(
+    "SELECT COUNT(*)::int AS unread_count FROM notifications WHERE recipient_id = $1 AND read_at IS NULL",
+    [userId]
+  );
+  return {
+    unreadCount: counts[0].unread_count,
+    items: rows.map((row) => ({
+      id: row.id,
+      type: row.type,
+      contentId: row.content_id,
+      tribeId: row.tribe_id,
+      tribeName: row.tribe_name,
+      createdAt: row.created_at,
+      readAt: row.read_at,
+      actor: { id: row.actor_id, name: row.actor_name },
+    })),
+  };
+}
+
+export async function markNotificationRead(userId, notificationId) {
+  const { rowCount } = await pool.query(
+    "UPDATE notifications SET read_at = COALESCE(read_at, CURRENT_TIMESTAMP) WHERE id = $1 AND recipient_id = $2",
+    [notificationId, userId]
+  );
+  return rowCount > 0;
+}
+
+export async function markAllNotificationsRead(userId) {
+  const { rowCount } = await pool.query(
+    "UPDATE notifications SET read_at = CURRENT_TIMESTAMP WHERE recipient_id = $1 AND read_at IS NULL",
+    [userId]
+  );
+  return rowCount;
 }
