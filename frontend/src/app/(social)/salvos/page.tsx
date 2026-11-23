@@ -31,7 +31,7 @@ export default function SavedPostsPage() {
 
   useEffect(() => {
     let active = true;
-    const requestId = ++requestSequence.current;
+    requestSequence.current += 1;
     setLoading(true);
     setError("");
     load()
