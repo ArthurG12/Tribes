@@ -27,8 +27,8 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
         className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-gradient-to-tr from-[#c4f36a]/20 via-orange-500/10 to-transparent blur-2xl"
       />
 
-      <div className="overflow-hidden rounded-xl border border-[#c8d3be] bg-[#f4f7f0] shadow-[0_16px_40px_rgba(48,66,45,0.09)] ring-1 ring-white/[0.04] ">
-        <div className="flex items-center justify-between border-b border-[#c8d3be] bg-[#e7efe1] px-4 py-3.5 sm:px-5">
+      <div className="overflow-hidden rounded-xl border border-border bg-secondary/50 shadow-[0_16px_40px_rgba(48,66,45,0.09)] ring-1 ring-white/[0.04]">
+        <div className="flex items-center justify-between border-b border-border bg-muted px-4 py-3.5 sm:px-5">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/15 font-heading text-sm font-bold text-primary">
               D&D
@@ -38,19 +38,19 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                 <span className="font-heading text-sm font-bold text-foreground">
                   Dados & Dragões Pampulha
                 </span>
-                <ShieldCheck className="size-4 text-[#657f4f]" />
+                <ShieldCheck className="size-4 text-emerald-700 dark:text-emerald-300" />
               </div>
               <p className="text-xs text-muted-foreground">
                 Belo Horizonte · 34 membros ativos
               </p>
             </div>
           </div>
-          <Badge className="border-emerald-600/20 border border-[#aebe92] bg-[#e8f1e4] text-[#42613e] hover:bg-[#d6e2c8]">
+          <Badge className="border border-emerald-700/20 bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:border-emerald-300/20 dark:bg-emerald-950 dark:text-emerald-200 dark:hover:bg-emerald-900">
             Aberto p/ iniciantes
           </Badge>
         </div>
 
-        <div className="grid grid-cols-2 gap-1 border-b border-[#c8d3be] bg-[#eef3e9] p-1.5">
+        <div className="grid grid-cols-2 gap-1 border-b border-border bg-muted/70 p-1.5">
           <button
             type="button"
             onClick={() => {
@@ -85,7 +85,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
 
         {activeTab === "evento" ? (
           <div className="space-y-4 p-4 sm:p-5">
-            <div className="rounded-2xl border border-primary/35 bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+            <div className="rounded-2xl border border-primary/35 bg-card p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
                   <Sparkles className="size-3.5" />
@@ -141,7 +141,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
           </div>
         ) : (
           <div className="space-y-3 p-4 sm:p-5">
-            <div className="rounded-xl border border-[#c8d3be] bg-white p-3 text-xs">
+            <div className="rounded-xl border border-border bg-card p-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">
                   Marina S. · Organizadora
@@ -152,7 +152,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                 Subi as fichas prontas direto no card do encontro! Assim ninguém precisa rolar 200 mensagens pra achar horário ou endereço.
               </p>
             </div>
-            <div className="rounded-xl border border-[#c8d3be] bg-[#f2f6ee] p-3 text-xs">
+            <div className="rounded-xl border border-border bg-secondary/50 p-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">
                   Lucas T. · 1º encontro na tribo
@@ -163,7 +163,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                 Sempre tive receio de entrar em grupo fechado onde todo mundo já se conhece. O filtro de iniciantes salvou demais!
               </p>
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-dashed border-[#bfd49f] px-3 py-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center justify-between rounded-xl border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground">
               <span>Data, mapa e lista de confirmação permanecem fixos na aba ao lado.</span>
               <button
                 type="button"

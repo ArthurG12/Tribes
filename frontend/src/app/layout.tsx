@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-heading-sans",
@@ -47,8 +49,11 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${jakarta.variable} ${inter.variable} ${jetbrainsMono.variable} h-full scroll-smooth antialiased`}
     >
+      <Script id="tribes-theme-init" strategy="beforeInteractive">
+        {`try { if (localStorage.getItem("tribes-theme") === "dark") document.documentElement.classList.add("dark"); } catch {}`}
+      </Script>
       <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-primary/15 selection:text-primary">
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

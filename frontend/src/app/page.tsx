@@ -17,9 +17,9 @@ export default function TribesLandingPage() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
-        <section className="relative isolate overflow-hidden bg-[#faf9f7] py-12 sm:py-16 lg:py-20">
+        <section className="relative isolate overflow-hidden bg-background py-12 sm:py-16 lg:py-20">
           <div aria-hidden="true" className="pointer-events-none absolute -top-40 right-[-10%] -z-10 h-[34rem] w-[34rem] rounded-full bg-primary/[0.06] blur-[130px]" />
-          <div aria-hidden="true" className="pointer-events-none absolute bottom-[-18rem] left-[-12%] -z-10 h-[34rem] w-[34rem] rounded-full bg-[#d69b55]/[0.06] blur-[130px]" />
+          <div aria-hidden="true" className="pointer-events-none absolute bottom-[-18rem] left-[-12%] -z-10 h-[34rem] w-[34rem] rounded-full bg-brand-orange/[0.06] blur-[130px]" />
           <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-12 lg:gap-8">
             <div className="lg:col-span-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-3.5 py-1.5 text-xs font-semibold text-primary">
@@ -44,8 +44,8 @@ export default function TribesLandingPage() {
             <div className="lg:col-span-6"><HeroMockup /></div>
           </div>
         </section>
-        <section className="relative overflow-hidden bg-[#faf9f7] py-12 sm:py-16">
-          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#f7efed] to-transparent" />
+        <section className="relative overflow-hidden bg-background py-12 sm:py-16">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-accent/60 to-transparent" />
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
             <TribeExplorer
               compact

@@ -55,6 +55,8 @@ export interface FeedComment {
   body: string;
   createdAt: string;
   editedAt: string | null;
+  likesCount: number;
+  likedByMe: boolean;
   isMine: boolean;
   author: { id: string; name: string; avatarUrl: string | null };
 }

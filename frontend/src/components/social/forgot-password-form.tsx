@@ -7,6 +7,7 @@ import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -35,7 +36,8 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+    <main className="relative flex min-h-screen items-center justify-center px-4 py-10">
+      <ThemeToggle className="absolute right-4 top-4" />
       <section className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-lg sm:p-8">
         <Link href="/" className="flex items-center gap-2 font-heading text-lg font-extrabold">
           <Image src="/tribes-emblem.png" alt="" width={36} height={36} className="size-9 rounded-full object-contain" />

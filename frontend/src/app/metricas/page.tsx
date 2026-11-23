@@ -31,6 +31,7 @@ import {
 } from "@/lib/mvp-tracker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export default function MetricasMvpPage() {
   const [metrics, setMetrics] = useState<ServerAggregateMetrics | null>(null);
@@ -201,6 +202,7 @@ export default function MetricasMvpPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <ThemeToggle />
             <Button
               variant="outline"
               size="sm"
@@ -273,10 +275,10 @@ export default function MetricasMvpPage() {
             </p>
           </div>
 
-          <div className="metric-card border-emerald-600/25 bg-[#f1f7ec]">
-            <div className="flex items-center justify-between text-xs font-semibold text-emerald-900">
+          <div className="metric-card border-emerald-600/25 bg-emerald-50 dark:bg-emerald-950/40">
+            <div className="flex items-center justify-between text-xs font-semibold text-emerald-900 dark:text-emerald-200">
               <span>Cadastros & Conversão</span>
-              <CheckCircle2 className="size-4 text-emerald-700" />
+              <CheckCircle2 className="size-4 text-emerald-700 dark:text-emerald-300" />
             </div>
             <div className="mt-2 flex items-baseline gap-2.5">
               <p className="font-heading text-3xl font-extrabold text-foreground">

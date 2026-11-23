@@ -52,7 +52,7 @@ export default function MyAgendaPage() {
               <article key={tribe.id} className="event-card">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Badge variant="secondary">{tribe.categoryLabel}</Badge>
-                  <Badge className="bg-[#e8f1e4] text-primary">Interesse registrado</Badge>
+                  <Badge className="bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">Interesse registrado</Badge>
                 </div>
                 <h2 className="mt-4 font-heading text-xl font-bold text-foreground">{tribe.name}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{tribe.nextEvent.title}</p>

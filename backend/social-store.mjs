@@ -1127,11 +1127,13 @@ export async function listComments(userId, contentId) {
   if (!(await canAccessContent(userId, contentId))) return null;
   const { rows } = await pool.query(
     `SELECT c.id, c.body, c.created_at, c.edited_at,
+            (SELECT COUNT(*)::int FROM comment_likes l WHERE l.comment_id = c.id) AS likes_count,
+            EXISTS (SELECT 1 FROM comment_likes l WHERE l.comment_id = c.id AND l.user_id = $2) AS liked_by_me,
             u.id AS author_id, u.display_name AS author_name,
             EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS author_has_avatar,
             (c.user_id = $2) AS is_mine
      FROM content_comments c JOIN users u ON u.id = c.user_id
-     WHERE c.content_id = $1 ORDER BY c.created_at ASC, c.id ASC LIMIT 200`,
+     WHERE c.content_id = $1 ORDER BY likes_count DESC, c.created_at ASC, c.id ASC LIMIT 200`,
     [contentId, userId]
   );
   return rows.map((row) => ({
@@ -1139,6 +1141,8 @@ export async function listComments(userId, contentId) {
     body: row.body,
     createdAt: row.created_at,
     editedAt: row.edited_at,
+    likesCount: row.likes_count,
+    likedByMe: row.liked_by_me,
     isMine: row.is_mine,
     author: {
       id: row.author_id,
@@ -1146,6 +1150,41 @@ export async function listComments(userId, contentId) {
       avatarUrl: row.author_has_avatar ? `/api/users/${row.author_id}/avatar` : null,
     },
   }));
+}
+
+export async function toggleCommentLike(userId, commentId, liked) {
+  if (liked) {
+    await pool.query(
+      `INSERT INTO comment_likes (comment_id, user_id)
+       SELECT c.id, $2
+       FROM content_comments c
+       JOIN feed_items f ON f.id = c.content_id
+       JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $2 AND m.status = 'active'
+       WHERE c.id = $1
+       ON CONFLICT DO NOTHING`,
+      [commentId, userId]
+    );
+  } else {
+    await pool.query(
+      `DELETE FROM comment_likes l USING content_comments c, feed_items f, tribe_memberships m
+       WHERE l.comment_id = c.id AND c.id = $1 AND l.user_id = $2
+         AND f.id = c.content_id AND m.tribe_id = f.tribe_id
+         AND m.user_id = $2 AND m.status = 'active'`,
+      [commentId, userId]
+    );
+  }
+
+  const { rows } = await pool.query(
+    `SELECT (SELECT COUNT(*)::int FROM comment_likes l WHERE l.comment_id = c.id) AS likes_count,
+            EXISTS (SELECT 1 FROM comment_likes l WHERE l.comment_id = c.id AND l.user_id = $2) AS liked_by_me
+     FROM content_comments c
+     JOIN feed_items f ON f.id = c.content_id
+     JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $2 AND m.status = 'active'
+     WHERE c.id = $1`,
+    [commentId, userId]
+  );
+  if (!rows.length) return null;
+  return { likesCount: rows[0].likes_count, likedByMe: rows[0].liked_by_me };
 }
 
 export async function addComment(userId, contentId, body) {

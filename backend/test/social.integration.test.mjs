@@ -670,11 +670,34 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(createdComment.response.status, 201);
   assert.equal(createdComment.data.comment.author.id, bob.user.id);
   assert.ok(createdComment.data.comment.createdAt);
+
+  const otherComment = await call(alice, commentsPath, { method: "POST", body: JSON.stringify({ body: "Até lá!" }) });
+  assert.equal(otherComment.response.status, 201);
+  const firstCommentLikePath = `/api/comments/${createdComment.data.comment.id}/like`;
+  const secondCommentLikePath = `/api/comments/${otherComment.data.comment.id}/like`;
+  assert.deepEqual((await call(bob, firstCommentLikePath, { method: "POST" })).data, { likesCount: 1, likedByMe: true });
+  assert.deepEqual((await call(bob, firstCommentLikePath, { method: "POST" })).data, { likesCount: 1, likedByMe: true });
+  assert.deepEqual((await call(alice, firstCommentLikePath, { method: "POST" })).data, { likesCount: 2, likedByMe: true });
+  assert.deepEqual((await call(alice, secondCommentLikePath, { method: "POST" })).data, { likesCount: 1, likedByMe: true });
+  assert.equal((await call(empty, firstCommentLikePath, { method: "POST" })).response.status, 404);
+
   const listed = await call(alice, commentsPath);
-  assert.equal(listed.data.comments.length, 1);
+  assert.equal(listed.data.comments.length, 2);
   assert.equal(listed.data.comments[0].body, "Vou participar!");
+  assert.equal(listed.data.comments[0].likesCount, 2);
+  assert.equal(listed.data.comments[0].likedByMe, true);
+  assert.equal(listed.data.comments[1].likesCount, 1);
+  assert.equal(listed.data.comments[1].likedByMe, true);
+
+  assert.deepEqual((await call(alice, firstCommentLikePath, { method: "DELETE" })).data, { likesCount: 1, likedByMe: false });
+  const tiedComments = await call(alice, commentsPath);
+  assert.deepEqual(tiedComments.data.comments.map((comment) => comment.id), [createdComment.data.comment.id, otherComment.data.comment.id]);
+  assert.deepEqual((await call(bob, firstCommentLikePath, { method: "DELETE" })).data, { likesCount: 0, likedByMe: false });
+  const reorderedComments = await call(alice, commentsPath);
+  assert.deepEqual(reorderedComments.data.comments.map((comment) => comment.id), [otherComment.data.comment.id, createdComment.data.comment.id]);
+
   const feedWithComment = await call(alice, `/api/feed?tribeId=${tribeOne.id}&limit=50`);
-  assert.equal(feedWithComment.data.items.find((item) => item.id === eventId).commentsCount, 1);
+  assert.equal(feedWithComment.data.items.find((item) => item.id === eventId).commentsCount, 2);
 
   const aliceNotifications = await call(alice, "/api/notifications");
   assert.equal(aliceNotifications.response.status, 200);
@@ -701,6 +724,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
     method: "PATCH", body: JSON.stringify({ body: "Comentário atualizado" }),
   })).response.status, 200);
   assert.equal((await call(bob, `/api/comments/${createdComment.data.comment.id}`, { method: "DELETE" })).response.status, 200);
+  assert.equal((await call(alice, `/api/comments/${otherComment.data.comment.id}`, { method: "DELETE" })).response.status, 200);
   const interactedFeed = await call(alice, `/api/feed?tribeId=${tribeOne.id}&limit=50`);
   const interactedEvent = interactedFeed.data.items.find((item) => item.id === eventId);
   assert.equal(interactedEvent.likesCount, 1);
