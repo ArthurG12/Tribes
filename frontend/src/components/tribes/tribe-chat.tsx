@@ -29,7 +29,7 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-  const endOfMessagesRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -65,7 +65,8 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
 
   const latestMessageId = messages.length ? messages[messages.length - 1].id : null;
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const container = messagesContainerRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
   }, [latestMessageId]);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
@@ -101,7 +102,7 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
 
       {error && <p role="alert" className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
 
-      <div className="mt-4 max-h-[26rem] min-h-36 space-y-3 overflow-y-auto rounded-2xl border border-border bg-muted/30 p-3 sm:p-4" aria-live="polite" aria-label="Mensagens recentes">
+      <div ref={messagesContainerRef} className="mt-4 max-h-[26rem] min-h-36 space-y-3 overflow-y-auto rounded-2xl border border-border bg-muted/30 p-3 sm:p-4" aria-live="polite" aria-label="Mensagens recentes">
         {loading ? (
           <div className="flex min-h-28 items-center justify-center"><LoaderCircle className="size-5 animate-spin text-primary" /></div>
         ) : messages.length ? messages.map((message) => (
@@ -118,7 +119,6 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
         )) : (
           <p className="flex min-h-28 items-center justify-center text-center text-sm text-muted-foreground">Ainda não há mensagens. Comece a conversa!</p>
         )}
-        <div ref={endOfMessagesRef} />
       </div>
 
       <form className="mt-4 space-y-2" onSubmit={sendMessage}>
@@ -132,6 +132,11 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
           rows={2}
           className="min-h-20 resize-y rounded-2xl bg-background"
           disabled={sending}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing || event.repeat) return;
+            event.preventDefault();
+            event.currentTarget.form?.requestSubmit();
+          }}
         />
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-xs text-muted-foreground">{body.length}/1000</span>
