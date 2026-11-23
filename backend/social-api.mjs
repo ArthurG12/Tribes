@@ -64,15 +64,16 @@ function readCookie(request, name) {
   return null;
 }
 
-function allowAuthAttempt(request) {
+function allowAuthAttempt(request, identifier) {
   const now = Date.now();
   const ip = String(request.socket.remoteAddress ?? "unknown").slice(0, 64);
+  const key = ip + ":" + String(identifier ?? "unknown").slice(0, 254);
   if (authAttempts.size > 2000) {
     for (const [key, attempt] of authAttempts) if (now - attempt.startedAt > 60_000) authAttempts.delete(key);
   }
-  const attempt = authAttempts.get(ip);
+  const attempt = authAttempts.get(key);
   if (!attempt || now - attempt.startedAt > 60_000) {
-    authAttempts.set(ip, { count: 1, startedAt: now });
+    authAttempts.set(key, { count: 1, startedAt: now });
     return true;
   }
   attempt.count += 1;
@@ -171,12 +172,12 @@ export async function handleSocialRequest(request, response, url) {
     }
 
     if (pathname === "/api/auth/register" && method === "POST") {
-      if (!allowAuthAttempt(request)) {
-        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." });
-        return true;
-      }
       const payload = await readJson(request);
       const email = requiredString(payload.email, "e-mail", 3, 254).toLowerCase();
+      if (!allowAuthAttempt(request, email)) {
+        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." }, { "Retry-After": "60" });
+        return true;
+      }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw invalid("Informe um e-mail válido.");
       const existingUser = await getUserByEmail(email);
       let message;
@@ -192,12 +193,12 @@ export async function handleSocialRequest(request, response, url) {
     }
 
     if (pathname === "/api/auth/register/complete" && method === "POST") {
-      if (!allowAuthAttempt(request)) {
-        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." });
-        return true;
-      }
       const payload = await readJson(request);
       const token = requiredString(payload.token, "token", 20, 200);
+      if (!allowAuthAttempt(request, digestSessionToken(token))) {
+        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." }, { "Retry-After": "60" });
+        return true;
+      }
       const name = requiredString(payload.name, "nome", 2, 80);
       if (typeof payload.password !== "string" || payload.password.length < 10 || payload.password.length > 128) {
         throw invalid("A senha deve ter entre 10 e 128 caracteres.");
@@ -225,12 +226,12 @@ export async function handleSocialRequest(request, response, url) {
     }
 
     if (pathname === "/api/auth/password-reset" && method === "POST") {
-      if (!allowAuthAttempt(request)) {
-        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." });
-        return true;
-      }
       const payload = await readJson(request);
       const email = requiredString(payload.email, "e-mail", 3, 254).toLowerCase();
+      if (!allowAuthAttempt(request, email)) {
+        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." }, { "Retry-After": "60" });
+        return true;
+      }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw invalid("Informe um e-mail válido.");
       const existingUser = await getUserByEmail(email);
       if (existingUser) {
@@ -243,12 +244,12 @@ export async function handleSocialRequest(request, response, url) {
     }
 
     if (pathname === "/api/auth/password-reset/complete" && method === "POST") {
-      if (!allowAuthAttempt(request)) {
-        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." });
-        return true;
-      }
       const payload = await readJson(request);
       const token = requiredString(payload.token, "token", 20, 200);
+      if (!allowAuthAttempt(request, digestSessionToken(token))) {
+        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." }, { "Retry-After": "60" });
+        return true;
+      }
       if (typeof payload.password !== "string" || payload.password.length < 10 || payload.password.length > 128) {
         throw invalid("A senha deve ter entre 10 e 128 caracteres.");
       }
@@ -264,12 +265,12 @@ export async function handleSocialRequest(request, response, url) {
     }
 
     if (pathname === "/api/auth/login" && method === "POST") {
-      if (!allowAuthAttempt(request)) {
-        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." });
-        return true;
-      }
       const payload = await readJson(request);
       const email = requiredString(payload.email, "e-mail", 3, 254).toLowerCase();
+      if (!allowAuthAttempt(request, email)) {
+        sendJson(response, 429, { error: "Muitas tentativas. Aguarde um minuto e tente novamente." }, { "Retry-After": "60" });
+        return true;
+      }
       if (typeof payload.password !== "string" || payload.password.length > 128) throw invalid("Credenciais inválidas.");
       const stored = await getUserByEmail(email);
       const validPassword = await verifyPassword(payload.password, stored?.password_hash ?? await dummyPasswordHash);
