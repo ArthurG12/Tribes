@@ -837,10 +837,18 @@ export async function setEventAttendance(userId, contentId, attending) {
     }
 
     if (attending) {
-      await client.query(
-        "INSERT INTO event_attendees (content_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+      const inserted = await client.query(
+        "INSERT INTO event_attendees (content_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING content_id",
         [contentId, userId]
       );
+      if (inserted.rowCount > 0) {
+        await client.query(
+          `INSERT INTO notifications (recipient_id, actor_id, type, content_id, tribe_id)
+           SELECT f.author_id, $2, 'event_attendance', f.id, f.tribe_id
+           FROM feed_items f WHERE f.id = $1 AND f.author_id <> $2`,
+          [contentId, userId]
+        );
+      }
     } else {
       await client.query("DELETE FROM event_attendees WHERE content_id = $1 AND user_id = $2", [contentId, userId]);
     }
