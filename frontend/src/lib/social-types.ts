@@ -31,6 +31,7 @@ export interface FeedItem {
   likesCount: number;
   commentsCount: number;
   likedByMe: boolean;
+  savedByMe: boolean;
   event: null | {
     title: string;
     startsAt: string;
