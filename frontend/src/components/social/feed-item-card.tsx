@@ -45,6 +45,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
   const [editPostBody, setEditPostBody] = useState(item.body);
   const [postPending, setPostPending] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   async function savePost() {
     const body = editPostBody.trim();
@@ -84,7 +85,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
       if (navigator.share) await navigator.share({ title: "Tribes", url });
       else {
         await navigator.clipboard.writeText(url);
-        onError("Link copiado para compartilhar.");
+        setShareCopied(true);
       }
     } catch (shareError) {
       if (shareError instanceof Error && shareError.name !== "AbortError") onError("Não foi possível compartilhar este link.");
@@ -207,6 +208,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
           {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label="Excluir publicação" onClick={() => setConfirmDelete(true)}><Trash2 className="size-4 text-destructive" /></Button>}
         </div>
       </header>
+      {shareCopied && <p role="status" className="px-5 pt-3 text-xs font-medium text-primary">Link copiado para compartilhar.</p>}
       <div className="space-y-4 p-4 sm:p-5">
         {item.event && <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><CalendarDays className="size-4" />Evento da tribo</div>
