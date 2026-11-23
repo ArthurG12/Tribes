@@ -20,6 +20,7 @@ import {
   deleteContent,
   createSession,
   createTribe,
+  deleteTribe,
   decodeCursor,
   deleteSession,
   enqueueEmail,
@@ -499,6 +500,22 @@ export async function handleSocialRequest(request, response, url) {
     }
 
     const tribeMatch = pathname.match(/^\/api\/tribes\/([^/]+)$/);
+    if (tribeMatch && method === "DELETE") {
+      const tribeId = requireUuid(tribeMatch[1], "Tribo");
+      const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });
+      const confirmationName = requiredString(payload.confirmationName, "nome de confirmação", 2, 80);
+      const deleted = await deleteTribe(user.id, tribeId, confirmationName);
+      if (deleted === null) {
+        sendJson(response, 404, { error: "Tribo não encontrada ou você não tem permissão para excluí-la." });
+        return true;
+      }
+      if (!deleted) {
+        sendJson(response, 400, { error: "O nome informado não corresponde ao nome atual da tribo." });
+        return true;
+      }
+      sendJson(response, 200, { ok: true });
+      return true;
+    }
     if (tribeMatch && ["PATCH", "PUT"].includes(method)) {
       const tribeId = requireUuid(tribeMatch[1], "Tribo");
       const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });

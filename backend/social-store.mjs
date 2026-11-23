@@ -630,6 +630,42 @@ export async function updateTribe(userId, tribeId, tribe) {
   return rows[0] ?? null;
 }
 
+export async function deleteTribe(userId, tribeId, confirmationName) {
+  const client = await pool.connect();
+  let imageKeys = [];
+  try {
+    await client.query("BEGIN");
+    const { rows: tribes } = await client.query(
+      "SELECT name FROM tribes WHERE id = $1 AND created_by = $2 FOR UPDATE",
+      [tribeId, userId]
+    );
+    if (!tribes.length) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+    if (tribes[0].name !== confirmationName) {
+      await client.query("ROLLBACK");
+      return false;
+    }
+    const { rows: images } = await client.query(
+      `SELECT i.image_key FROM content_images i
+       JOIN feed_items f ON f.id = i.content_id
+       WHERE f.tribe_id = $1 AND i.image_key IS NOT NULL`,
+      [tribeId]
+    );
+    imageKeys = images.map((image) => image.image_key);
+    await client.query("DELETE FROM tribes WHERE id = $1 AND created_by = $2", [tribeId, userId]);
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+  await Promise.all(imageKeys.map(removeObjectBestEffort));
+  return true;
+}
+
 export async function joinTribe(userId, tribeId) {
   const { rows } = await pool.query(
     `INSERT INTO tribe_memberships (tribe_id, user_id, status, joined_at, left_at)

@@ -325,6 +325,36 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   const tribeTwo = await createTribe(alice, "two");
   const outsiderTribe = await createTribe(bob, "private-to-bob");
 
+  const tribeToDelete = await createTribe(alice, "for-deletion");
+  const deletionPostId = await createPost(
+    alice,
+    tribeToDelete,
+    "Publicação que será removida com a tribo.",
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII="
+  );
+  const deletionImage = await pool.query("SELECT image_key FROM content_images WHERE content_id = $1", [deletionPostId]);
+  assert.ok(deletionImage.rows[0].image_key);
+  const deleteTribePath = `/api/tribes/${tribeToDelete.id}`;
+  const deletePayload = { confirmationName: tribeToDelete.name };
+  assert.equal((await call(null, deleteTribePath, {
+    method: "DELETE", body: JSON.stringify(deletePayload),
+  })).response.status, 401);
+  assert.equal((await call(bob, deleteTribePath, {
+    method: "DELETE", body: JSON.stringify(deletePayload),
+  })).response.status, 404);
+  assert.equal((await call(alice, deleteTribePath, {
+    method: "DELETE", body: JSON.stringify({ confirmationName: "Nome incorreto" }),
+  })).response.status, 400);
+  assert.equal((await pool.query("SELECT 1 FROM tribes WHERE id = $1", [tribeToDelete.id])).rowCount, 1);
+  const deletedTribeResponse = await call(alice, deleteTribePath, {
+    method: "DELETE", body: JSON.stringify(deletePayload),
+  });
+  assert.equal(deletedTribeResponse.response.status, 200, JSON.stringify(deletedTribeResponse.data));
+  assert.deepEqual(deletedTribeResponse.data, { ok: true });
+  assert.equal((await pool.query("SELECT 1 FROM tribes WHERE id = $1", [tribeToDelete.id])).rowCount, 0);
+  assert.equal((await pool.query("SELECT 1 FROM feed_items WHERE id = $1", [deletionPostId])).rowCount, 0);
+  await assert.rejects(getObjectStorage().getObject(deletionImage.rows[0].image_key));
+
   assert.equal((await call(null, `/api/tribes/${tribeOne.id}/posts`, {
     method: "POST", body: JSON.stringify({ body: "Sem sessão" }),
   })).response.status, 401);
