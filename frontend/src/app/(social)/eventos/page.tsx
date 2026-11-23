@@ -14,6 +14,7 @@ type EventItem = {
   startsAt: string;
   endsAt: string | null;
   location: string;
+  cost: string | null;
   maxAttendees: number | null;
   tribe: { id: string; name: string };
   authorName: string;
@@ -173,8 +174,9 @@ export default function EventsPage() {
               <h2 className="mt-3 font-heading text-xl font-bold">{event.title}</h2>
               <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{event.body}</p>
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4 text-primary" />{formatDateTime(event.startsAt)}</span>
+                <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4 text-primary" />{formatDateTime(event.startsAt)}{event.endsAt ? ` – ${formatDateTime(event.endsAt)}` : ""}</span>
                 <span className="inline-flex items-center gap-1.5"><MapPin className="size-4 text-primary" />{event.location}</span>
+                {event.cost && <span>{event.cost}</span> }
                 <span className="inline-flex items-center gap-1.5"><Users className="size-4 text-primary" />{event.attendeesCount}{event.maxAttendees ? `/${event.maxAttendees}` : ""} confirmados</span>
                 {event.waitlistCount > 0 && <span>{event.waitlistCount} na lista de espera</span>}
               </div>
