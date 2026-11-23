@@ -428,6 +428,9 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   });
   assert.equal(eventResponse.response.status, 201, JSON.stringify(eventResponse.data));
   const eventId = eventResponse.data.id;
+  const upcomingEvents = await call(alice, "/api/events");
+  assert.equal(upcomingEvents.response.status, 200);
+  assert.ok(upcomingEvents.data.events.some((event) => event.id === eventId && event.title === "Noite de jogos"));
   await new Promise((resolve) => setTimeout(resolve, 10));
   const postTwoId = await createPost(alice, tribeTwo, "Publicação da segunda tribo.");
   for (let index = 0; index < 23; index += 1) {
