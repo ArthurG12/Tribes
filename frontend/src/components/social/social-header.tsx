@@ -20,8 +20,14 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
       .then((data) => { if (active && data) setUnreadCount(data.unreadCount); })
       .catch(() => undefined);
     void loadUnread();
+    const handleUpdated = () => void loadUnread();
+    window.addEventListener("tribes-notifications-updated", handleUpdated);
     const interval = window.setInterval(() => void loadUnread(), 30000);
-    return () => { active = false; window.clearInterval(interval); };
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      window.removeEventListener("tribes-notifications-updated", handleUpdated);
+    };
   }, [pathname]);
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
