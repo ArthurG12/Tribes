@@ -626,7 +626,7 @@ export async function userBelongsToTribe(userId, tribeId) {
   return rowCount > 0;
 }
 
-export async function getFeed(userId, { tribeId, cursor, limit }) {
+export async function getFeed(userId, { tribeId, query, cursor, limit }) {
   if (tribeId && !(await userBelongsToTribe(userId, tribeId))) {
     const error = new Error("Você não participa desta tribo.");
     error.statusCode = 403;
@@ -650,10 +650,11 @@ export async function getFeed(userId, { tribeId, cursor, limit }) {
      JOIN tribes t ON t.id = f.tribe_id
      LEFT JOIN tribe_events e ON e.content_id = f.id
      WHERE ($2::uuid IS NULL OR f.tribe_id = $2)
-       AND ($3::timestamptz IS NULL OR (f.created_at, f.id) < ($3, $4::uuid))
+       AND ($3::text IS NULL OR (f.body ILIKE $3 OR author.display_name ILIKE $3 OR t.name ILIKE $3 OR e.title ILIKE $3 OR e.location ILIKE $3))
+       AND ($4::timestamptz IS NULL OR (f.created_at, f.id) < ($4, $5::uuid))
      ORDER BY f.created_at DESC, f.id DESC
-     LIMIT $5`,
-    [userId, tribeId ?? null, cursor?.createdAt ?? null, cursor?.id ?? null, limit + 1]
+     LIMIT $6`,
+    [userId, tribeId ?? null, query ? `%${query}%` : null, cursor?.createdAt ?? null, cursor?.id ?? null, limit + 1]
   );
   const hasMore = rows.length > limit;
   const pageRows = rows.slice(0, limit);
