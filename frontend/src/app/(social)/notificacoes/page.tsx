@@ -98,7 +98,7 @@ export default function NotificationsPage() {
                   <p className="mt-1 text-xs text-muted-foreground">{relativeDate(item.createdAt)}</p>
                 </div>
                 {!item.readAt && <span className="size-2 shrink-0 rounded-full bg-primary" aria-label="Não lida" />}
-                <Link href={target} onClick={() => { if (!item.readAt) void markRead(item.id); }} aria-label="Abrir feed" className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"><ArrowRight className="size-4" /></Link>
+                <Link href={target} onClick={() => { if (!item.readAt) void markRead(item.id); }} aria-label="Abrir publicação ou evento" className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"><ArrowRight className="size-4" /></Link>
               </article>
             );
           })}
