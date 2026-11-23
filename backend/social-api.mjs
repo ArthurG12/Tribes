@@ -48,6 +48,8 @@ const MAX_POST_PAYLOAD_SIZE = MAX_IMAGE_DATA_URL_SIZE;
 const MAX_PROFILE_PAYLOAD_SIZE = MAX_POST_PAYLOAD_SIZE;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const authAttempts = new Map();
+const apiAttempts = new Map();
+const RATE_WINDOW_MS = 60_000;
 const dummyPasswordHash = hashPassword("tribes-invalid-account-password");
 
 function readCookie(request, name) {
@@ -64,7 +66,7 @@ function readCookie(request, name) {
 
 function allowAuthAttempt(request) {
   const now = Date.now();
-  const ip = (request.headers["x-forwarded-for"]?.split(",")[0]?.trim() ?? request.socket.remoteAddress ?? "unknown").slice(0, 64);
+  const ip = String(request.socket.remoteAddress ?? "unknown").slice(0, 64);
   if (authAttempts.size > 2000) {
     for (const [key, attempt] of authAttempts) if (now - attempt.startedAt > 60_000) authAttempts.delete(key);
   }
@@ -115,6 +117,37 @@ async function authenticatedUser(request) {
   return getSessionUser(readCookie(request, SESSION_COOKIE));
 }
 
+function allowApiAttempt(request, user, method, pathname) {
+  const now = Date.now();
+  if (apiAttempts.size > 10_000) {
+    for (const [key, attempt] of apiAttempts) {
+      if (now - attempt.startedAt > RATE_WINDOW_MS) apiAttempts.delete(key);
+    }
+  }
+  const write = !["GET", "HEAD", "OPTIONS"].includes(method);
+  const key = user ? `user:${user.id}:${write ? "write" : "read"}` : `ip:${request.socket.remoteAddress ?? "unknown"}`;
+  const limit = user ? (write ? 45 : 180) : 30;
+  const attempt = apiAttempts.get(key);
+  if (!attempt || now - attempt.startedAt > RATE_WINDOW_MS) {
+    apiAttempts.set(key, { count: 1, startedAt: now });
+    return true;
+  }
+  attempt.count += 1;
+  return attempt.count <= limit;
+}
+
+function originAllowed(request) {
+  const origin = request.headers.origin;
+  if (!origin) return request.headers["sec-fetch-site"] !== "cross-site";
+  let expected;
+  try {
+    expected = new URL(process.env.FRONTEND_URL ?? "http://localhost:4317").origin;
+  } catch {
+    return false;
+  }
+  return origin === expected;
+}
+
 export async function handleSocialRequest(request, response, url) {
   const pathname = url.pathname.replace(/\/+$/, "") || "/";
   const method = request.method ?? "GET";
@@ -126,6 +159,11 @@ export async function handleSocialRequest(request, response, url) {
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance|vote)$/.test(pathname) ||
     /^\/api\/comments\/[^/]+$/.test(pathname);
   if (!routeKnown) return false;
+
+  if (!["GET", "HEAD", "OPTIONS"].includes(method) && !originAllowed(request)) {
+    sendJson(response, 403, { error: "Origem da requisição não permitida." });
+    return true;
+  }
 
   try {
     if (pathname === "/api/auth/me" && method === "GET") {
@@ -195,11 +233,10 @@ export async function handleSocialRequest(request, response, url) {
       const email = requiredString(payload.email, "e-mail", 3, 254).toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw invalid("Informe um e-mail válido.");
       const existingUser = await getUserByEmail(email);
-      if (!existingUser) {
-        return sendJson(response, 404, { error: "Este e-mail não está cadastrado." }), true;
+      if (existingUser) {
+        await enqueueEmail({ email, kind: "password_reset" });
+        wakeEmailQueueWorker();
       }
-      await enqueueEmail({ email, kind: "password_reset" });
-      wakeEmailQueueWorker();
       return sendJson(response, 202, {
         message: "Se este e-mail estiver cadastrado, enviaremos um link assim que houver disponibilidade de envio.",
       }), true;
@@ -257,8 +294,8 @@ export async function handleSocialRequest(request, response, url) {
       sendJson(response, 401, { error: "Autenticação necessária." });
       return true;
     }
-    if (request.headers["sec-fetch-site"] === "cross-site" && !["GET", "HEAD"].includes(method)) {
-      sendJson(response, 403, { error: "Requisição cross-site não permitida." });
+    if (!allowApiAttempt(request, user, method, pathname)) {
+      sendJson(response, 429, { error: "Muitas requisições. Aguarde um minuto e tente novamente." }, { "Retry-After": "60" });
       return true;
     }
 
