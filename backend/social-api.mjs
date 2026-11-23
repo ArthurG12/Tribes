@@ -136,49 +136,6 @@ function allowApiAttempt(request, user, method) {
   return attempt.count <= limit;
 }
 
-function originAllowed(request) {
-  const originHeader = request.headers.origin;
-  const fetchSite = request.headers["sec-fetch-site"];
-
-  if (!originHeader) {
-    return fetchSite !== "cross-site";
-  }
-
-  let requestOrigin;
-  try {
-    requestOrigin = new URL(originHeader).origin;
-  } catch {
-    return false;
-  }
-
-  const configuredOrigins = [
-    process.env.FRONTEND_URL,
-    ...(process.env.FRONTEND_ORIGINS ?? "").split(/[\\s,]+/),
-  ]
-    .map((value) => value.trim().replace(/^["']|["']$/g, ""))
-    .filter(Boolean)
-    .flatMap((value) => {
-      try {
-        return [new URL(value).origin];
-      } catch {
-        return [];
-      }
-    });
-
-  if (configuredOrigins.includes(requestOrigin)) return true;
-
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      const parsed = new URL(requestOrigin);
-      return ["localhost", "127.0.0.1", "[::1]"].includes(parsed.hostname) &&
-        ["3000", "4317", "4318"].includes(parsed.port);
-    } catch {
-      return false;
-    }
-  }
-
-  return false;
-}
 
 export async function handleSocialRequest(request, response, url) {
   const pathname = url.pathname.replace(/\/+$/, "") || "/";
@@ -191,11 +148,6 @@ export async function handleSocialRequest(request, response, url) {
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance|vote)$/.test(pathname) ||
     /^\/api\/comments\/[^/]+$/.test(pathname);
   if (!routeKnown) return false;
-
-  if (!["GET", "HEAD", "OPTIONS"].includes(method) && !originAllowed(request)) {
-    sendJson(response, 403, { error: "Origem da requisição não permitida." });
-    return true;
-  }
 
   try {
     if (pathname === "/api/auth/me" && method === "GET") {
