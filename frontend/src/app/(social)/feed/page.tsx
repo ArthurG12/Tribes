@@ -14,6 +14,7 @@ const PAGE_SIZE = 20;
 export default function FeedPage() {
   const [focusId, setFocusId] = useState<string | null>(null);
   const focusedItemRef = useRef<string | null>(null);
+  const requestSequence = useRef(0);
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [selectedTribe, setSelectedTribe] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
@@ -41,7 +42,9 @@ export default function FeedPage() {
     if (debouncedSearch) query.set("q", debouncedSearch);
     if (selectedType !== "all") query.set("type", selectedType);
     if (cursor) query.set("cursor", cursor);
+    const requestId = ++requestSequence.current;
     const result = await apiRequest<{ items: FeedItem[]; nextCursor: string | null }>(`/api/feed?${query}`);
+    if (requestId !== requestSequence.current) return;
     setItems((existing) => replace ? result.items : [...existing, ...result.items]);
     setNextCursor(result.nextCursor);
   }, [selectedTribe, selectedType, debouncedSearch]);
