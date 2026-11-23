@@ -233,7 +233,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
 
   return (
     <article id={`feed-item-${item.id}`} className="scroll-mt-28 overflow-hidden rounded-3xl border border-border bg-card shadow-xs">
-      <header className="flex flex-col gap-3 border-b border-border/70 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-5">
+      <header className="flex items-start justify-between gap-2 border-b border-border/70 p-4 sm:items-center sm:gap-3 sm:p-5">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Link href={`/usuarios/${item.author.id}`} aria-label={`Ver perfil de ${item.author.name}`}>
             <UserAvatar name={item.author.name} avatarUrl={item.author.avatarUrl} />
@@ -244,7 +244,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
             <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(item.createdAt)}{item.editedAt ? " · editado" : ""}</p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1 self-end sm:self-center">
+        <div className="flex shrink-0 items-center gap-1">
           <Button type="button" size="icon-sm" variant="ghost" aria-label="Compartilhar publicação" onClick={() => void sharePost()}><Share2 className="size-4" /></Button>
           {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label={item.event ? "Editar evento" : "Editar publicação"} onClick={() => { setEditPostBody(item.body); setEventDraft(item.event ? { title: item.event.title, startsAt: toLocalDateTimeInput(item.event.startsAt), endsAt: toLocalDateTimeInput(item.event.endsAt), location: item.event.location, lat: item.event.lat, lon: item.event.lon, cost: item.event.cost, maxAttendees: item.event.maxAttendees ? String(item.event.maxAttendees) : "" } : null); setEditingPost(true); }}><Pencil className="size-4" /></Button>}
           {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label={item.event ? "Cancelar evento" : "Excluir publicação"} onClick={() => setConfirmDelete(true)}><Trash2 className="size-4 text-destructive" /></Button>}
