@@ -13,6 +13,9 @@ import {
   BarChart3,
   Send,
   Users,
+  Pencil,
+  Trash2,
+  Share2,
 } from "lucide-react";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { Badge } from "@/components/ui/badge";
@@ -25,9 +28,10 @@ interface FeedItemCardProps {
   item: FeedItem;
   onUpdateItem: (itemId: string, update: (current: FeedItem) => FeedItem) => void;
   onError: (message: string) => void;
+  onRemoveItem: (itemId: string) => void;
 }
 
-export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps) {
+export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: FeedItemCardProps) {
   const [expandedComments, setExpandedComments] = useState(false);
   const [comments, setComments] = useState<FeedComment[] | null>(null);
   const [commentDraft, setCommentDraft] = useState("");
@@ -37,6 +41,55 @@ export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps)
   const [attendancePending, setAttendancePending] = useState(false);
   const [savePending, setSavePending] = useState(false);
   const [votePending, setVotePending] = useState(false);
+  const [editingPost, setEditingPost] = useState(false);
+  const [editPostBody, setEditPostBody] = useState(item.body);
+  const [postPending, setPostPending] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  async function savePost() {
+    const body = editPostBody.trim();
+    if (!body || postPending) return;
+    setPostPending(true);
+    try {
+      const result = await apiRequest<{ item: { body: string; editedAt: string } }>(`/api/content/${item.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ body }),
+      });
+      onUpdateItem(item.id, (current) => ({ ...current, body: result.item.body, editedAt: result.item.editedAt }));
+      setEditingPost(false);
+    } catch (saveError) {
+      onError(saveError instanceof Error ? saveError.message : "Não foi possível editar a publicação.");
+    } finally {
+      setPostPending(false);
+    }
+  }
+
+  async function removePost() {
+    if (postPending) return;
+    setPostPending(true);
+    try {
+      await apiRequest(`/api/content/${item.id}`, { method: "DELETE" });
+      onRemoveItem(item.id);
+    } catch (removeError) {
+      onError(removeError instanceof Error ? removeError.message : "Não foi possível excluir a publicação.");
+    } finally {
+      setPostPending(false);
+      setConfirmDelete(false);
+    }
+  }
+
+  async function sharePost() {
+    const url = `${window.location.origin}/feed?focus=${item.id}`;
+    try {
+      if (navigator.share) await navigator.share({ title: "Tribes", url });
+      else {
+        await navigator.clipboard.writeText(url);
+        onError("Link copiado para compartilhar.");
+      }
+    } catch (shareError) {
+      if (shareError instanceof Error && shareError.name !== "AbortError") onError("Não foi possível compartilhar este link.");
+    }
+  }
 
   async function toggleLike() {
     const method = item.likedByMe ? "DELETE" : "POST";
@@ -147,7 +200,12 @@ export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps)
             <p className="mt-0.5 truncate text-xs text-muted-foreground">em <span className="font-semibold text-foreground/80">{item.tribe.name}</span> · {formatDateTime(item.createdAt)}{item.editedAt ? " · editado" : ""}</p>
           </div>
         </div>
-        <Badge variant={item.type === "event" ? "default" : "secondary"}>{item.type === "event" ? "Evento" : item.type === "poll" ? "Enquete" : "Publicação"}</Badge>
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge variant={item.type === "event" ? "default" : "secondary"}>{item.type === "event" ? "Evento" : item.type === "poll" ? "Enquete" : "Publicação"}</Badge>
+          <Button type="button" size="icon-sm" variant="ghost" aria-label="Compartilhar publicação" onClick={() => void sharePost()}><Share2 className="size-4" /></Button>
+          {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label="Editar publicação" onClick={() => { setEditPostBody(item.body); setEditingPost(true); }}><Pencil className="size-4" /></Button>}
+          {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label="Excluir publicação" onClick={() => setConfirmDelete(true)}><Trash2 className="size-4 text-destructive" /></Button>}
+        </div>
       </header>
       <div className="space-y-4 p-4 sm:p-5">
         {item.event && <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
@@ -160,7 +218,20 @@ export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps)
             {item.event.maxAttendees && <p className="flex items-center gap-2"><Users className="size-4 text-primary" />Limite de {item.event.maxAttendees} participantes</p>}
           </div>
         </div>}
-        <p className="whitespace-pre-wrap text-sm leading-relaxed">{item.body}</p>
+        {editingPost ? <div className="space-y-2">
+          <Textarea value={editPostBody} onChange={(event) => setEditPostBody(event.target.value)} maxLength={5000} rows={4} />
+          <div className="flex justify-end gap-2">
+            <Button type="button" size="sm" variant="ghost" onClick={() => setEditingPost(false)}>Cancelar</Button>
+            <Button type="button" size="sm" disabled={postPending || !editPostBody.trim()} onClick={() => void savePost()}>{postPending ? <LoaderCircle className="size-4 animate-spin" /> : null}Salvar</Button>
+          </div>
+        </div> : <p className="whitespace-pre-wrap text-sm leading-relaxed">{item.body}</p>}
+        {confirmDelete && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+          <p className="text-sm">Excluir esta publicação permanentemente?</p>
+          <div className="flex gap-2">
+            <Button type="button" size="sm" variant="ghost" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+            <Button type="button" size="sm" variant="destructive" disabled={postPending} onClick={() => void removePost()}>{postPending ? <LoaderCircle className="size-4 animate-spin" /> : "Excluir"}</Button>
+          </div>
+        </div>}
         {item.poll && <section className="rounded-2xl border border-primary/20 bg-primary/[0.035] p-4">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><BarChart3 className="size-4" />Enquete · {item.poll.totalVotes} {item.poll.totalVotes === 1 ? "voto" : "votos"}</div>
           <div className="space-y-2">
