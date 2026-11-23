@@ -29,7 +29,7 @@ function TribeDetailContent() {
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-6">
-      <Link href="/minhas-tribos" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />Voltar para minhas tribos</Link>
+      <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />Voltar para a página inicial</Link>
       {error || !tribe ? <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error || "Tribo não encontrada."}</p> : <>
         <section className="rounded-3xl border border-border bg-card p-5 sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
