@@ -1073,7 +1073,7 @@ export async function listNotifications(userId, limit = 40) {
             t.name AS tribe_name
      FROM notifications n
      JOIN users actor ON actor.id = n.actor_id
-     JOIN tribes t ON t.id = n.tribe_id
+     LEFT JOIN tribes t ON t.id = n.tribe_id
      WHERE n.recipient_id = $1
      ORDER BY n.created_at DESC, n.id DESC
      LIMIT $2`,
