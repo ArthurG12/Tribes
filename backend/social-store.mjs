@@ -931,8 +931,8 @@ export async function deleteContent(userId, contentId) {
   try {
     await client.query("BEGIN");
     const { rows: images } = await client.query(
-      `SELECT i.image_key FROM content_images i
-       JOIN feed_items f ON f.id = i.content_id
+      `SELECT i.image_key FROM feed_items f
+       LEFT JOIN content_images i ON i.content_id = f.id
        JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $2 AND m.status = 'active'
        WHERE f.id = $1 AND f.author_id = $2 FOR UPDATE OF f`,
       [contentId, userId]
