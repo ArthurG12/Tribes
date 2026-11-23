@@ -64,9 +64,6 @@ export interface PublicProfile {
   city: string;
   interests: string[];
   avatarUrl: string | null;
-  followersCount: number;
-  followingCount: number;
-  isFollowing: boolean;
   isMe: boolean;
 }
 
@@ -83,9 +80,12 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   return payload as T;
 }
 
-export function formatDateTime(value: string) {
+export function formatDateTime(value: string | null | undefined) {
+  if (!value) return "Data indisponível";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Data indisponível";
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(value));
+  }).format(date);
 }
