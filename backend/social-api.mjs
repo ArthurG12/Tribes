@@ -156,7 +156,7 @@ function allowApiAttempt(request, user, method) {
 export async function handleSocialRequest(request, response, url) {
   const pathname = url.pathname.replace(/\/+$/, "") || "/";
   const method = request.method ?? "GET";
-  const routeKnown = pathname.startsWith("/api/auth/") ||
+  const routeKnown = pathname.startsWith("/api/auth/") || pathname === "/api/maps-config" ||
     pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
     pathname === "/api/feed" || pathname === "/api/saved" || /^\/api\/content\/[^/]+$/.test(pathname) || /^\/api\/content\/[^/]+\/save$/.test(pathname) || pathname === "/api/events" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
     /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members)$/.test(pathname) ||
@@ -296,6 +296,8 @@ export async function handleSocialRequest(request, response, url) {
         return true;
       }
       sendJson(response, 200, { tribe });
+    if (pathname === "/api/maps-config" && method === "GET") {
+      sendJson(response, 200, { apiKey: process.env.MAPS_API ?? "" }, { "Cache-Control": "no-store, max-age=0" });
       return true;
     }
 

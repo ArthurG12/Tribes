@@ -298,6 +298,6 @@
   background: transparent;
 }
 
-.event-location-map .leaflet-control-attribution {
-  font-size: 9px;
+.event-location-map.leaflet-container {
+  background: var(--muted);
 }

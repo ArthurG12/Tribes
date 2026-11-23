@@ -17,9 +17,38 @@ export interface EventMapPoint {
   formatted: string;
 }
 
-const MAPS_API_KEY = process.env.NEXT_PUBLIC_MAPS_API ?? "";
 const DEFAULT_CENTER: [number, number] = [-14.2, -51.9];
-const TILE_ATTRIBUTION = 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | © OpenStreetMap';
+let mapsApiKeyRequest: Promise<string> | null = null;
+
+async function requestMapsApiKey() {
+  if (!mapsApiKeyRequest) {
+    mapsApiKeyRequest = fetch("/api/maps-config", { cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) throw new Error("Não foi possível carregar a configuração dos mapas.");
+        return response.json() as Promise<{ apiKey?: unknown }>;
+      })
+      .then((configuration) => typeof configuration.apiKey === "string" ? configuration.apiKey : "")
+      .catch((error: unknown) => {
+        mapsApiKeyRequest = null;
+        throw error;
+      });
+  }
+  return mapsApiKeyRequest;
+}
+
+export function useMapsApiKey() {
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void requestMapsApiKey()
+      .then((key) => { if (active) setApiKey(key); })
+      .catch(() => { if (active) setApiKey(""); });
+    return () => { active = false; };
+  }, []);
+
+  return apiKey;
+}
 
 function isValidPoint(point: EventMapPoint) {
   return Number.isFinite(point.lat) && point.lat >= -90 && point.lat <= 90 &&
@@ -42,11 +71,10 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
   const markersRef = useRef<Leaflet.LayerGroup | null>(null);
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const apiKey = MAPS_API_KEY;
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !apiKey) return;
+    if (!container) return;
 
     let active = true;
     let map: Leaflet.Map | null = null;
@@ -56,11 +84,16 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
       const leaflet = await import("leaflet");
       if (!active || !container) return;
 
-      map = leaflet.map(container, { scrollWheelZoom: false }).setView(DEFAULT_CENTER, 4);
-      leaflet.tileLayer(
-        `https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${apiKey}`,
-        { attribution: TILE_ATTRIBUTION, maxZoom: 20 },
-      ).addTo(map);
+      map = leaflet.map(container, {
+        zoomControl: false,
+        attributionControl: false,
+        dragging: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false,
+        touchZoom: false,
+      }).setView(DEFAULT_CENTER, 4);
       markers = leaflet.layerGroup().addTo(map);
       leafletRef.current = leaflet;
       mapRef.current = map;
@@ -76,7 +109,7 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
       markersRef.current = null;
       map?.remove();
     };
-  }, [apiKey]);
+  }, []);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -99,11 +132,7 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
     }
   }, [mapReady, points]);
 
-  if (!apiKey) {
-    return <p className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">Configure MAPS_API para exibir o mapa.</p>;
-  }
-
-  return <div ref={containerRef} aria-label="Mapa do local do evento" role="region" className={`event-location-map h-56 w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`} />;
+  return <div ref={containerRef} aria-label="Localização exata do evento" role="img" className={`event-location-map h-56 w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`} />;
 }
 
 export function EventLocationPicker({
@@ -122,10 +151,12 @@ export function EventLocationPicker({
   const containerRef = useRef<HTMLDivElement>(null);
   const autocompleteRef = useRef<import("@geoapify/geocoder-autocomplete").GeocoderAutocomplete | null>(null);
   const selectedFormattedRef = useRef("");
+  const mapsApiKey = useMapsApiKey();
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !MAPS_API_KEY) return;
+    if (!container || mapsApiKey === null || mapsApiKey === "") return;
+    const apiKey = mapsApiKey;
 
     let active = true;
     let autocomplete: import("@geoapify/geocoder-autocomplete").GeocoderAutocomplete | null = null;
@@ -133,7 +164,7 @@ export function EventLocationPicker({
       const { GeocoderAutocomplete } = await import("@geoapify/geocoder-autocomplete");
       if (!active || !container) return;
 
-      autocomplete = new GeocoderAutocomplete(container, MAPS_API_KEY, {
+      autocomplete = new GeocoderAutocomplete(container, apiKey, {
         lang: "pt",
         filter: { countrycode: ["br"] },
         limit: 5,
@@ -185,7 +216,7 @@ export function EventLocationPicker({
     };
     // The widget is initialized once per mounted field; subsequent values are synchronized below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, label]);
+  }, [id, label, mapsApiKey]);
 
   useEffect(() => {
     const autocomplete = autocompleteRef.current;
@@ -199,15 +230,15 @@ export function EventLocationPicker({
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="text-sm font-semibold">{label}</label>
-      {MAPS_API_KEY ? (
+      {mapsApiKey ? (
         <div ref={containerRef} className="event-location-autocomplete" />
       ) : (
         <>
           <Input id={id} value={value} onChange={(event) => onChange(event.target.value, null)} autoComplete="off" maxLength={240} required placeholder="Digite o local do evento" />
-          <p className="text-xs text-muted-foreground">Configure MAPS_API para ativar a busca de endereços.</p>
+          {mapsApiKey === "" && <p className="text-xs text-muted-foreground">Configure MAPS_API para ativar a busca de endereços.</p>}
         </>
       )}
-      {MAPS_API_KEY && <EventLocationMap points={mapPoints} />}
+      {coordinates && <EventLocationMap points={mapPoints} />}
     </div>
   );
 }
