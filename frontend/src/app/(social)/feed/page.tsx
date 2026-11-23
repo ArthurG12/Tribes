@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { LoaderCircle, Search, Send, Users, X } from "lucide-react";
+import { Bookmark, LoaderCircle, Search, Send, Users, X } from "lucide-react";
 import { FeedComposer } from "@/components/social/feed-composer";
 import { FeedItemCard } from "@/components/social/feed-item-card";
 import { Badge } from "@/components/ui/badge";
@@ -77,6 +77,7 @@ export default function FeedPage() {
           <p className="mt-1 text-sm text-muted-foreground">Publicações e eventos, em ordem cronológica.</p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" nativeButton={false} render={<a href="/salvos" />}><Bookmark className="size-4" />Salvos</Button>
           <Button variant="outline" onClick={() => setComposerOpen(true)}><Send className="size-4" />Publicar</Button>
         </div>
       </section>
