@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, Clock3, MapPin, Users, LoaderCircle, Search, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,7 @@ type EventItem = {
 };
 
 function dateKey(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "full" }).format(new Date(value));
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value));
 }
 
 function escapeIcs(value: string) {
@@ -89,7 +89,7 @@ export default function EventsPage() {
     }
   }
 
-  const visibleEvents = useMemo(() => events, [events]);
+  const visibleEvents = events;
 
   function exportCalendar() {
     const lines = [
@@ -140,7 +140,7 @@ export default function EventsPage() {
           <h1 className="mt-2 font-heading text-3xl font-extrabold">Próximos eventos</h1>
           <p className="mt-1 text-sm text-muted-foreground">Tudo que vai acontecer nas tribos das quais você participa.</p>
         </div>
-        <Button variant="outline" onClick={exportCalendar} disabled={!visibleEvents.length}>
+        <Button variant="outline" className="w-full sm:w-auto" onClick={exportCalendar} disabled={!visibleEvents.length}>
           <Download className="size-4" />Exportar calendário
         </Button>
       </section>
@@ -159,7 +159,7 @@ export default function EventsPage() {
             {tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>)}
           </select>
         </div>
-        <Button onClick={() => void applyFilters()} disabled={loading}>Filtrar</Button>
+        <Button className="w-full sm:w-auto" onClick={() => void applyFilters()} disabled={loading}>Filtrar</Button>
       </section>
       {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
       {loading ? <div className="flex justify-center py-12"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : visibleEvents.length ? (
@@ -180,9 +180,9 @@ export default function EventsPage() {
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
                 <span className="text-xs font-semibold text-muted-foreground">{event.tribe.name}</span>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
                   <Link href={`/feed?focus=${event.id}`} className="text-sm font-semibold text-primary hover:underline">Ver no feed</Link>
-                  <Button size="sm" variant={event.attendingByMe ? "outline" : "default"} disabled={pendingEvent === event.id} onClick={() => void toggleAttendance(event)}>
+                  <Button className="w-full sm:w-auto" size="sm" variant={event.attendingByMe ? "outline" : "default"} disabled={pendingEvent === event.id} onClick={() => void toggleAttendance(event)}>
                     {pendingEvent === event.id ? <LoaderCircle className="size-4 animate-spin" /> : null}
                     {event.attendingByMe ? "Cancelar presença" : event.waitlistedByMe ? "Sair da espera" : event.maxAttendees && event.attendeesCount >= event.maxAttendees ? "Entrar na lista de espera" : "Confirmar presença"}
                   </Button>
