@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, LoaderCircle, MapPin, UserRound } from "lucide-react";
 import { UserAvatar } from "@/components/social/user-avatar";
+import { Button } from "@/components/ui/button";
 import { apiRequest, type PublicProfile } from "@/lib/social-types";
 
 export default function PublicProfilePage() {
