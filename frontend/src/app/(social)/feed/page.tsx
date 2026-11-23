@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Bookmark, LoaderCircle, Search, Send, Users, X } from "lucide-react";
 import { FeedComposer } from "@/components/social/feed-composer";
 import { FeedItemCard } from "@/components/social/feed-item-card";
@@ -12,6 +13,8 @@ import { apiRequest, type FeedItem, type Tribe } from "@/lib/social-types";
 const PAGE_SIZE = 20;
 
 export default function FeedPage() {
+  const searchParams = useSearchParams();
+  const focusId = searchParams.get("focus");
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [selectedTribe, setSelectedTribe] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,6 +61,13 @@ export default function FeedPage() {
       });
     return () => { active = false; };
   }, [fetchPage]);
+
+  useEffect(() => {
+    if (loading || !focusId || !items.some((item) => item.id === focusId)) return;
+    window.requestAnimationFrame(() => {
+      document.getElementById(`feed-item-${focusId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [focusId, items, loading]);
 
   function updateItem(itemId: string, update: (current: FeedItem) => FeedItem) {
     setItems((current) => current.map((item) => item.id === itemId ? update(item) : item));
