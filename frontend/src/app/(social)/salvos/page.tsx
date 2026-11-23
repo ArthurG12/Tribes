@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Bookmark, LoaderCircle, Search } from "lucide-react";
 import { FeedItemCard } from "@/components/social/feed-item-card";
@@ -15,6 +15,7 @@ export default function SavedPostsPage() {
   const [search, setSearch] = useState("");
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const requestSequence = useRef(0);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setSearch(query.trim()), 250);
@@ -30,6 +31,7 @@ export default function SavedPostsPage() {
 
   useEffect(() => {
     let active = true;
+    const requestId = ++requestSequence.current;
     setLoading(true);
     setError("");
     load()
@@ -56,7 +58,9 @@ export default function SavedPostsPage() {
     setLoadingMore(true);
     setError("");
     try {
+      const requestId = requestSequence.current;
       const result = await load(nextCursor);
+      if (requestId !== requestSequence.current) return;
       setItems((current) => [...current, ...result.items]);
       setNextCursor(result.nextCursor);
     } catch (err) {
@@ -93,7 +97,7 @@ export default function SavedPostsPage() {
           <p className="mt-2 text-sm text-muted-foreground">{search ? "Tente outro termo." : "Use o botão Salvar nas publicações do feed para montar sua coleção."}</p>
         </section>
       )}
-      {!loading && nextCursor && <div className="flex justify-center"><Button variant="outline" disabled={loadingMore} onClick={() => void loadMore()}>{loadingMore && <LoaderCircle className="size-4 animate-spin" />}Carregar mais</Button></div>}
+      {!loading && nextCursor && <div className="flex justify-center"><Button variant="outline" disabled={loadingMore || query.trim() !== search || loading} onClick={() => void loadMore()}>{loadingMore && <LoaderCircle className="size-4 animate-spin" />}Carregar mais</Button></div>}
     </main>
   );
 }
