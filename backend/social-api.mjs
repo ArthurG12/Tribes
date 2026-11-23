@@ -26,6 +26,7 @@ import {
   getContentImage,
   getFeed,
   getPublicUserProfile,
+  getPublicTribe,
   getSessionUser,
   getUserByEmail,
   waitForEmailQueueDelivery,
@@ -286,6 +287,15 @@ export async function handleSocialRequest(request, response, url) {
       return sendJson(response, 200, { ok: true }, { "Set-Cookie": clearSessionCookie() }), true;
     }
 
+    const publicTribeMatch = pathname.match(/^\/api\/tribes\/([^/]+)$/);
+    if (publicTribeMatch && method === "GET") {
+      const tribeId = requireUuid(publicTribeMatch[1], "Tribo");
+      const tribe = await getPublicTribe(tribeId);
+      if (!tribe) {
+        sendJson(response, 404, { error: "Tribo não encontrada." });
+        return true;
+      }
+      sendJson(response, 200, { tribe });
     if (pathname === "/api/maps-config" && method === "GET") {
       sendJson(response, 200, { apiKey: process.env.MAPS_API ?? "" }, { "Cache-Control": "no-store, max-age=0" });
       return true;

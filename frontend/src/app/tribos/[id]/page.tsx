@@ -29,19 +29,19 @@ function TribeDetailContent() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      apiRequest<{ tribes: (Tribe & { isOwner?: boolean })[] }>("/api/tribes?mine=true"),
-      apiRequest<{ members: TribeMember[] }>(`/api/tribes/${id}/members`),
-    ]).then(([tribeResult, memberResult]) => {
+    apiRequest<{ tribe: Tribe }>(`/api/tribes/${id}`).then(async ({ tribe: current }) => {
       if (!active) return;
-      const current = tribeResult.tribes.find((item) => item.id === id);
-      if (!current) {
-        setError("Esta tribo não foi encontrada ou você não participa dela.");
-        return;
-      }
       setTribe(current);
-      setIsOwner(current.isOwner === true);
-      setMembers(memberResult.members);
+      const [tribeResult, memberResult] = await Promise.allSettled([
+        apiRequest<{ tribes: (Tribe & { isOwner?: boolean })[] }>("/api/tribes?mine=true"),
+        apiRequest<{ members: TribeMember[] }>(`/api/tribes/${id}/members`),
+      ]);
+      if (!active) return;
+      if (tribeResult.status === "fulfilled") {
+        const membership = tribeResult.value.tribes.find((item) => item.id === id);
+        setIsOwner(membership?.isOwner === true);
+      }
+      if (memberResult.status === "fulfilled") setMembers(memberResult.value.members);
     }).catch((loadError) => {
       if (active) setError(loadError instanceof Error ? loadError.message : "Não foi possível abrir esta tribo.");
     }).finally(() => { if (active) setLoading(false); });
@@ -52,7 +52,7 @@ function TribeDetailContent() {
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-6">
-      <Link href="/minhas-tribos" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />Voltar para minhas tribos</Link>
+      <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />Voltar para a página inicial</Link>
       {error || !tribe ? <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error || "Tribo não encontrada."}</p> : <>
         <section className="rounded-3xl border border-border bg-card p-5 sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-3">
