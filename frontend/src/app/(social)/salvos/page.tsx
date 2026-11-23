@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Bookmark, LoaderCircle, Search } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Bookmark, LoaderCircle, Search } from "lucide-react";
 import { FeedItemCard } from "@/components/social/feed-item-card";
 import { Button } from "@/components/ui/button";
 import { apiRequest, type FeedItem } from "@/lib/social-types";
@@ -20,20 +21,29 @@ export default function SavedPostsPage() {
     return () => window.clearTimeout(timeout);
   }, [query]);
 
-  const load = useCallback(async (cursor?: string, replace = true) => {
+  const load = useCallback(async (cursor?: string) => {
     const params = new URLSearchParams({ limit: "20" });
     if (search) params.set("q", search);
     if (cursor) params.set("cursor", cursor);
-    const result = await apiRequest<{ items: FeedItem[]; nextCursor: string | null }>(`/api/saved?${params}`);
-    setItems((current) => replace ? result.items : [...current, ...result.items]);
-    setNextCursor(result.nextCursor);
+    return apiRequest<{ items: FeedItem[]; nextCursor: string | null }>(`/api/saved?${params}`);
   }, [search]);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
-    load().catch((err) => { if (active) setError(err instanceof Error ? err.message : "Não foi possível carregar os salvos."); })
-      .finally(() => { if (active) setLoading(false); });
+    setError("");
+    load()
+      .then((result) => {
+        if (!active) return;
+        setItems(result.items);
+        setNextCursor(result.nextCursor);
+      })
+      .catch((err) => {
+        if (active) setError(err instanceof Error ? err.message : "Não foi possível carregar os salvos.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     return () => { active = false; };
   }, [load]);
 
@@ -41,8 +51,27 @@ export default function SavedPostsPage() {
     setItems((current) => current.map((item) => item.id === id ? update(item) : item).filter((item) => item.savedByMe));
   }
 
+  async function loadMore() {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    setError("");
+    try {
+      const result = await load(nextCursor);
+      setItems((current) => [...current, ...result.items]);
+      setNextCursor(result.nextCursor);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao carregar mais publicações.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
   return (
     <main className="mx-auto max-w-3xl space-y-6">
+      <Link href="/feed" className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <ArrowLeft className="size-4" />
+        Voltar ao feed
+      </Link>
       <section>
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Sua coleção</p>
         <h1 className="mt-2 font-heading text-3xl font-extrabold">Publicações salvas</h1>
@@ -64,7 +93,7 @@ export default function SavedPostsPage() {
           <p className="mt-2 text-sm text-muted-foreground">{search ? "Tente outro termo." : "Use o botão Salvar nas publicações do feed para montar sua coleção."}</p>
         </section>
       )}
-      {!loading && nextCursor && <div className="flex justify-center"><Button variant="outline" disabled={loadingMore} onClick={async () => { setLoadingMore(true); try { await load(nextCursor, false); } catch (err) { setError(err instanceof Error ? err.message : "Erro ao carregar mais."); } finally { setLoadingMore(false); } }}>{loadingMore && <LoaderCircle className="size-4 animate-spin" />}Carregar mais</Button></div>}
+      {!loading && nextCursor && <div className="flex justify-center"><Button variant="outline" disabled={loadingMore} onClick={() => void loadMore()}>{loadingMore && <LoaderCircle className="size-4 animate-spin" />}Carregar mais</Button></div>}
     </main>
   );
 }
