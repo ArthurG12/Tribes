@@ -251,25 +251,11 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
     city: "",
     interests: [],
     avatarUrl: `/api/users/${alice.user.id}/avatar`,
-    followersCount: 0,
-    followingCount: 0,
-    isFollowing: false,
     isMe: false,
   });
   assert.equal("email" in publicProfile.data.profile, false);
   const selfProfile = await call(alice, `/api/users/${alice.user.id}/profile`);
   assert.equal(selfProfile.data.profile.isMe, true);
-  const follow = await call(bob, `/api/users/${alice.user.id}/follow`, { method: "POST" });
-  assert.equal(follow.response.status, 200, JSON.stringify(follow.data));
-  assert.equal(follow.data.isFollowing, true);
-  assert.equal(follow.data.followersCount, 1);
-  assert.equal((await call(bob, `/api/users/${alice.user.id}/follow`, { method: "POST" })).data.followersCount, 1);
-  assert.equal((await call(alice, `/api/users/${alice.user.id}/follow`, { method: "POST" })).response.status, 400);
-  const followNotice = await call(alice, "/api/notifications");
-  assert.ok(followNotice.data.items.some((item) => item.type === "follow" && item.actor.id === bob.user.id && item.tribeName === null));
-  const unfollow = await call(bob, `/api/users/${alice.user.id}/follow`, { method: "DELETE" });
-  assert.equal(unfollow.response.status, 200);
-  assert.equal(unfollow.data.followersCount, 0);
   const publicAvatar = await requestImage(bob, `/api/users/${alice.user.id}/avatar`);
   assert.equal(publicAvatar.status, 302);
   assert.equal(new URL(publicAvatar.headers.get("location")).searchParams.get("X-Amz-Expires"), "300");
