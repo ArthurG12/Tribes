@@ -481,19 +481,41 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(firstChatMessage.response.status, 201, JSON.stringify(firstChatMessage.data));
   assert.equal(firstChatMessage.data.message.body, "Oi, pessoal!");
   assert.equal(firstChatMessage.data.message.author.id, alice.user.id);
+  assert.equal(firstChatMessage.data.message.isMine, true);
+  assert.equal((await call(bob, chatPath)).data.messages.find((message) => message.id === firstChatMessage.data.message.id).isMine, false);
+  const aliceMessagePath = `${chatPath}/${firstChatMessage.data.message.id}`;
+  assert.equal((await call(bob, aliceMessagePath, {
+    method: "PATCH", body: JSON.stringify({ body: "Tentativa de edição." }),
+  })).response.status, 404);
+  assert.equal((await call(bob, aliceMessagePath, { method: "DELETE" })).response.status, 404);
+  const editedChatMessage = await call(alice, aliceMessagePath, {
+    method: "PATCH", body: JSON.stringify({ body: "Oi, pessoal! (editada)" }),
+  });
+  assert.equal(editedChatMessage.response.status, 200);
+  assert.equal(editedChatMessage.data.message.body, "Oi, pessoal! (editada)");
+  assert.ok(editedChatMessage.data.message.editedAt);
+  const aliceChat = await call(alice, chatPath);
+  assert.equal(aliceChat.data.messages.find((message) => message.id === firstChatMessage.data.message.id).editedAt, editedChatMessage.data.message.editedAt);
+  assert.equal((await call(alice, aliceMessagePath, { method: "DELETE" })).response.status, 200);
+  assert.ok(!(await call(bob, chatPath)).data.messages.some((message) => message.id === firstChatMessage.data.message.id));
   const bobChat = await call(bob, chatPath);
   assert.equal(bobChat.response.status, 200);
-  assert.ok(bobChat.data.messages.some((message) => message.id === firstChatMessage.data.message.id));
+  const bobMessage = await call(bob, chatPath, {
+    method: "POST", body: JSON.stringify({ body: "Mensagem do Bob" }),
+  });
+  assert.equal(bobMessage.response.status, 201);
+  const bobMessagePath = `${chatPath}/${bobMessage.data.message.id}`;
+  assert.equal((await call(alice, bobMessagePath, { method: "DELETE" })).response.status, 404);
   assert.equal((await call(alice, chatPath, {
     method: "POST", body: JSON.stringify({ body: "x".repeat(1001) }),
   })).response.status, 400);
   await pool.query(
     "UPDATE tribe_messages SET created_at = CURRENT_TIMESTAMP - INTERVAL '8 days' WHERE id = $1",
-    [firstChatMessage.data.message.id]
+    [bobMessage.data.message.id]
   );
   const chatAfterRetention = await call(alice, chatPath);
   assert.equal(chatAfterRetention.response.status, 200);
-  assert.ok(!chatAfterRetention.data.messages.some((message) => message.id === firstChatMessage.data.message.id));
+  assert.ok(!chatAfterRetention.data.messages.some((message) => message.id === bobMessage.data.message.id));
 
   assert.equal((await call(bob, "/api/events")).response.status, 200);
   const imageData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII=";

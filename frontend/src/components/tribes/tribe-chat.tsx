@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { LoaderCircle, MessageCircle, Send } from "lucide-react";
+import { LoaderCircle, MessageCircle, MoreVertical, Pencil, Send, Trash2 } from "lucide-react";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,8 @@ type TribeMessage = {
   id: string;
   body: string;
   createdAt: string;
+  editedAt: string | null;
+  isMine: boolean;
   author: { id: string; name: string; avatarUrl: string | null };
 };
 
@@ -28,8 +30,14 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [openMenuMessage, setOpenMenuMessage] = useState<string | null>(null);
+  const [editingMessage, setEditingMessage] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [error, setError] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const messageRevisionRef = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -39,9 +47,10 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
     const refresh = async () => {
       if (fetching) return;
       fetching = true;
+      const revision = messageRevisionRef.current;
       try {
         const result = await apiRequest<{ messages: TribeMessage[] }>(`/api/tribes/${tribeId}/messages`, { cache: "no-store" });
-        if (active) {
+        if (active && revision === messageRevisionRef.current) {
           setMessages(result.messages);
           setError("");
         }
@@ -81,12 +90,53 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
         method: "POST",
         body: JSON.stringify({ body: trimmed }),
       });
+      messageRevisionRef.current += 1;
       setMessages((current) => sortMessages([...current.filter((message) => message.id !== result.message.id), result.message]));
       setBody("");
     } catch (sendError) {
       setError(sendError instanceof Error ? sendError.message : "Não foi possível enviar a mensagem.");
     } finally {
       setSending(false);
+    }
+  }
+
+  async function saveMessage(messageId: string) {
+    const trimmed = editDraft.trim();
+    if (!trimmed || pendingMessage) return;
+    setPendingMessage(messageId);
+    setError("");
+    try {
+      const result = await apiRequest<{ message: { id: string; body: string; editedAt: string } }>(
+        `/api/tribes/${tribeId}/messages/${messageId}`,
+        { method: "PATCH", body: JSON.stringify({ body: trimmed }) }
+      );
+      messageRevisionRef.current += 1;
+      setMessages((current) => current.map((message) => message.id === messageId
+        ? { ...message, body: result.message.body, editedAt: result.message.editedAt }
+        : message));
+      setEditingMessage(null);
+      setEditDraft("");
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Não foi possível editar a mensagem.");
+    } finally {
+      setPendingMessage(null);
+    }
+  }
+
+  async function deleteMessage(messageId: string) {
+    if (pendingMessage) return;
+    setPendingMessage(messageId);
+    setError("");
+    try {
+      await apiRequest(`/api/tribes/${tribeId}/messages/${messageId}`, { method: "DELETE" });
+      messageRevisionRef.current += 1;
+      setMessages((current) => current.filter((message) => message.id !== messageId));
+      setConfirmDelete(null);
+      setOpenMenuMessage(null);
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Não foi possível apagar a mensagem.");
+    } finally {
+      setPendingMessage(null);
     }
   }
 
@@ -109,11 +159,75 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
           <article key={message.id} className="flex min-w-0 items-start gap-2.5">
             <UserAvatar name={message.author.name} avatarUrl={message.author.avatarUrl} />
             <div className="min-w-0 flex-1 rounded-2xl bg-card px-3 py-2.5 shadow-xs">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <div className="flex min-w-0 items-start justify-between gap-2">
                 <p className="break-words text-sm font-semibold">{message.author.name}</p>
-                <time className="shrink-0 text-xs text-muted-foreground" dateTime={message.createdAt}>{messageTime.format(new Date(message.createdAt))}</time>
+                <div className="flex shrink-0 items-center gap-1">
+                  <time className="text-xs text-muted-foreground" dateTime={message.createdAt}>
+                    {messageTime.format(new Date(message.createdAt))}{message.editedAt ? " · editada" : ""}
+                  </time>
+                  {message.isMine && <div className="relative">
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label={`Ações da sua mensagem para ${message.author.name}`}
+                      aria-haspopup="menu"
+                      aria-expanded={openMenuMessage === message.id}
+                      onClick={() => setOpenMenuMessage((current) => current === message.id ? null : message.id)}
+                    >
+                      <MoreVertical className="size-4" />
+                    </Button>
+                    {openMenuMessage === message.id && <div role="menu" className="absolute right-0 top-full z-10 mt-1 min-w-36 rounded-xl border border-border bg-popover p-1 shadow-lg">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => {
+                          setEditingMessage(message.id);
+                          setEditDraft(message.body);
+                          setConfirmDelete(null);
+                          setOpenMenuMessage(null);
+                        }}
+                      ><Pencil className="size-4" />Editar</button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => {
+                          setConfirmDelete(message.id);
+                          setEditingMessage(null);
+                          setOpenMenuMessage(null);
+                        }}
+                      ><Trash2 className="size-4" />Apagar</button>
+                    </div>}
+                  </div>}
+                </div>
               </div>
-              <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{message.body}</p>
+              {editingMessage === message.id ? <div className="mt-2 space-y-2">
+                <Textarea
+                  aria-label="Editar mensagem"
+                  value={editDraft}
+                  onChange={(event) => setEditDraft(event.target.value)}
+                  maxLength={1000}
+                  rows={3}
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2">
+                  <Button type="button" size="sm" variant="ghost" disabled={pendingMessage === message.id} onClick={() => { setEditingMessage(null); setEditDraft(""); }}>Cancelar</Button>
+                  <Button type="button" size="sm" disabled={pendingMessage === message.id || !editDraft.trim()} onClick={() => void saveMessage(message.id)}>
+                    {pendingMessage === message.id && <LoaderCircle className="size-4 animate-spin" />}Salvar
+                  </Button>
+                </div>
+              </div> : <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{message.body}</p>}
+              {confirmDelete === message.id && <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+                <p className="text-sm">Apagar esta mensagem permanentemente?</p>
+                <div className="flex gap-2">
+                  <Button type="button" size="sm" variant="ghost" disabled={pendingMessage === message.id} onClick={() => setConfirmDelete(null)}>Cancelar</Button>
+                  <Button type="button" size="sm" variant="destructive" disabled={pendingMessage === message.id} onClick={() => void deleteMessage(message.id)}>
+                    {pendingMessage === message.id && <LoaderCircle className="size-4 animate-spin" />}Apagar
+                  </Button>
+                </div>
+              </div>}
             </div>
           </article>
         )) : (

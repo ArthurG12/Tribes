@@ -7,6 +7,7 @@ import { registrationMessageForDelivery } from "./registration-message.mjs";
 import {
   addComment,
   createTribeMessage,
+  deleteTribeMessage,
   listNotifications,
   listTribeMembers,
   listTribeMessages,
@@ -19,6 +20,7 @@ import {
   completeRegistration,
   createContent,
   updateContent,
+  updateTribeMessage,
   deleteContent,
   createSession,
   createTribe,
@@ -163,7 +165,7 @@ export async function handleSocialRequest(request, response, url) {
   const routeKnown = pathname.startsWith("/api/auth/") || pathname === "/api/maps-config" ||
     pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
     pathname === "/api/feed" || pathname === "/api/saved" || /^\/api\/content\/[^/]+$/.test(pathname) || /^\/api\/content\/[^/]+\/save$/.test(pathname) || pathname === "/api/events" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
-    /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members|messages)$/.test(pathname) ||
+    /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members|messages)$/.test(pathname) || /^\/api\/tribes\/[^/]+\/messages\/[^/]+$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance|vote)$/.test(pathname) ||
     /^\/api\/comments\/[^/]+(?:\/like)?$/.test(pathname);
@@ -500,6 +502,30 @@ export async function handleSocialRequest(request, response, url) {
         return true;
       }
       sendJson(response, 201, { message });
+      return true;
+    }
+
+    const tribeMessageMatch = pathname.match(/^\/api\/tribes\/([^/]+)\/messages\/([^/]+)$/);
+    if (tribeMessageMatch && ["PATCH", "DELETE"].includes(method)) {
+      const tribeId = requireUuid(tribeMessageMatch[1], "Tribo");
+      const messageId = requireUuid(tribeMessageMatch[2], "Mensagem");
+      if (method === "PATCH") {
+        const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });
+        const body = requiredString(payload.body, "mensagem", 1, 1000);
+        const message = await updateTribeMessage(user.id, tribeId, messageId, body);
+        if (!message) {
+          sendJson(response, 404, { error: "Mensagem não encontrada ou sem permissão." });
+          return true;
+        }
+        sendJson(response, 200, { message: { id: message.id, body: message.body, editedAt: message.edited_at } });
+        return true;
+      }
+      const deleted = await deleteTribeMessage(user.id, tribeId, messageId);
+      if (!deleted) {
+        sendJson(response, 404, { error: "Mensagem não encontrada ou sem permissão." });
+        return true;
+      }
+      sendJson(response, 200, { ok: true });
       return true;
     }
 

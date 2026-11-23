@@ -1371,7 +1371,8 @@ export async function listTribeMembers(userId, tribeId) {
 
 export async function listTribeMessages(userId, tribeId, limit = 100) {
   const { rows } = await pool.query(
-    `SELECT message.id, message.body, message.created_at,
+    `SELECT message.id, message.body, message.created_at, message.edited_at,
+            (message.user_id = $1) AS is_mine,
             author.id AS author_id, author.display_name AS author_name,
             EXISTS (SELECT 1 FROM user_profile_images image
                     WHERE image.user_id = author.id AND image.is_deleted = FALSE) AS author_has_avatar
@@ -1419,7 +1420,7 @@ export async function createTribeMessage(userId, tribeId, body) {
       [userId]
     );
     await client.query("COMMIT");
-    return toTribeMessage({ ...rows[0], ...authors[0] });
+    return toTribeMessage({ ...rows[0], ...authors[0], is_mine: true });
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -1433,12 +1434,46 @@ function toTribeMessage(row) {
     id: row.id,
     body: row.body,
     createdAt: row.created_at,
+    editedAt: row.edited_at ?? null,
+    isMine: row.is_mine === true,
     author: {
       id: row.author_id,
       name: row.author_name,
       avatarUrl: row.author_has_avatar ? `/api/users/${row.author_id}/avatar` : null,
     },
   };
+}
+
+export async function updateTribeMessage(userId, tribeId, messageId, body) {
+  const { rows } = await pool.query(
+    `UPDATE tribe_messages AS message
+     SET body = $4, edited_at = CURRENT_TIMESTAMP
+     FROM tribe_memberships AS membership
+     WHERE message.id = $1
+       AND message.tribe_id = $2
+       AND message.user_id = $3
+       AND membership.tribe_id = message.tribe_id
+       AND membership.user_id = $3
+       AND membership.status = 'active'
+     RETURNING message.id, message.body, message.edited_at`,
+    [messageId, tribeId, userId, body]
+  );
+  return rows[0] ?? null;
+}
+
+export async function deleteTribeMessage(userId, tribeId, messageId) {
+  const { rowCount } = await pool.query(
+    `DELETE FROM tribe_messages AS message
+     USING tribe_memberships AS membership
+     WHERE message.id = $1
+       AND message.tribe_id = $2
+       AND message.user_id = $3
+       AND membership.tribe_id = message.tribe_id
+       AND membership.user_id = $3
+       AND membership.status = 'active'`,
+    [messageId, tribeId, userId]
+  );
+  return rowCount > 0;
 }
 
 export async function deleteExpiredTribeMessages() {
