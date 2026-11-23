@@ -30,6 +30,7 @@ type EventDraft = { title: string; startsAt: string; endsAt: string; location: s
 function toLocalDateTimeInput(value: string | null) {
   if (!value) return "";
   const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
@@ -65,6 +66,18 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
       if (item.event && (!eventDraft?.title.trim() || !eventDraft.location.trim() || !eventDraft.startsAt)) {
         onError("Preencha título, data e local do evento.");
         return;
+      }
+      if (item.event && eventDraft) {
+        const startsAt = new Date(eventDraft.startsAt);
+        const endsAt = eventDraft.endsAt ? new Date(eventDraft.endsAt) : null;
+        if (Number.isNaN(startsAt.getTime()) || (endsAt && Number.isNaN(endsAt.getTime()))) {
+          onError("Informe uma data e um horário válidos para o evento.");
+          return;
+        }
+        if (endsAt && endsAt <= startsAt) {
+          onError("O término do evento deve ser posterior ao início.");
+          return;
+        }
       }
       const eventPayload = item.event && eventDraft ? {
         title: eventDraft.title.trim(),
@@ -241,7 +254,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><CalendarDays className="size-4" />Evento da tribo</div>
           <h2 className="mt-2 font-heading text-lg font-bold">{item.event.title}</h2>
           <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-            <p className="flex items-center gap-2"><Clock3 className="size-4 shrink-0 text-primary" />{formatDateTime(item.event.startsAt)}{item.event.endsAt ? ` – ${new Intl.DateTimeFormat("pt-BR", { timeStyle: "short" }).format(new Date(item.event.endsAt))}` : ""}</p>
+            <p className="flex items-center gap-2"><Clock3 className="size-4 shrink-0 text-primary" />{formatDateTime(item.event.startsAt)}{item.event.endsAt ? ` – ${formatDateTime(item.event.endsAt)}` : ""}</p>
             <p className="flex items-center gap-2"><MapPin className="size-4 shrink-0 text-primary" />{item.event.location}</p>
             {item.event.cost && <p>{item.event.cost}</p>}
             {item.event.maxAttendees && <p className="flex items-center gap-2"><Users className="size-4 text-primary" />Limite de {item.event.maxAttendees} participantes</p>}
