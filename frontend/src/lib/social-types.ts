@@ -21,7 +21,7 @@ export interface Tribe {
 
 export interface FeedItem {
   id: string;
-  type: "post" | "event";
+  type: "post" | "event" | "poll";
   body: string;
   imageUrl: string | null;
   createdAt: string;
@@ -32,6 +32,7 @@ export interface FeedItem {
   commentsCount: number;
   likedByMe: boolean;
   savedByMe: boolean;
+  poll: null | { options: { id: string; label: string; votes: number }[]; totalVotes: number; votedOptionId: string | null };
   event: null | {
     title: string;
     startsAt: string;
