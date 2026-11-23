@@ -1023,7 +1023,7 @@ export async function listTribeMembers(userId, tribeId) {
      JOIN users u ON u.id = m.user_id
      JOIN tribes t ON t.id = m.tribe_id
      WHERE m.tribe_id = $2 AND m.status = 'active'
-       AND EXISTS (SELECT 1 FROM tribe_memberships access WHERE access.tribe_id = $2 AND access.user_id = $1 AND access.status = 'active')
+       AND EXISTS (SELECT 1 FROM tribe_memberships viewer_membership WHERE viewer_membership.tribe_id = $2 AND viewer_membership.user_id = $1 AND viewer_membership.status = 'active')
      ORDER BY (t.created_by = u.id) DESC, u.display_name ASC
      LIMIT 200`,
     [userId, tribeId]
