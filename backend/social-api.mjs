@@ -346,8 +346,11 @@ export async function handleSocialRequest(request, response, url) {
       if (!Number.isInteger(limit) || limit < 1 || limit > 50) throw invalid("Limite de página inválido (1–50).");
       const tribeId = url.searchParams.get("tribeId") || undefined;
       if (tribeId) requireUuid(tribeId, "Tribo");
+      const query = (url.searchParams.get("q") ?? "").trim();
+      if (query.length > 100) throw invalid("A busca deve ter até 100 caracteres.");
       const result = await getFeed(user.id, {
         tribeId,
+        query,
         cursor: decodeCursor(url.searchParams.get("cursor")),
         limit,
       });
