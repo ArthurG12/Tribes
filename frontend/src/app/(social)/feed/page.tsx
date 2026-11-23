@@ -79,6 +79,10 @@ export default function FeedPage() {
     });
   }, [focusId, items, loading]);
 
+  function removeItem(itemId: string) {
+    setItems((current) => current.filter((item) => item.id !== itemId));
+  }
+
   function updateItem(itemId: string, update: (current: FeedItem) => FeedItem) {
     setItems((current) => current.map((item) => item.id === itemId ? update(item) : item));
   }
@@ -137,7 +141,7 @@ export default function FeedPage() {
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{debouncedSearch ? "Tente pesquisar por outro termo ou limpar a busca." : tribes.length ? "Quando alguém publicar ou criar um evento, ele aparecerá aqui." : "Entre em uma comunidade para acompanhar publicações e eventos por aqui."}</p>
         </section>
       ) : <div className="space-y-4">
-        {items.map((item) => <FeedItemCard key={item.id} item={item} onUpdateItem={updateItem} onError={setError} />)}
+        {items.map((item) => <FeedItemCard key={item.id} item={item} onUpdateItem={updateItem} onError={setError} onRemoveItem={removeItem} />)}
       </div>}
       {!loading && nextCursor && <div className="flex justify-center"><Button variant="outline" disabled={loadingMore} onClick={async () => { setLoadingMore(true); try { await fetchPage(nextCursor); } catch (loadError) { setError(loadError instanceof Error ? loadError.message : "Erro ao carregar mais itens."); } finally { setLoadingMore(false); } }}>{loadingMore && <LoaderCircle className="size-4 animate-spin" />}Carregar mais</Button></div>}
     </main>
