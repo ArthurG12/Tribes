@@ -24,6 +24,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest, formatDateTime, type FeedComment, type FeedItem } from "@/lib/social-types";
 
+type EventDraft = { title: string; startsAt: string; endsAt: string; location: string; cost: string; maxAttendees: string };
+
+function toLocalDateTimeInput(value: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+
 interface FeedItemCardProps {
   item: FeedItem;
   onUpdateItem: (itemId: string, update: (current: FeedItem) => FeedItem) => void;
@@ -46,17 +54,35 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
   const [postPending, setPostPending] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [eventDraft, setEventDraft] = useState<EventDraft | null>(null);
 
   async function savePost() {
     const body = editPostBody.trim();
     if (!body || postPending) return;
     setPostPending(true);
     try {
+      if (item.event && (!eventDraft?.title.trim() || !eventDraft.location.trim() || !eventDraft.startsAt)) {
+        onError("Preencha título, data e local do evento.");
+        return;
+      }
+      const eventPayload = item.event && eventDraft ? {
+        title: eventDraft.title.trim(),
+        startsAt: new Date(eventDraft.startsAt).toISOString(),
+        endsAt: eventDraft.endsAt ? new Date(eventDraft.endsAt).toISOString() : null,
+        location: eventDraft.location.trim(),
+        cost: eventDraft.cost.trim(),
+        maxAttendees: eventDraft.maxAttendees ? Number(eventDraft.maxAttendees) : null,
+      } : undefined;
       const result = await apiRequest<{ item: { body: string; editedAt: string } }>(`/api/content/${item.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ body }),
+        body: JSON.stringify({ body, ...(eventPayload ? { event: eventPayload } : {}) }),
       });
-      onUpdateItem(item.id, (current) => ({ ...current, body: result.item.body, editedAt: result.item.editedAt }));
+      onUpdateItem(item.id, (current) => ({
+        ...current,
+        body: result.item.body,
+        editedAt: result.item.editedAt,
+        event: current.event && eventPayload ? { ...current.event, ...eventPayload } : current.event,
+      }));
       setEditingPost(false);
     } catch (saveError) {
       onError(saveError instanceof Error ? saveError.message : "Não foi possível editar a publicação.");
@@ -204,13 +230,13 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
         <div className="flex shrink-0 items-center gap-2">
           <Badge variant={item.type === "event" ? "default" : "secondary"}>{item.type === "event" ? "Evento" : item.type === "poll" ? "Enquete" : "Publicação"}</Badge>
           <Button type="button" size="icon-sm" variant="ghost" aria-label="Compartilhar publicação" onClick={() => void sharePost()}><Share2 className="size-4" /></Button>
-          {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label="Editar publicação" onClick={() => { setEditPostBody(item.body); setEditingPost(true); }}><Pencil className="size-4" /></Button>}
-          {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label="Excluir publicação" onClick={() => setConfirmDelete(true)}><Trash2 className="size-4 text-destructive" /></Button>}
+          {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label={item.event ? "Editar evento" : "Editar publicação"} onClick={() => { setEditPostBody(item.body); setEventDraft(item.event ? { title: item.event.title, startsAt: toLocalDateTimeInput(item.event.startsAt), endsAt: toLocalDateTimeInput(item.event.endsAt), location: item.event.location, cost: item.event.cost, maxAttendees: item.event.maxAttendees ? String(item.event.maxAttendees) : "" } : null); setEditingPost(true); }}><Pencil className="size-4" /></Button>}
+          {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label={item.event ? "Cancelar evento" : "Excluir publicação"} onClick={() => setConfirmDelete(true)}><Trash2 className="size-4 text-destructive" /></Button>}
         </div>
       </header>
       {shareCopied && <p role="status" className="px-5 pt-3 text-xs font-medium text-primary">Link copiado para compartilhar.</p>}
       <div className="space-y-4 p-4 sm:p-5">
-        {item.event && <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
+        {item.event && !editingPost && <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><CalendarDays className="size-4" />Evento da tribo</div>
           <h2 className="mt-2 font-heading text-lg font-bold">{item.event.title}</h2>
           <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
@@ -220,7 +246,15 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
             {item.event.maxAttendees && <p className="flex items-center gap-2"><Users className="size-4 text-primary" />Limite de {item.event.maxAttendees} participantes</p>}
           </div>
         </div>}
-        {editingPost ? <div className="space-y-2">
+        {editingPost ? <div className="space-y-3">
+          {item.event && eventDraft && <div className="grid gap-2 sm:grid-cols-2">
+            <Input aria-label="Título do evento" value={eventDraft.title} onChange={(event) => setEventDraft((current) => current ? { ...current, title: event.target.value } : current)} maxLength={120} placeholder="Título do evento" />
+            <Input aria-label="Local do evento" value={eventDraft.location} onChange={(event) => setEventDraft((current) => current ? { ...current, location: event.target.value } : current)} maxLength={240} placeholder="Local" />
+            <Input aria-label="Início do evento" type="datetime-local" value={eventDraft.startsAt} onChange={(event) => setEventDraft((current) => current ? { ...current, startsAt: event.target.value } : current)} />
+            <Input aria-label="Término do evento" type="datetime-local" value={eventDraft.endsAt} onChange={(event) => setEventDraft((current) => current ? { ...current, endsAt: event.target.value } : current)} />
+            <Input aria-label="Custo do evento" value={eventDraft.cost} onChange={(event) => setEventDraft((current) => current ? { ...current, cost: event.target.value } : current)} maxLength={100} placeholder="Custo (opcional)" />
+            <Input aria-label="Limite de participantes" type="number" min="1" max="10000" value={eventDraft.maxAttendees} onChange={(event) => setEventDraft((current) => current ? { ...current, maxAttendees: event.target.value } : current)} placeholder="Sem limite" />
+          </div>}
           <Textarea value={editPostBody} onChange={(event) => setEditPostBody(event.target.value)} maxLength={5000} rows={4} />
           <div className="flex justify-end gap-2">
             <Button type="button" size="sm" variant="ghost" onClick={() => setEditingPost(false)}>Cancelar</Button>
@@ -228,10 +262,10 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
           </div>
         </div> : <p className="whitespace-pre-wrap text-sm leading-relaxed">{item.body}</p>}
         {confirmDelete && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
-          <p className="text-sm">Excluir esta publicação permanentemente?</p>
+          <p className="text-sm">{item.event ? "Cancelar este evento permanentemente?" : "Excluir esta publicação permanentemente?"}</p>
           <div className="flex gap-2">
             <Button type="button" size="sm" variant="ghost" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
-            <Button type="button" size="sm" variant="destructive" disabled={postPending} onClick={() => void removePost()}>{postPending ? <LoaderCircle className="size-4 animate-spin" /> : "Excluir"}</Button>
+            <Button type="button" size="sm" variant="destructive" disabled={postPending} onClick={() => void removePost()}>{postPending ? <LoaderCircle className="size-4 animate-spin" /> : item.event ? "Cancelar evento" : "Excluir"}</Button>
           </div>
         </div>}
         {item.poll && <section className="rounded-2xl border border-primary/20 bg-primary/[0.035] p-4">
