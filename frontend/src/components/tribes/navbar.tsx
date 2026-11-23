@@ -43,6 +43,7 @@ function NavbarContent() {
   }, [pathname]);
 
   return (
+    <>
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" aria-label="Tribes — página inicial" className="flex shrink-0 items-center gap-2.5">
@@ -97,6 +98,7 @@ function NavbarContent() {
       </div>,
       document.body
     )}
+    </>
   );
 }
 
