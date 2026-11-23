@@ -1299,7 +1299,7 @@ export async function listTribeMembers(userId, tribeId) {
 export async function listUpcomingEvents(userId, limit = 100, { query = "", tribeId } = {}) {
   const normalizedQuery = query.trim();
   const { rows } = await pool.query(
-    `SELECT f.id, f.body, e.title, e.starts_at, e.ends_at, e.location, e.max_attendees,
+    `SELECT f.id, f.body, e.title, e.starts_at, e.ends_at, e.location, e.cost, e.max_attendees,
             t.id AS tribe_id, t.name AS tribe_name, u.display_name AS author_name,
             (SELECT COUNT(*) FROM event_attendees a WHERE a.content_id = f.id)::int AS attendees_count,
             EXISTS (SELECT 1 FROM event_attendees a WHERE a.content_id = f.id AND a.user_id = $1) AS attending_by_me,
@@ -1318,7 +1318,7 @@ export async function listUpcomingEvents(userId, limit = 100, { query = "", trib
   );
   return rows.map((row) => ({
     id: row.id, body: row.body, title: row.title, startsAt: row.starts_at, endsAt: row.ends_at,
-    location: row.location, maxAttendees: row.max_attendees,
+    location: row.location, cost: row.cost, maxAttendees: row.max_attendees,
     tribe: { id: row.tribe_id, name: row.tribe_name }, authorName: row.author_name,
     attendeesCount: row.attendees_count, waitlistCount: row.waitlist_count,
     attendingByMe: row.attending_by_me, waitlistedByMe: row.waitlisted_by_me,
