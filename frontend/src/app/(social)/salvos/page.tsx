@@ -88,7 +88,7 @@ export default function SavedPostsPage() {
       {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
       {loading ? <div className="flex justify-center py-12"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : items.length ? (
         <div className="space-y-4">
-          {items.map((item) => <FeedItemCard key={item.id} item={item} onUpdateItem={updateItem} onError={setError} />)}
+          {items.map((item) => <FeedItemCard key={item.id} item={item} onUpdateItem={updateItem} onError={setError} onRemoveItem={(id) => setItems((current) => current.filter((entry) => entry.id !== id))} />)}
         </div>
       ) : (
         <section className="rounded-3xl border border-dashed border-border bg-card px-5 py-12 text-center">
