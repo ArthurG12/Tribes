@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 type Notification = {
   id: string;
   type: "post_like" | "post_comment" | "event_created" | "event_attendance" | "follow";
-  contentId: string;
-  tribeId: string;
+  contentId: string | null;
+  tribeId: string | null;
   tribeName: string | null;
   createdAt: string;
   readAt: string | null;
