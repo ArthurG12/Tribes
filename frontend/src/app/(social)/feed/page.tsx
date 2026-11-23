@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bookmark, CalendarDays, ChevronDown, Filter, LoaderCircle, MessageSquareText, Search, Users, Vote, X } from "lucide-react";
+import { Bookmark, ChevronDown, Filter, LoaderCircle, Search, Users, X } from "lucide-react";
 import { FeedComposer } from "@/components/social/feed-composer";
 import { FeedItemCard } from "@/components/social/feed-item-card";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,6 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
-  const [composerOpen, setComposerOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -111,12 +110,6 @@ export default function FeedPage() {
 
   return (
     <main className="mx-auto w-full min-w-0 max-w-3xl space-y-6">
-      <FeedComposer
-        tribes={tribes}
-        open={composerOpen}
-        onOpenChange={setComposerOpen}
-        onPublished={() => fetchPage(undefined, true)}
-      />
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <Badge className="bg-primary/10 text-primary">Sua comunidade</Badge>
@@ -128,22 +121,10 @@ export default function FeedPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-4 shadow-xs sm:p-5">
-        <button type="button" onClick={() => setComposerOpen(true)} className="flex min-h-20 w-full items-center gap-4 rounded-xl border border-border bg-background px-4 py-4 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-24 sm:px-5">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"><MessageSquareText className="size-5" /></span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-semibold text-foreground">O que está acontecendo?</span>
-            <span className="mt-1 block text-sm text-muted-foreground">Compartilhe uma publicação, enquete ou evento com sua tribo.</span>
-          </span>
-          <span className="hidden rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground sm:inline-flex">Publicar</span>
-        </button>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground"><MessageSquareText className="size-3.5" />Publicação</span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground"><Vote className="size-3.5" />Enquete</span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground"><CalendarDays className="size-3.5" />Evento</span>
-        </div>
-      </section>
-
+      <FeedComposer
+        tribes={tribes}
+        onPublished={() => fetchPage(undefined, true)}
+      />
       <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
         <div className="space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
