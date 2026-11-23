@@ -89,7 +89,7 @@ export default function NotificationsPage() {
         <div className="mt-8 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
           {items.map((item) => {
             const { verb, Icon } = copy[item.type];
-            const target = item.type === "follow" ? `/usuarios/${item.actor.id}` : "/feed";
+            const target = item.type === "follow" ? `/usuarios/${item.actor.id}` : item.contentId ? `/feed?focus=${encodeURIComponent(item.contentId)}` : "/feed";
             return (
               <article key={item.id} className={`flex items-center gap-3 p-4 transition-colors sm:gap-4 ${item.readAt ? "" : "bg-primary/[0.045]"}`}>
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></span>
