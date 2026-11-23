@@ -6,8 +6,10 @@ import { wakeEmailQueueWorker } from "./email-queue-worker.mjs";
 import { registrationMessageForDelivery } from "./registration-message.mjs";
 import {
   addComment,
+  createTribeMessage,
   listNotifications,
   listTribeMembers,
+  listTribeMessages,
   listUpcomingEvents,
   toggleSavedContent,
   toggleCommentLike,
@@ -161,7 +163,7 @@ export async function handleSocialRequest(request, response, url) {
   const routeKnown = pathname.startsWith("/api/auth/") || pathname === "/api/maps-config" ||
     pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
     pathname === "/api/feed" || pathname === "/api/saved" || /^\/api\/content\/[^/]+$/.test(pathname) || /^\/api\/content\/[^/]+\/save$/.test(pathname) || pathname === "/api/events" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
-    /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members)$/.test(pathname) ||
+    /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members|messages)$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance|vote)$/.test(pathname) ||
     /^\/api\/comments\/[^/]+(?:\/like)?$/.test(pathname);
@@ -475,6 +477,29 @@ export async function handleSocialRequest(request, response, url) {
         return true;
       }
       sendJson(response, 200, { members });
+      return true;
+    }
+
+    const tribeMessagesMatch = pathname.match(/^\/api\/tribes\/([^/]+)\/messages$/);
+    if (tribeMessagesMatch && ["GET", "POST"].includes(method)) {
+      const tribeId = requireUuid(tribeMessagesMatch[1], "Tribo");
+      if (method === "GET") {
+        const messages = await listTribeMessages(user.id, tribeId);
+        if (!messages) {
+          sendJson(response, 404, { error: "Tribo não encontrada ou você não participa dela." });
+          return true;
+        }
+        sendJson(response, 200, { messages });
+        return true;
+      }
+      const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });
+      const body = requiredString(payload.body, "mensagem", 1, 1000);
+      const message = await createTribeMessage(user.id, tribeId, body);
+      if (!message) {
+        sendJson(response, 404, { error: "Tribo não encontrada ou você não participa dela." });
+        return true;
+      }
+      sendJson(response, 201, { message });
       return true;
     }
 

@@ -3,11 +3,12 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Calendar, CheckCircle2, LoaderCircle, MapPin, Pencil, Pin, Sparkles, Store, Users } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle2, ChevronDown, ChevronUp, LoaderCircle, MapPin, Pencil, Pin, Sparkles, Store, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { TribeChat } from "@/components/tribes/tribe-chat";
 import { apiRequest, type Tribe } from "@/lib/social-types";
 import { SAMPLE_TRIBES, type TribePreview } from "@/lib/tribes-data";
 
@@ -27,6 +28,11 @@ function TribeDetailContent() {
   const [sampleTribe, setSampleTribe] = useState<TribePreview | null>(null);
   const [members, setMembers] = useState<TribeMember[]>([]);
   const [isOwner, setIsOwner] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [membersExpanded, setMembersExpanded] = useState(false);
+  const [membersLoaded, setMembersLoaded] = useState(false);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [membersError, setMembersError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -52,19 +58,23 @@ function TribeDetailContent() {
     }
 
     setSampleTribe(null);
+    setIsMember(false);
+    setMembers([]);
+    setMembersExpanded(false);
+    setMembersLoaded(false);
+    setMembersError("");
     apiRequest<{ tribe: Tribe }>(`/api/tribes/${id}`).then(async ({ tribe: current }) => {
       if (!active) return;
       setTribe(current);
-      const [tribeResult, memberResult] = await Promise.allSettled([
+      const tribeResult = await Promise.allSettled([
         apiRequest<{ tribes: (Tribe & { isOwner?: boolean })[] }>("/api/tribes?mine=true"),
-        apiRequest<{ members: TribeMember[] }>(`/api/tribes/${id}/members`),
       ]);
       if (!active) return;
-      if (tribeResult.status === "fulfilled") {
-        const membership = tribeResult.value.tribes.find((item) => item.id === id);
+      if (tribeResult[0].status === "fulfilled") {
+        const membership = tribeResult[0].value.tribes.find((item) => item.id === id);
         setIsOwner(membership?.isOwner === true);
+        setIsMember(membership?.isMember === true);
       }
-      if (memberResult.status === "fulfilled") setMembers(memberResult.value.members);
     }).catch((loadError) => {
       if (active) setError(loadError instanceof Error ? loadError.message : "Não foi possível abrir esta tribo.");
     }).finally(() => { if (active) setLoading(false); });
@@ -72,6 +82,26 @@ function TribeDetailContent() {
   }, [id]);
 
   const isSampleTribe = Boolean(sampleTribe);
+
+  async function toggleMembers() {
+    if (membersExpanded) {
+      setMembersExpanded(false);
+      return;
+    }
+    setMembersExpanded(true);
+    if (membersLoaded || membersLoading) return;
+    setMembersLoading(true);
+    setMembersError("");
+    try {
+      const result = await apiRequest<{ members: TribeMember[] }>(`/api/tribes/${id}/members`, { cache: "no-store" });
+      setMembers(result.members);
+      setMembersLoaded(true);
+    } catch (loadError) {
+      setMembersError(loadError instanceof Error ? loadError.message : "Não foi possível carregar os membros.");
+    } finally {
+      setMembersLoading(false);
+    }
+  }
 
   if (loading) return <main className="flex justify-center py-20"><LoaderCircle className="size-6 animate-spin text-primary" /></main>;
 
@@ -139,20 +169,48 @@ function TribeDetailContent() {
           </section>
         </>}
 
-        {!isSampleTribe && <section className="rounded-3xl border border-border bg-card p-5 sm:p-7">
-          <div className="flex items-center justify-between gap-3">
-            <div><h2 className="font-heading text-xl font-bold">Ver membros</h2><p className="mt-1 text-sm text-muted-foreground">{members.length} participantes</p></div>
-            <Badge variant="outline"><Users className="size-3" />{members.length}</Badge>
-          </div>
-          <div className="mt-4 divide-y divide-border">
-            {members.map((member) => <div key={member.id} className="flex min-w-0 items-center gap-3 py-3">
-              <UserAvatar name={member.name} avatarUrl={member.avatarUrl} />
-              <div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{member.name}</p>{member.city && <p className="text-xs text-muted-foreground">{member.city}</p>}</div>
-              {member.isOwner && <Badge variant="secondary">Criador</Badge>}
-            </div>)}
-            {!members.length && <p className="py-6 text-sm text-muted-foreground">Ainda não há membros para exibir.</p>}
-          </div>
-        </section>}
+        {!isSampleTribe && <>
+          <section className="rounded-3xl border border-border bg-card p-3 sm:p-4">
+            <button
+              type="button"
+              aria-expanded={membersExpanded}
+              aria-controls="tribe-members-list"
+              onClick={() => void toggleMembers()}
+              className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="flex min-w-0 items-center gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Users className="size-5" /></span>
+                <span className="min-w-0">
+                  <span className="block font-heading text-lg font-bold">Ver membros</span>
+                  <span className="block text-sm text-muted-foreground">{tribe.memberCount} {tribe.memberCount === 1 ? "participante" : "participantes"}</span>
+                </span>
+              </span>
+              <span className="flex shrink-0 items-center gap-2">
+                <Badge variant="outline"><Users className="size-3" />{tribe.memberCount}</Badge>
+                {membersExpanded ? <ChevronUp className="size-5 text-muted-foreground" /> : <ChevronDown className="size-5 text-muted-foreground" />}
+              </span>
+            </button>
+            {membersExpanded && <div id="tribe-members-list" className="mt-2 divide-y divide-border px-3">
+              {membersLoading && <div className="flex justify-center py-6"><LoaderCircle className="size-5 animate-spin text-primary" /></div>}
+              {membersError && <p role="alert" className="py-4 text-sm text-destructive">{membersError}</p>}
+              {!membersLoading && !membersError && members.map((member) => <div key={member.id} className="flex min-w-0 items-center gap-3 py-3">
+                <UserAvatar name={member.name} avatarUrl={member.avatarUrl} />
+                <div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{member.name}</p>{member.city && <p className="text-xs text-muted-foreground">{member.city}</p>}</div>
+                {member.isOwner && <Badge variant="secondary">Criador</Badge>}
+              </div>)}
+              {!membersLoading && !membersError && membersLoaded && !members.length && <p className="py-6 text-sm text-muted-foreground">Ainda não há membros para exibir.</p>}
+              {!membersLoading && members.length > 0 && tribe.memberCount > members.length && <p className="py-3 text-xs text-muted-foreground">Exibindo os primeiros {members.length} membros.</p>}
+            </div>}
+          </section>
+
+          {isMember ? <TribeChat tribeId={tribe.id} /> : (
+            <section className="rounded-3xl border border-border bg-card p-5 sm:p-7">
+              <h2 className="font-heading text-xl font-bold">Chat da tribo</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Participe da tribo para conversar com os membros. As mensagens são apagadas após sete dias.</p>
+              <Button nativeButton={false} render={<Link href="/tribos" />} variant="outline" className="mt-4 rounded-xl">Encontrar tribos</Button>
+            </section>
+          )}
+        </>}
       </>}
     </main>
   );

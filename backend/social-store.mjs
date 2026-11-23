@@ -1369,6 +1369,85 @@ export async function listTribeMembers(userId, tribeId) {
   }));
 }
 
+export async function listTribeMessages(userId, tribeId, limit = 100) {
+  const { rows } = await pool.query(
+    `SELECT message.id, message.body, message.created_at,
+            author.id AS author_id, author.display_name AS author_name,
+            EXISTS (SELECT 1 FROM user_profile_images image
+                    WHERE image.user_id = author.id AND image.is_deleted = FALSE) AS author_has_avatar
+     FROM tribe_messages message
+     JOIN users author ON author.id = message.user_id
+     JOIN tribe_memberships membership
+       ON membership.tribe_id = message.tribe_id
+      AND membership.user_id = $1
+      AND membership.status = 'active'
+     WHERE message.tribe_id = $2
+       AND message.created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
+     ORDER BY message.created_at DESC, message.id DESC
+     LIMIT $3`,
+    [userId, tribeId, limit]
+  );
+  if (rows.length === 0 && !(await userBelongsToTribe(userId, tribeId))) return null;
+  return rows.reverse().map(toTribeMessage);
+}
+
+export async function createTribeMessage(userId, tribeId, body) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rowCount } = await client.query(
+      `SELECT 1 FROM tribe_memberships
+       WHERE user_id = $1 AND tribe_id = $2 AND status = 'active'
+       FOR SHARE`,
+      [userId, tribeId]
+    );
+    if (!rowCount) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+    const { rows } = await client.query(
+      `INSERT INTO tribe_messages (tribe_id, user_id, body)
+       VALUES ($1, $2, $3)
+       RETURNING id, body, created_at`,
+      [tribeId, userId, body]
+    );
+    const { rows: authors } = await client.query(
+      `SELECT u.id AS author_id, u.display_name AS author_name,
+              EXISTS (SELECT 1 FROM user_profile_images image
+                      WHERE image.user_id = u.id AND image.is_deleted = FALSE) AS author_has_avatar
+       FROM users u WHERE u.id = $1`,
+      [userId]
+    );
+    await client.query("COMMIT");
+    return toTribeMessage({ ...rows[0], ...authors[0] });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+function toTribeMessage(row) {
+  return {
+    id: row.id,
+    body: row.body,
+    createdAt: row.created_at,
+    author: {
+      id: row.author_id,
+      name: row.author_name,
+      avatarUrl: row.author_has_avatar ? `/api/users/${row.author_id}/avatar` : null,
+    },
+  };
+}
+
+export async function deleteExpiredTribeMessages() {
+  const { rowCount } = await pool.query(
+    "DELETE FROM tribe_messages WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '7 days'"
+  );
+  return rowCount;
+}
+
 export async function listUpcomingEvents(userId, limit = 100, { query = "", tribeId } = {}) {
   const normalizedQuery = query.trim();
   const { rows } = await pool.query(

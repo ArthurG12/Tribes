@@ -471,6 +471,30 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(bobDirectoryEntry.city, "Belo Horizonte - MG");
   assert.deepEqual(bobDirectoryEntry.interests, ["Games", "Leitura"]);
   assert.equal((await call(empty, `/api/tribes/${tribeOne.id}/members`)).response.status, 404);
+
+  const chatPath = `/api/tribes/${tribeOne.id}/messages`;
+  assert.equal((await call(null, chatPath)).response.status, 401);
+  assert.equal((await call(empty, chatPath)).response.status, 404);
+  const firstChatMessage = await call(alice, chatPath, {
+    method: "POST", body: JSON.stringify({ body: "Oi, pessoal!" }),
+  });
+  assert.equal(firstChatMessage.response.status, 201, JSON.stringify(firstChatMessage.data));
+  assert.equal(firstChatMessage.data.message.body, "Oi, pessoal!");
+  assert.equal(firstChatMessage.data.message.author.id, alice.user.id);
+  const bobChat = await call(bob, chatPath);
+  assert.equal(bobChat.response.status, 200);
+  assert.ok(bobChat.data.messages.some((message) => message.id === firstChatMessage.data.message.id));
+  assert.equal((await call(alice, chatPath, {
+    method: "POST", body: JSON.stringify({ body: "x".repeat(1001) }),
+  })).response.status, 400);
+  await pool.query(
+    "UPDATE tribe_messages SET created_at = CURRENT_TIMESTAMP - INTERVAL '8 days' WHERE id = $1",
+    [firstChatMessage.data.message.id]
+  );
+  const chatAfterRetention = await call(alice, chatPath);
+  assert.equal(chatAfterRetention.response.status, 200);
+  assert.ok(!chatAfterRetention.data.messages.some((message) => message.id === firstChatMessage.data.message.id));
+
   assert.equal((await call(bob, "/api/events")).response.status, 200);
   const imageData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII=";
   assert.equal((await call(empty, `/api/tribes/${tribeOne.id}/posts`, {

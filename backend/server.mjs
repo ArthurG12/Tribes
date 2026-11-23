@@ -9,7 +9,7 @@ import {
   recordMetricEvent,
 } from "./metrics-store.mjs";
 import { handleSocialRequest } from "./social-api.mjs";
-import { initializeSocialStore } from "./social-store.mjs";
+import { deleteExpiredTribeMessages, initializeSocialStore } from "./social-store.mjs";
 import { startEmailQueueWorker } from "./email-queue-worker.mjs";
 
 const PORT = Number(process.env.PORT ?? 4000);
@@ -148,6 +148,16 @@ const server = createServer(async (request, response) => {
 Promise.all([initializeMetricsStore(), initializeSocialStore()])
   .then(() => {
     startEmailQueueWorker();
+    const cleanExpiredTribeMessages = async () => {
+      try {
+        await deleteExpiredTribeMessages();
+      } catch (error) {
+        console.error("Falha ao remover mensagens antigas do chat:", error);
+      }
+    };
+    void cleanExpiredTribeMessages();
+    const tribeMessageCleanupTimer = setInterval(() => void cleanExpiredTribeMessages(), 5 * 60 * 1000);
+    tribeMessageCleanupTimer.unref();
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`Tribes backend listening on port ${PORT}`);
     });
