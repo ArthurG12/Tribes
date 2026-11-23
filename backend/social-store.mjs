@@ -417,9 +417,9 @@ function toUser(row) {
     city: row.city ?? "",
     interests: Array.isArray(row.interests) ? row.interests : [],
     profileVisibility: {
-      aboutMe: row.profile_visibility?.aboutMe === "private" ? "private" : "public",
-      city: row.profile_visibility?.city === "private" ? "private" : "public",
-      interests: row.profile_visibility?.interests === "private" ? "private" : "public",
+      aboutMe: row.profile_visibility?.aboutMe === "public" ? "public" : "private",
+      city: row.profile_visibility?.city === "public" ? "public" : "private",
+      interests: row.profile_visibility?.interests === "public" ? "public" : "private",
     },
     avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
   };
