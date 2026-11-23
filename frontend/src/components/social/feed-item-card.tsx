@@ -36,6 +36,13 @@ function toLocalDateTimeInput(value: string | null) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
+function sortComments(comments: FeedComment[]) {
+  return [...comments].sort((a, b) =>
+    b.likesCount - a.likesCount ||
+    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() ||
+    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
+
 interface FeedItemCardProps {
   item: FeedItem;
   onUpdateItem: (itemId: string, update: (current: FeedItem) => FeedItem) => void;
@@ -46,6 +53,7 @@ interface FeedItemCardProps {
 export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: FeedItemCardProps) {
   const [expandedComments, setExpandedComments] = useState(false);
   const [comments, setComments] = useState<FeedComment[] | null>(null);
+  const [pendingCommentLikes, setPendingCommentLikes] = useState<Set<string>>(() => new Set());
   const [commentDraft, setCommentDraft] = useState("");
   const [commentError, setCommentError] = useState("");
   const [editingComment, setEditingComment] = useState<string | null>(null);
@@ -203,7 +211,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
     if (willOpen && comments === null) {
       try {
         const result = await apiRequest<{ comments: FeedComment[] }>(`/api/content/${item.id}/comments`);
-        setComments(result.comments);
+        setComments(sortComments(result.comments));
       } catch (loadError) {
         setCommentError(loadError instanceof Error ? loadError.message : "Erro ao carregar comentários.");
       }
@@ -218,7 +226,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
         method: "POST",
         body: JSON.stringify({ body }),
       });
-      setComments((current) => [...(current ?? []), result.comment]);
+      setComments((current) => sortComments([...(current ?? []), result.comment]));
       onUpdateItem(item.id, (current) => ({ ...current, commentsCount: current.commentsCount + 1 }));
       setCommentDraft("");
       setCommentError("");
@@ -251,6 +259,26 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
       setCommentError("");
     } catch (removeError) {
       setCommentError(removeError instanceof Error ? removeError.message : "Não foi possível remover.");
+    }
+  }
+
+  async function toggleCommentLike(comment: FeedComment) {
+    if (pendingCommentLikes.has(comment.id)) return;
+    setPendingCommentLikes((current) => new Set(current).add(comment.id));
+    try {
+      const method = comment.likedByMe ? "DELETE" : "POST";
+      const result = await apiRequest<{ likesCount: number; likedByMe: boolean }>(`/api/comments/${comment.id}/like`, { method });
+      setComments((current) => current
+        ? sortComments(current.map((entry) => entry.id === comment.id ? { ...entry, ...result } : entry))
+        : current);
+    } catch (likeError) {
+      setCommentError(likeError instanceof Error ? likeError.message : "Não foi possível atualizar a curtida do comentário.");
+    } finally {
+      setPendingCommentLikes((current) => {
+        const next = new Set(current);
+        next.delete(comment.id);
+        return next;
+      });
     }
   }
 
@@ -375,7 +403,12 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
             {editingComment === comment.id
               ? <div className="mt-2 space-y-2"><Textarea value={editDraft} onChange={(event) => setEditDraft(event.target.value)} maxLength={2000} /><div className="flex justify-end gap-2"><Button size="sm" variant="ghost" onClick={() => setEditingComment(null)}>Cancelar</Button><Button size="sm" onClick={() => void saveComment(comment.id)}>Salvar</Button></div></div>
               : <p className="mt-1 whitespace-pre-wrap text-sm text-foreground/85">{comment.body}</p>}
-            {comment.isMine && editingComment !== comment.id && <div className="mt-2 flex gap-3 text-xs"><button type="button" className="font-semibold text-primary hover:underline" onClick={() => { setEditingComment(comment.id); setEditDraft(comment.body); }}>Editar</button><button type="button" className="font-semibold text-destructive hover:underline" onClick={() => void removeComment(comment.id)}>Remover</button></div>}
+            <div className="mt-2 flex items-center justify-between">
+              <Button type="button" size="sm" variant="ghost" aria-label={comment.likedByMe ? "Descurtir comentário" : "Curtir comentário"} aria-pressed={comment.likedByMe} disabled={pendingCommentLikes.has(comment.id)} onClick={() => void toggleCommentLike(comment)} className={`h-7 gap-1 px-2 text-xs ${comment.likedByMe ? "text-primary" : "text-muted-foreground"}`}>
+                <Heart className={`size-3.5 ${comment.likedByMe ? "fill-current" : ""}`} />{comment.likesCount} {comment.likesCount === 1 ? "curtida" : "curtidas"}
+              </Button>
+              {comment.isMine && editingComment !== comment.id && <div className="flex gap-3 text-xs"><button type="button" className="font-semibold text-primary hover:underline" onClick={() => { setEditingComment(comment.id); setEditDraft(comment.body); }}>Editar</button><button type="button" className="font-semibold text-destructive hover:underline" onClick={() => void removeComment(comment.id)}>Remover</button></div>}
+            </div>
           </div>)}
           {commentError && <p role="alert" className="text-xs text-destructive">{commentError}</p>}
           <div className="flex gap-2"><Input aria-label="Escreva um comentário" value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} maxLength={2000} placeholder="Escreva um comentário..." onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void submitComment(); } }} /><Button type="button" aria-label="Enviar comentário" disabled={!commentDraft.trim()} onClick={() => void submitComment()}><Send className="size-4" /></Button></div>

@@ -10,6 +10,7 @@ import {
   listTribeMembers,
   listUpcomingEvents,
   toggleSavedContent,
+  toggleCommentLike,
   markNotificationRead,
   markAllNotificationsRead,
   completePasswordReset,
@@ -162,7 +163,7 @@ export async function handleSocialRequest(request, response, url) {
     /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members)$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance|vote)$/.test(pathname) ||
-    /^\/api\/comments\/[^/]+$/.test(pathname);
+    /^\/api\/comments\/[^/]+(?:\/like)?$/.test(pathname);
   if (!routeKnown) return false;
 
   try {
@@ -709,6 +710,18 @@ export async function handleSocialRequest(request, response, url) {
       }
       const comments = await listComments(user.id, contentId);
       sendJson(response, 201, { comment: comments.find((entry) => entry.id === comment.id) });
+      return true;
+    }
+
+    const commentLikeMatch = pathname.match(/^\/api\/comments\/([^/]+)\/like$/);
+    if (commentLikeMatch && ["POST", "DELETE"].includes(method)) {
+      const commentId = requireUuid(commentLikeMatch[1], "Comentário");
+      const result = await toggleCommentLike(user.id, commentId, method === "POST");
+      if (!result) {
+        sendJson(response, 404, { error: "Comentário não encontrado ou sem acesso." });
+        return true;
+      }
+      sendJson(response, 200, result);
       return true;
     }
 
