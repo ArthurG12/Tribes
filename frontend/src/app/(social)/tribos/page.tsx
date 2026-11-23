@@ -14,6 +14,7 @@ export default function TribesPage() {
   const [loading, setLoading] = useState(true);
   const [workingTribe, setWorkingTribe] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const sortedTribes = [...tribes].sort((a, b) => b.memberCount - a.memberCount);
 
   useEffect(() => {
     let active = true;
@@ -63,9 +64,9 @@ export default function TribesPage() {
         <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, interesse ou cidade..." aria-label="Buscar tribos" className="h-12 rounded-2xl pl-10" />
       </div>
       {error && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
-      {loading ? <div className="flex justify-center py-14"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : tribes.length ? (
+      {loading ? <div className="flex justify-center py-14"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : sortedTribes.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {tribes.map((tribe) => <article key={tribe.id} className="flex flex-col rounded-3xl border border-border bg-card p-5 shadow-xs">
+          {sortedTribes.map((tribe) => <article key={tribe.id} className="flex flex-col rounded-3xl border border-border bg-card p-5 shadow-xs">
             <div className="flex items-start justify-between gap-2"><Badge variant="secondary">{tribe.category}</Badge><Badge variant="outline">{tribe.format}</Badge></div>
             <h2 className="mt-4 font-heading text-lg font-bold">{tribe.name}</h2>
             <p className="mt-2 line-clamp-3 flex-1 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{tribe.description}</p>
