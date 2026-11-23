@@ -19,7 +19,6 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { UserAvatar } from "@/components/social/user-avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -231,18 +230,18 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
 
   return (
     <article id={`feed-item-${item.id}`} className="scroll-mt-28 overflow-hidden rounded-3xl border border-border bg-card shadow-xs">
-      <header className="flex items-start justify-between gap-3 border-b border-border/70 p-4 sm:p-5">
-        <div className="flex min-w-0 items-center gap-3">
+      <header className="flex flex-col gap-3 border-b border-border/70 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+        <div className="flex min-w-0 items-start gap-3">
           <Link href={`/usuarios/${item.author.id}`} aria-label={`Ver perfil de ${item.author.name}`}>
             <UserAvatar name={item.author.name} avatarUrl={item.author.avatarUrl} />
           </Link>
-          <div className="min-w-0">
-            <Link href={`/usuarios/${item.author.id}`} className="truncate font-heading text-sm font-bold hover:text-primary">{item.author.name}</Link>
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">em <span className="font-semibold text-foreground/80">{item.tribe.name}</span> · {formatDateTime(item.createdAt)}{item.editedAt ? " · editado" : ""}</p>
+          <div className="min-w-0 flex-1">
+            <Link href={`/usuarios/${item.author.id}`} className="block break-words font-heading text-sm font-bold hover:text-primary">{item.author.name}</Link>
+            <p className="mt-0.5 whitespace-normal break-words text-xs leading-relaxed text-muted-foreground">em <span className="font-semibold text-foreground/80">{item.tribe.name}</span></p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(item.createdAt)}{item.editedAt ? " · editado" : ""}</p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Badge variant={item.type === "event" ? "default" : "secondary"}>{item.type === "event" ? "Evento" : item.type === "poll" ? "Enquete" : "Publicação"}</Badge>
+        <div className="flex shrink-0 items-center gap-1 self-end sm:self-start">
           <Button type="button" size="icon-sm" variant="ghost" aria-label="Compartilhar publicação" onClick={() => void sharePost()}><Share2 className="size-4" /></Button>
           {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label={item.event ? "Editar evento" : "Editar publicação"} onClick={() => { setEditPostBody(item.body); setEventDraft(item.event ? { title: item.event.title, startsAt: toLocalDateTimeInput(item.event.startsAt), endsAt: toLocalDateTimeInput(item.event.endsAt), location: item.event.location, cost: item.event.cost, maxAttendees: item.event.maxAttendees ? String(item.event.maxAttendees) : "" } : null); setEditingPost(true); }}><Pencil className="size-4" /></Button>}
           {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label={item.event ? "Cancelar evento" : "Excluir publicação"} onClick={() => setConfirmDelete(true)}><Trash2 className="size-4 text-destructive" /></Button>}
@@ -274,7 +273,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
             <Button type="button" size="sm" variant="ghost" onClick={() => setEditingPost(false)}>Cancelar</Button>
             <Button type="button" size="sm" disabled={postPending || !editPostBody.trim()} onClick={() => void savePost()}>{postPending ? <LoaderCircle className="size-4 animate-spin" /> : null}Salvar</Button>
           </div>
-        </div> : <p className="whitespace-pre-wrap text-sm leading-relaxed">{item.body}</p>}
+        </div> : <p className="whitespace-pre-wrap break-words text-sm leading-relaxed [overflow-wrap:anywhere]">{item.body}</p>}
         {confirmDelete && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
           <p className="text-sm">{item.event ? "Cancelar este evento permanentemente?" : "Excluir esta publicação permanentemente?"}</p>
           <div className="flex gap-2">
@@ -303,14 +302,14 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
           <p className="mt-2 text-xs text-muted-foreground">{item.poll.votedOptionId ? "Você pode alterar seu voto." : "Escolha uma opção para votar."}</p>
         </section>}
         {item.imageUrl && <Image src={item.imageUrl} alt={`Imagem da publicação de ${item.author.name}`} width={1200} height={900} unoptimized className="max-h-[32rem] w-full rounded-2xl bg-muted/30 object-contain" />}
-        <div className="flex flex-wrap items-center gap-2 border-t border-border/70 pt-3">
-          <Button type="button" size="sm" variant="ghost" aria-pressed={item.savedByMe} disabled={savePending} onClick={() => void toggleSaved()} className={item.savedByMe ? "text-primary" : "text-muted-foreground"}>
+        <div className="flex flex-nowrap items-center justify-between gap-0.5 border-t border-border/70 pt-3">
+          <Button type="button" size="sm" variant="ghost" aria-pressed={item.savedByMe} disabled={savePending} onClick={() => void toggleSaved()} className={`min-w-0 flex-1 gap-1 px-1.5 text-xs whitespace-nowrap sm:flex-none sm:gap-2 sm:px-3 sm:text-sm ${item.savedByMe ? "text-primary" : "text-muted-foreground"}`}>
             <Bookmark className={`size-4 ${item.savedByMe ? "fill-current" : ""}`} />{item.savedByMe ? "Salva" : "Salvar"}
           </Button>
-          <Button type="button" size="sm" variant="ghost" aria-pressed={item.likedByMe} onClick={() => void toggleLike()} className={item.likedByMe ? "text-primary" : "text-muted-foreground"}>
+          <Button type="button" size="sm" variant="ghost" aria-pressed={item.likedByMe} onClick={() => void toggleLike()} className={`min-w-0 flex-1 gap-1 px-1.5 text-xs whitespace-nowrap sm:flex-none sm:gap-2 sm:px-3 sm:text-sm ${item.likedByMe ? "text-primary" : "text-muted-foreground"}`}>
             <Heart className={`size-4 ${item.likedByMe ? "fill-current" : ""}`} />{item.likesCount} {item.likesCount === 1 ? "curtida" : "curtidas"}
           </Button>
-          <Button type="button" size="sm" variant="ghost" aria-expanded={expandedComments} onClick={() => void toggleComments()} className="text-muted-foreground">
+          <Button type="button" size="sm" variant="ghost" aria-expanded={expandedComments} onClick={() => void toggleComments()} className="min-w-0 flex-1 gap-1 px-1.5 text-xs whitespace-nowrap sm:flex-none sm:gap-2 sm:px-3 sm:text-sm text-muted-foreground">
             <MessageCircle className="size-4" />{item.commentsCount} {item.commentsCount === 1 ? "comentário" : "comentários"}
           </Button>
           {item.event && <Button type="button" size="sm" variant="ghost" aria-pressed={item.event.attendingByMe} disabled={attendancePending} onClick={() => void toggleAttendance()} className={item.event.attendingByMe ? "text-primary" : "text-muted-foreground"}>

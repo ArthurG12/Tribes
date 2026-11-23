@@ -107,7 +107,7 @@ export default function FeedPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6">
+    <main className="mx-auto w-full min-w-0 max-w-3xl space-y-6">
       <FeedComposer
         tribes={tribes}
         open={composerOpen}
@@ -117,7 +117,7 @@ export default function FeedPage() {
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <Badge className="bg-primary/10 text-primary">Sua comunidade</Badge>
-          <h1 className="mt-2 font-heading text-3xl font-extrabold">Feed das suas tribos</h1>
+          <h1 className="mt-2 break-words font-heading text-2xl font-extrabold sm:text-3xl">Feed das suas tribos</h1>
           <p className="mt-1 text-sm text-muted-foreground">Publicações e eventos, em ordem cronológica.</p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
@@ -143,10 +143,10 @@ export default function FeedPage() {
 
       <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="relative min-w-0 flex-1">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 w-full flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input aria-label="Pesquisar publicações" type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Pesquisar publicações, autores, tribos ou eventos..." className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-10 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring" />
+              <input aria-label="Pesquisar publicações" type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Pesquisar publicações..." className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-10 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring" />
               {searchTerm && <button type="button" aria-label="Limpar pesquisa" onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="size-4" /></button>}
             </div>
             <Button
@@ -155,7 +155,7 @@ export default function FeedPage() {
               aria-expanded={filtersOpen}
               aria-controls="feed-filter-controls"
               onClick={() => setFiltersOpen((open) => !open)}
-              className="h-11 shrink-0 gap-2 rounded-xl px-3 text-muted-foreground hover:text-foreground"
+              className="h-11 shrink-0 self-end gap-2 rounded-xl px-3 text-muted-foreground hover:text-foreground sm:self-auto"
             >
               <Filter className="size-4" />
               Filtros
