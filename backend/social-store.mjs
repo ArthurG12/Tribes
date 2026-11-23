@@ -870,16 +870,38 @@ export async function createContent(userId, tribeId, { type, body, event, image,
   }
 }
 
-export async function updateContent(userId, contentId, body) {
-  const { rows } = await pool.query(
-    `UPDATE feed_items f SET body = $3, edited_at = CURRENT_TIMESTAMP
-     FROM tribe_memberships m
-     WHERE f.id = $1 AND f.author_id = $2
-       AND m.tribe_id = f.tribe_id AND m.user_id = $2 AND m.status = 'active'
-     RETURNING f.id, f.body, f.edited_at`,
-    [contentId, userId, body]
-  );
-  return rows[0] ?? null;
+export async function updateContent(userId, contentId, body, event) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows } = await client.query(
+      `UPDATE feed_items f SET body = $3, edited_at = CURRENT_TIMESTAMP
+       FROM tribe_memberships m
+       WHERE f.id = $1 AND f.author_id = $2
+         AND m.tribe_id = f.tribe_id AND m.user_id = $2 AND m.status = 'active'
+       RETURNING f.id, f.kind, f.body, f.edited_at`,
+      [contentId, userId, body]
+    );
+    if (!rows.length) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+    if (event && rows[0].kind === "event") {
+      await client.query(
+        `UPDATE tribe_events
+         SET title = $2, starts_at = $3, ends_at = $4, location = $5, cost = $6, max_attendees = $7
+         WHERE content_id = $1`,
+        [contentId, event.title, event.startsAt, event.endsAt, event.location, event.cost, event.maxAttendees]
+      );
+    }
+    await client.query("COMMIT");
+    return rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function deleteContent(userId, contentId) {
