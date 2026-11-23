@@ -432,7 +432,7 @@ export async function updateUserProfile(userId, { name, aboutMe, city, interests
   try {
     await client.query("BEGIN");
     const { rows } = await client.query(
-      `UPDATE users SET display_name = $2, about_me = $3, city = $4, interests = $5::jsonb, profile_visibility = $6::jsonb
+      `UPDATE users SET display_name = $2, about_me = $3, city = $4, interests = $5::jsonb, profile_visibility = COALESCE($6::jsonb, profile_visibility)
        WHERE id = $1
        RETURNING id, display_name, email, about_me, city, interests, profile_visibility`,
       [userId, name, aboutMe, city, JSON.stringify(interests), JSON.stringify(profileVisibility)]
