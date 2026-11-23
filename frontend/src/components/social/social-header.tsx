@@ -74,6 +74,7 @@ export function SocialHeader({
   const isActive = (href: string) => pathname === href || (href === "/minhas-tribos" && pathname.startsWith("/minhas-tribos/"));
 
   return (
+    <>
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
         <Link href="/feed" className="flex shrink-0 items-center gap-2 font-heading text-lg font-extrabold">
@@ -145,5 +146,6 @@ export function SocialHeader({
       </div>,
       document.body
     )}
+    </>
   );
 }
