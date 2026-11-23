@@ -1,28 +1,32 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import Image from "next/image";
 import {
+  BarChart3,
+  CalendarDays,
   ImagePlus,
   LoaderCircle,
   Send,
   X,
 } from "lucide-react";
+import { useCurrentUser } from "@/components/social/auth-guard";
+import { UserAvatar } from "@/components/social/user-avatar";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { ImageFileError, readImageAsDataUrl } from "@/lib/image-file";
 import { apiRequest, type Tribe } from "@/lib/social-types";
 
 interface FeedComposerProps {
   tribes: Tribe[];
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   onPublished: () => Promise<void>;
 }
 
-export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedComposerProps) {
+const toolButton = "inline-flex size-9 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
+
+export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
+  const { user } = useCurrentUser();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [tribeId, setTribeId] = useState("");
   const [body, setBody] = useState("");
   const [image, setImage] = useState<string | null>(null);
@@ -38,23 +42,16 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
   const [eventLocation, setEventLocation] = useState("");
   const [eventCost, setEventCost] = useState("");
   const [eventCapacity, setEventCapacity] = useState("");
-  useEffect(() => {
-    if (open) {
-      setComposerError("");
-      setImageError("");
-    }
-  }, [open]);
 
   const selectedTribeId = tribeId && tribes.some((tribe) => tribe.id === tribeId)
     ? tribeId
     : tribes[0]?.id ?? "";
 
-  function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen) {
-      setComposerError("");
-      setImageError("");
-    }
-    onOpenChange(nextOpen);
+  function resizeTextarea() {
+    const element = textareaRef.current;
+    if (!element) return;
+    element.style.height = "auto";
+    element.style.height = `${Math.min(element.scrollHeight, 320)}px`;
   }
 
   function changeEventMode(nextMode: boolean) {
@@ -79,6 +76,8 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
     setComposerError("");
     if (!file) return;
 
+    changeEventMode(false);
+    setPollMode(false);
     setImage(null);
     try {
       setImage(await readImageAsDataUrl(file));
@@ -88,13 +87,14 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
         : selectionError instanceof ImageFileError && selectionError.code === "too-large"
           ? "A imagem deve ter no máximo 5 MB."
           : "Não foi possível ler essa imagem.");
+    } finally {
       event.target.value = "";
     }
   }
 
   async function submitContent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selectedTribeId) return;
+    if (!selectedTribeId || !body.trim()) return;
     if (eventMode) {
       const startsAt = new Date(eventStartsAt);
       const endsAt = eventEndsAt ? new Date(eventEndsAt) : null;
@@ -139,14 +139,16 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
       setPollOptions(["", ""]);
       setImage(null);
       setImageError("");
+      setEventMode(false);
+      setPollMode(false);
       setEventTitle("");
       setEventStartsAt("");
       setEventEndsAt("");
       setEventLocation("");
       setEventCost("");
       setEventCapacity("");
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
       await onPublished();
-      onOpenChange(false);
     } catch (submitError) {
       setComposerError(submitError instanceof Error ? submitError.message : "Não foi possível publicar.");
     } finally {
@@ -154,35 +156,47 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
     }
   }
 
+  const pollInvalid = pollMode && (
+    pollOptions.some((option) => !option.trim())
+    || new Set(pollOptions.map((option) => option.trim().toLocaleLowerCase("pt-BR"))).size !== pollOptions.length
+  );
+
+  const placeholder = eventMode
+    ? "Conte um pouco sobre o evento..."
+    : pollMode
+      ? "Qual é a sua pergunta?"
+      : "O que está acontecendo?";
+
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="box-border w-[calc(100%-2rem)] max-w-2xl min-w-0 max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto rounded-2xl p-5 sm:p-6">
-        <DialogHeader>
-          <DialogTitle className="font-heading text-xl font-bold">Compartilhe com sua tribo</DialogTitle>
-          <DialogDescription>Publique uma novidade, crie um evento ou faça uma enquete para sua tribo.</DialogDescription>
-        </DialogHeader>
-        <form className="w-full min-w-0 space-y-3" onSubmit={(event) => void submitContent(event)}>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex gap-2">
-              <button type="button" disabled={creating} onClick={() => changeEventMode(false)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!eventMode && !pollMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Publicação</button>
-              <button type="button" disabled={creating} onClick={() => changeEventMode(true)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Evento</button>
-              <button type="button" disabled={creating} onClick={() => changePollMode(true)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${pollMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Enquete</button>
-            </div>
-          </div>
-          <select aria-label="Tribo onde publicar" value={selectedTribeId} onChange={(event) => setTribeId(event.target.value)} required disabled={!tribes.length}
-            className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            {tribes.length ? tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>) : <option value="">Entre em uma tribo para publicar</option>}
-          </select>
-          {eventMode && <div className="grid min-w-0 gap-2 sm:grid-cols-2">
-            <Input aria-label="Título do evento" placeholder="Título do evento" value={eventTitle} onChange={(event) => setEventTitle(event.target.value)} required />
-            <Input aria-label="Local do evento" placeholder="Local" value={eventLocation} onChange={(event) => setEventLocation(event.target.value)} required />
+    <form
+      onSubmit={(event) => void submitContent(event)}
+      className="w-full min-w-0 rounded-2xl border border-border bg-card p-4 shadow-xs sm:p-5"
+    >
+      <div className="flex items-start gap-3">
+        <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-11" />
+        <div className="min-w-0 flex-1">
+          <textarea
+            ref={textareaRef}
+            aria-label="Escreva sua publicação"
+            placeholder={placeholder}
+            value={body}
+            rows={2}
+            maxLength={5000}
+            disabled={creating}
+            onChange={(event) => { setBody(event.target.value); resizeTextarea(); }}
+            className="block min-h-12 w-full resize-none border-0 bg-transparent py-2 text-lg leading-snug text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+          />
+
+          {eventMode && <div className="mt-2 grid min-w-0 gap-2 sm:grid-cols-2">
+            <Input aria-label="Título do evento" placeholder="Título do evento" value={eventTitle} onChange={(event) => setEventTitle(event.target.value)} maxLength={120} required />
+            <Input aria-label="Local do evento" placeholder="Local" value={eventLocation} onChange={(event) => setEventLocation(event.target.value)} maxLength={240} required />
             <Input aria-label="Início do evento" type="datetime-local" value={eventStartsAt} onChange={(event) => setEventStartsAt(event.target.value)} required />
             <Input aria-label="Término do evento" type="datetime-local" value={eventEndsAt} onChange={(event) => setEventEndsAt(event.target.value)} />
-            <Input aria-label="Custo do evento" placeholder="Custo (opcional)" value={eventCost} onChange={(event) => setEventCost(event.target.value)} />
-            <Input aria-label="Limite de participantes" type="number" min="1" placeholder="Limite de participantes" value={eventCapacity} onChange={(event) => setEventCapacity(event.target.value)} />
+            <Input aria-label="Custo do evento" placeholder="Custo (opcional)" value={eventCost} onChange={(event) => setEventCost(event.target.value)} maxLength={100} />
+            <Input aria-label="Limite de participantes" type="number" min="1" max="10000" placeholder="Limite de participantes" value={eventCapacity} onChange={(event) => setEventCapacity(event.target.value)} />
           </div>}
-          <Textarea placeholder={eventMode ? "Conte um pouco sobre o evento..." : pollMode ? "Qual é a sua pergunta?" : "O que está acontecendo na sua tribo?"} value={body} onChange={(event) => setBody(event.target.value)} maxLength={5000} required />
-          {pollMode && <div className="space-y-2">
+
+          {pollMode && <div className="mt-2 space-y-2">
             <p className="text-sm font-semibold">Opções da enquete</p>
             {pollOptions.map((option, index) => <div key={index} className="flex gap-2">
               <Input aria-label={`Opção ${index + 1}`} placeholder={`Opção ${index + 1}`} value={option} maxLength={80} onChange={(event) => setPollOptions((current) => current.map((value, optionIndex) => optionIndex === index ? event.target.value : value))} />
@@ -190,29 +204,43 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
             </div>)}
             {pollOptions.length < 6 && <button type="button" onClick={() => setPollOptions((current) => [...current, ""])} className="text-sm font-semibold text-primary hover:underline">Adicionar opção</button>}
           </div>}
-          {!eventMode && !pollMode && <div className="space-y-2">
-            <label htmlFor="post-image" className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-semibold transition-colors hover:bg-muted">
-              <ImagePlus className="size-4" />Adicionar imagem
-            </label>
-            <Input id="post-image" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void selectImage(event)} className="sr-only" aria-label="Adicionar imagem à publicação" />
-            <p className="text-xs text-muted-foreground">JPEG, PNG ou WebP · até 5 MB</p>
-            {imageError && <p role="alert" className="text-sm text-destructive">{imageError}</p>}
-            {image && <div className="relative w-fit max-w-full rounded-xl border border-border bg-muted/40 p-2">
-              <Image src={image} alt="Pré-visualização da imagem" width={1200} height={900} unoptimized className="max-h-64 w-auto max-w-full rounded-lg object-contain" />
-              <button type="button" aria-label="Remover imagem" onClick={() => { setImage(null); setImageError(""); }} className="absolute right-3 top-3 rounded-full bg-background/90 p-1.5 text-foreground shadow hover:bg-background"><X className="size-4" /></button>
-            </div>}
+
+          {image && <div className="relative mt-2 w-fit max-w-full rounded-xl border border-border bg-muted/40 p-2">
+            <Image src={image} alt="Pré-visualização da imagem" width={1200} height={900} unoptimized className="max-h-64 w-auto max-w-full rounded-lg object-contain" />
+            <button type="button" aria-label="Remover imagem" onClick={() => { setImage(null); setImageError(""); }} className="absolute right-3 top-3 rounded-full bg-background/90 p-1.5 text-foreground shadow hover:bg-background"><X className="size-4" /></button>
           </div>}
-          {!tribes.length && <p className="text-sm text-muted-foreground">Entre em uma tribo antes de publicar.</p>}
-          {composerError && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{composerError}</p>}
-          <div className="flex items-center justify-end gap-2 border-t border-border pt-3">
-            <Button type="button" variant="ghost" disabled={creating} onClick={() => handleOpenChange(false)} className="rounded-xl">Cancelar</Button>
-            <Button type="submit" disabled={creating || !tribes.length || !body.trim() || (pollMode && (pollOptions.some((option) => !option.trim()) || new Set(pollOptions.map((option) => option.trim().toLocaleLowerCase("pt-BR"))).size !== pollOptions.length))} className="rounded-xl">
+
+          {imageError && <p role="alert" className="mt-2 text-sm text-destructive">{imageError}</p>}
+          {!tribes.length && <p className="mt-2 text-sm text-muted-foreground">Entre em uma tribo antes de publicar.</p>}
+          {composerError && <p role="alert" className="mt-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{composerError}</p>}
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-border pt-3">
+            <div className="-ml-2 flex items-center gap-0.5">
+              <label htmlFor="composer-image" title="Adicionar imagem" className={`${toolButton} cursor-pointer`}>
+                <ImagePlus className="size-5" />
+                <span className="sr-only">Adicionar imagem</span>
+              </label>
+              <input id="composer-image" type="file" accept="image/jpeg,image/png,image/webp" disabled={creating} onChange={(event) => void selectImage(event)} className="sr-only" />
+              <button type="button" title="Criar enquete" aria-label="Criar enquete" aria-pressed={pollMode} disabled={creating} onClick={() => changePollMode(!pollMode)} className={`${toolButton} ${pollMode ? "bg-primary/10" : ""}`}>
+                <BarChart3 className="size-5" />
+              </button>
+              <button type="button" title="Criar evento" aria-label="Criar evento" aria-pressed={eventMode} disabled={creating} onClick={() => changeEventMode(!eventMode)} className={`${toolButton} ${eventMode ? "bg-primary/10" : ""}`}>
+                <CalendarDays className="size-5" />
+              </button>
+            </div>
+
+            <select aria-label="Tribo onde publicar" value={selectedTribeId} onChange={(event) => setTribeId(event.target.value)} required disabled={!tribes.length || creating}
+              className="h-9 min-w-0 max-w-full flex-1 rounded-full border border-input bg-background px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:max-w-56 sm:flex-none">
+              {tribes.length ? tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>) : <option value="">Sem tribos</option>}
+            </select>
+
+            <Button type="submit" disabled={creating || !tribes.length || !body.trim() || pollInvalid} className="ml-auto rounded-full px-5">
               {creating ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
               {eventMode ? "Publicar evento" : pollMode ? "Publicar enquete" : "Publicar"}
             </Button>
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </form>
   );
 }
