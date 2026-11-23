@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import Image from "next/image";
 import {
   ImagePlus,
@@ -36,6 +36,13 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
   const [eventLocation, setEventLocation] = useState("");
   const [eventCost, setEventCost] = useState("");
   const [eventCapacity, setEventCapacity] = useState("");
+  useEffect(() => {
+    if (open) {
+      setComposerError("");
+      setImageError("");
+    }
+  }, [open]);
+
   const selectedTribeId = tribeId && tribes.some((tribe) => tribe.id === tribeId)
     ? tribeId
     : tribes[0]?.id ?? "";
@@ -58,6 +65,7 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
   async function selectImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     setImageError("");
+    setComposerError("");
     if (!file) return;
 
     setImage(null);
@@ -131,8 +139,8 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
         <form className="w-full min-w-0 space-y-3" onSubmit={(event) => void submitContent(event)}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex gap-2">
-              <button type="button" onClick={() => changeEventMode(false)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Publicação</button>
-              <button type="button" onClick={() => changeEventMode(true)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Evento</button>
+              <button type="button" disabled={creating} onClick={() => changeEventMode(false)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Publicação</button>
+              <button type="button" disabled={creating} onClick={() => changeEventMode(true)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Evento</button>
             </div>
           </div>
           <select aria-label="Tribo onde publicar" value={selectedTribeId} onChange={(event) => setTribeId(event.target.value)} required disabled={!tribes.length}
