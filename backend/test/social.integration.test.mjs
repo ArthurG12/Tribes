@@ -171,16 +171,22 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   const resetRequest = await call(null, "/api/auth/password-reset", {
     method: "POST",
     body: JSON.stringify({ email: "not-registered@example.test" }),
-    headers: { "x-forwarded-for": "203.0.113.1" },
   });
-  assert.equal(resetRequest.response.status, 404);
-  assert.equal(resetRequest.data.error, "Este e-mail não está cadastrado.");
+  assert.equal(resetRequest.response.status, 202);
+  assert.match(resetRequest.data.message, /Se este e-mail estiver cadastrado/);
+  const rejectedOrigin = await call(null, "/api/auth/password-reset", {
+    method: "POST",
+    body: JSON.stringify({ email: "not-registered@example.test" }),
+    headers: { Origin: "https://cross-origin.invalid" },
+  });
+  assert.equal(rejectedOrigin.response.status, 403);
 
-  const { response: resetRequestResponse } = await call(null, "/api/auth/password-reset", {
+  const { response: resetRequestResponse, data: resetRequestData } = await call(null, "/api/auth/password-reset", {
     method: "POST",
     body: JSON.stringify({ email: alice.user.email }),
   });
   assert.equal(resetRequestResponse.status, 202);
+  assert.equal(resetRequestData.message, resetRequest.data.message);
   let resetLink;
   for (let attempt = 0; attempt < 20 && !resetLink; attempt += 1) {
     const search = await fetch(`${mailhogApi}/api/v2/search?kind=to&query=${encodeURIComponent(alice.user.email)}`);
