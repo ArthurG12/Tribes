@@ -30,6 +30,8 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
   const [creating, setCreating] = useState(false);
   const [composerError, setComposerError] = useState("");
   const [eventMode, setEventMode] = useState(false);
+  const [pollMode, setPollMode] = useState(false);
+  const [pollOptions, setPollOptions] = useState(["", ""]);
   const [eventTitle, setEventTitle] = useState("");
   const [eventStartsAt, setEventStartsAt] = useState("");
   const [eventEndsAt, setEventEndsAt] = useState("");
@@ -57,9 +59,18 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
 
   function changeEventMode(nextMode: boolean) {
     setEventMode(nextMode);
+    setPollMode(false);
     setComposerError("");
     setImageError("");
     if (nextMode) setImage(null);
+  }
+
+  function changePollMode(nextMode: boolean) {
+    setPollMode(nextMode);
+    setEventMode(false);
+    setImage(null);
+    setComposerError("");
+    setImageError("");
   }
 
   async function selectImage(event: ChangeEvent<HTMLInputElement>) {
@@ -91,7 +102,12 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
     setCreating(true);
     setComposerError("");
     try {
-      if (eventMode) {
+      if (pollMode) {
+        await apiRequest(`/api/tribes/${selectedTribeId}/posts`, {
+          method: "POST",
+          body: JSON.stringify({ body, pollOptions: pollOptions.map((option) => option.trim()) }),
+        });
+      } else if (eventMode) {
         await apiRequest(`/api/tribes/${selectedTribeId}/events`, {
           method: "POST",
           body: JSON.stringify({
@@ -112,6 +128,7 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
       }
 
       setBody("");
+      setPollOptions(["", ""]);
       setImage(null);
       setImageError("");
       setEventTitle("");
@@ -141,6 +158,7 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
             <div className="flex gap-2">
               <button type="button" disabled={creating} onClick={() => changeEventMode(false)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Publicação</button>
               <button type="button" disabled={creating} onClick={() => changeEventMode(true)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Evento</button>
+              <button type="button" disabled={creating} onClick={() => changePollMode(true)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${pollMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Enquete</button>
             </div>
           </div>
           <select aria-label="Tribo onde publicar" value={selectedTribeId} onChange={(event) => setTribeId(event.target.value)} required disabled={!tribes.length}
@@ -156,7 +174,15 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
             <Input aria-label="Limite de participantes" type="number" min="1" placeholder="Limite de participantes" value={eventCapacity} onChange={(event) => setEventCapacity(event.target.value)} />
           </div>}
           <Textarea placeholder={eventMode ? "Conte um pouco sobre o evento..." : "O que está acontecendo na sua tribo?"} value={body} onChange={(event) => setBody(event.target.value)} maxLength={5000} required />
-          {!eventMode && <div className="space-y-2">
+          {pollMode && <div className="space-y-2">
+            <p className="text-sm font-semibold">Opções da enquete</p>
+            {pollOptions.map((option, index) => <div key={index} className="flex gap-2">
+              <Input aria-label={`Opção ${index + 1}`} placeholder={`Opção ${index + 1}`} value={option} maxLength={80} onChange={(event) => setPollOptions((current) => current.map((value, optionIndex) => optionIndex === index ? event.target.value : value))} />
+              {pollOptions.length > 2 && <button type="button" aria-label={`Remover opção ${index + 1}`} onClick={() => setPollOptions((current) => current.filter((_, optionIndex) => optionIndex !== index))} className="rounded-lg px-3 text-muted-foreground hover:bg-muted"><X className="size-4" /></button>}
+            </div>)}
+            {pollOptions.length < 6 && <button type="button" onClick={() => setPollOptions((current) => [...current, ""])} className="text-sm font-semibold text-primary hover:underline">Adicionar opção</button>}
+          </div>}
+          {!eventMode && !pollMode && <div className="space-y-2">
             <label htmlFor="post-image" className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-semibold transition-colors hover:bg-muted">
               <ImagePlus className="size-4" />Adicionar imagem
             </label>
@@ -171,9 +197,9 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
           {!tribes.length && <p className="text-sm text-muted-foreground">Entre em uma tribo antes de publicar.</p>}
           {composerError && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{composerError}</p>}
           <div className="flex justify-end">
-            <Button type="submit" disabled={creating || !tribes.length || !body.trim()} className="rounded-xl">
+            <Button type="submit" disabled={creating || !tribes.length || !body.trim() || (pollMode && (pollOptions.some((option) => !option.trim()) || new Set(pollOptions.map((option) => option.trim().toLocaleLowerCase("pt-BR"))).size !== pollOptions.length))} className="rounded-xl">
               {creating ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
-              {eventMode ? "Publicar evento" : "Publicar"}
+              {eventMode ? "Publicar evento" : pollMode ? "Publicar enquete" : "Publicar"}
             </Button>
           </div>
         </form>
