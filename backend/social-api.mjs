@@ -33,6 +33,7 @@ import {
   listComments,
   searchTribes,
   setEventAttendance,
+  setPollVote,
   toggleLike,
   updateUserProfile,
   updateTribe,
@@ -119,7 +120,7 @@ export async function handleSocialRequest(request, response, url) {
     pathname === "/api/feed" || pathname === "/api/saved" || /^\/api\/content\/[^/]+\/save$/.test(pathname) || pathname === "/api/events" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
     /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members)$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
-    /^\/api\/content\/[^/]+\/(?:like|comments|attendance)$/.test(pathname) ||
+    /^\/api\/content\/[^/]+\/(?:like|comments|attendance|vote)$/.test(pathname) ||
     /^\/api\/comments\/[^/]+$/.test(pathname);
   if (!routeKnown) return false;
 
@@ -488,6 +489,16 @@ export async function handleSocialRequest(request, response, url) {
       });
       const body = requiredString(payload.body, "texto", 1, 5000);
       const image = type === "post" ? await parseImage(payload.image) : null;
+      let pollOptions;
+      if (type === "post" && payload.pollOptions !== undefined) {
+        if (!Array.isArray(payload.pollOptions) || payload.pollOptions.length < 2 || payload.pollOptions.length > 6) {
+          throw invalid("Uma enquete deve ter de 2 a 6 opções.");
+        }
+        pollOptions = payload.pollOptions.map((option) => requiredString(option, "opção", 1, 80));
+        if (new Set(pollOptions.map((option) => option.toLocaleLowerCase("pt-BR"))).size !== pollOptions.length) {
+          throw invalid("As opções da enquete não podem se repetir.");
+        }
+      }
       let event;
       if (type === "event") {
         const startsAt = requiredString(payload.startsAt, "data do evento", 10, 40);
@@ -510,7 +521,7 @@ export async function handleSocialRequest(request, response, url) {
           maxAttendees,
         };
       }
-      const item = await createContent(user.id, tribeId, { type, body, event, image });
+      const item = await createContent(user.id, tribeId, { type: pollOptions ? "poll" : type, body, event, image, pollOptions });
       sendJson(response, 201, { id: item.id, createdAt: item.created_at });
       return true;
     }
@@ -523,6 +534,21 @@ export async function handleSocialRequest(request, response, url) {
         sendJson(response, 404, { error: "Conteúdo não encontrado ou sem acesso." });
         return true;
       }
+      sendJson(response, 200, result);
+      return true;
+    }
+
+    const voteMatch = pathname.match(/^\/api\/content\/([^/]+)\/vote$/);
+    if (voteMatch && method === "POST") {
+      const contentId = requireUuid(voteMatch[1], "Enquete");
+      const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });
+      const optionId = requireUuid(payload.optionId, "Opção");
+      const result = await setPollVote(user.id, contentId, optionId);
+      if (!result) {
+        sendJson(response, 404, { error: "Enquete não encontrada ou sem acesso." });
+        return true;
+      }
+      if (result.invalidOption) throw invalid("Essa opção não pertence à enquete.");
       sendJson(response, 200, result);
       return true;
     }
