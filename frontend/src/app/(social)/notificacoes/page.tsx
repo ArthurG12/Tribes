@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, CheckCheck, Heart, MessageCircle, CalendarDays, ArrowRight, UserPlus } from "lucide-react";
+import { Bell, CheckCheck, Heart, MessageCircle, CalendarDays, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Notification = {
   id: string;
-  type: "post_like" | "post_comment" | "event_created" | "event_attendance" | "follow";
+  type: "post_like" | "post_comment" | "event_created" | "event_attendance";
   contentId: string | null;
   tribeId: string | null;
   tribeName: string | null;
@@ -21,7 +21,6 @@ const copy = {
   post_comment: { verb: "comentou em sua publicação", Icon: MessageCircle },
   event_created: { verb: "publicou um novo evento em", Icon: CalendarDays },
   event_attendance: { verb: "confirmou presença no seu evento em", Icon: CalendarDays },
-  follow: { verb: "começou a seguir você", Icon: UserPlus },
 };
 
 function relativeDate(value: string) {
@@ -89,7 +88,7 @@ export default function NotificationsPage() {
         <div className="mt-8 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
           {items.map((item) => {
             const { verb, Icon } = copy[item.type];
-            const target = item.type === "follow" ? `/usuarios/${item.actor.id}` : item.contentId ? `/feed?focus=${encodeURIComponent(item.contentId)}` : "/feed";
+            const target = item.contentId ? `/feed?focus=${encodeURIComponent(item.contentId)}` : "/feed";
             return (
               <article key={item.id} className={`flex items-center gap-3 p-4 transition-colors sm:gap-4 ${item.readAt ? "" : "bg-primary/[0.045]"}`}>
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></span>
@@ -98,7 +97,7 @@ export default function NotificationsPage() {
                   <p className="mt-1 text-xs text-muted-foreground">{relativeDate(item.createdAt)}</p>
                 </div>
                 {!item.readAt && <span className="size-2 shrink-0 rounded-full bg-primary" aria-label="Não lida" />}
-                <Link href={target} onClick={() => { if (!item.readAt) void markRead(item.id); }} aria-label={item.type === "follow" ? "Ver perfil de quem seguiu você" : "Abrir feed"} className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"><ArrowRight className="size-4" /></Link>
+                <Link href={target} onClick={() => { if (!item.readAt) void markRead(item.id); }} aria-label="Abrir feed" className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"><ArrowRight className="size-4" /></Link>
               </article>
             );
           })}
@@ -107,7 +106,7 @@ export default function NotificationsPage() {
         <div className="surface-card mt-8 p-10 text-center">
           <Bell className="mx-auto size-8 text-primary" />
           <h2 className="mt-3 font-heading text-lg font-bold">Tudo em dia</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Quando alguém interagir com suas publicações, seguir você ou criar um evento nas suas tribos, você verá aqui.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Quando alguém interagir com suas publicações ou criar um evento nas suas tribos, você verá aqui.</p>
         </div>
       )}
     </section>
