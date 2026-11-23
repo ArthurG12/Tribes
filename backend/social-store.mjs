@@ -1,3 +1,28 @@
+export async function listUpcomingEvents(userId, limit = 100, { query = "", tribeId } = {}) {
+  const { rows } = await pool.query(
+    `SELECT f.id, f.body, e.title, e.starts_at, e.ends_at, e.location,
+            t.id AS tribe_id, t.name AS tribe_name, u.display_name AS author_name,
+            e.max_attendees,
+            (SELECT COUNT(*) FROM event_attendees a WHERE a.content_id = f.id)::int AS attendees_count,
+            (SELECT COUNT(*) FROM event_waitlist w WHERE w.content_id = f.id)::int AS waitlist_count,
+            EXISTS (SELECT 1 FROM event_attendees a WHERE a.content_id = f.id AND a.user_id = $1) AS attending_by_me,
+            EXISTS (SELECT 1 FROM event_waitlist w WHERE w.content_id = f.id AND w.user_id = $1) AS waitlisted_by_me
+     FROM feed_items f JOIN tribe_events e ON e.content_id = f.id
+     JOIN tribes t ON t.id = f.tribe_id JOIN users u ON u.id = f.author_id
+     JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $1 AND m.status = 'active'
+     WHERE e.starts_at >= CURRENT_TIMESTAMP
+       AND ($3::uuid IS NULL OR t.id = $3)
+       AND ($4::text IS NULL OR (e.title ILIKE $4 OR e.location ILIKE $4 OR f.body ILIKE $4 OR t.name ILIKE $4))
+     ORDER BY e.starts_at ASC, f.id ASC LIMIT $2`,
+    [userId, limit, tribeId ?? null, query ? `%${query}%` : null]
+  );
+  return rows.map((row) => ({
+    id: row.id, body: row.body, title: row.title, startsAt: row.starts_at, endsAt: row.ends_at,
+    location: row.location, tribe: { id: row.tribe_id, name: row.tribe_name }, authorName: row.author_name,
+    maxAttendees: row.max_attendees, attendeesCount: row.attendees_count, waitlistCount: row.waitlist_count,
+    attendingByMe: row.attending_by_me, waitlistedByMe: row.waitlisted_by_me,
+  }));
+}
 import "./load-env.mjs";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
@@ -672,7 +697,7 @@ export async function userBelongsToTribe(userId, tribeId) {
   return rowCount > 0;
 }
 
-export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly = false }) {
+export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly = false, type = "all" }) {
   if (tribeId && !(await userBelongsToTribe(userId, tribeId))) {
     const error = new Error("Você não participa desta tribo.");
     error.statusCode = 403;
@@ -703,7 +728,9 @@ export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly
             EXISTS (SELECT 1 FROM content_likes l WHERE l.content_id = f.id AND l.user_id = $1) AS liked_by_me,
             EXISTS (SELECT 1 FROM saved_content s WHERE s.content_id = f.id AND s.user_id = $1) AS saved_by_me,
             (SELECT COUNT(*) FROM event_attendees a WHERE a.content_id = f.id)::int AS attendee_count,
-            EXISTS (SELECT 1 FROM event_attendees a WHERE a.content_id = f.id AND a.user_id = $1) AS attending_by_me
+            EXISTS (SELECT 1 FROM event_attendees a WHERE a.content_id = f.id AND a.user_id = $1) AS attending_by_me,
+            (SELECT COUNT(*) FROM event_waitlist w WHERE w.content_id = f.id)::int AS waitlist_count,
+            EXISTS (SELECT 1 FROM event_waitlist w WHERE w.content_id = f.id AND w.user_id = $1) AS waitlisted_by_me
      FROM feed_items f
      JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $1 AND m.status = 'active'
      JOIN users author ON author.id = f.author_id
@@ -713,9 +740,10 @@ export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly
        AND ($3::text IS NULL OR (f.body ILIKE $3 OR author.display_name ILIKE $3 OR t.name ILIKE $3 OR e.title ILIKE $3 OR e.location ILIKE $3))
        AND ($4::timestamptz IS NULL OR (f.created_at, f.id) < ($4, $5::uuid))
        AND ($7::boolean = false OR EXISTS (SELECT 1 FROM saved_content s WHERE s.content_id = f.id AND s.user_id = $1))
+       AND ($8::text = 'all' OR f.kind = $8)
      ORDER BY f.created_at DESC, f.id DESC
      LIMIT $6`,
-    [userId, tribeId ?? null, query ? `%${query}%` : null, cursor?.createdAt ?? null, cursor?.id ?? null, limit + 1, savedOnly]
+    [userId, tribeId ?? null, query ? `%${query}%` : null, cursor?.createdAt ?? null, cursor?.id ?? null, limit + 1, savedOnly, type]
   );
   const hasMore = rows.length > limit;
   const pageRows = rows.slice(0, limit);
@@ -746,6 +774,8 @@ export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly
       maxAttendees: row.max_attendees,
       attendeesCount: row.attendee_count,
       attendingByMe: row.attending_by_me,
+      waitlistCount: row.waitlist_count,
+      waitlistedByMe: row.waitlisted_by_me,
     } : null,
   }));
   const last = pageRows.at(-1);
@@ -938,43 +968,76 @@ export async function setEventAttendance(userId, contentId, attending) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const { rowCount } = await client.query(
-      `SELECT 1 FROM feed_items f
+    const { rows: eventRows } = await client.query(
+      `SELECT e.max_attendees, f.tribe_id FROM feed_items f
        JOIN tribe_events e ON e.content_id = f.id
        JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $1 AND m.status = 'active'
-       WHERE f.id = $2 FOR SHARE OF f`,
+       WHERE f.id = $2 FOR UPDATE OF f`,
       [userId, contentId]
     );
-    if (!rowCount) {
+    if (!eventRows.length) {
       await client.query("ROLLBACK");
       return null;
     }
 
     if (attending) {
-      const inserted = await client.query(
-        "INSERT INTO event_attendees (content_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING content_id",
+      const { rowCount: alreadyAttending } = await client.query(
+        "SELECT 1 FROM event_attendees WHERE content_id = $1 AND user_id = $2",
         [contentId, userId]
       );
-      if (inserted.rowCount > 0) {
-        await client.query(
-          `INSERT INTO notifications (recipient_id, actor_id, type, content_id, tribe_id)
-           SELECT f.author_id, $2, 'event_attendance', f.id, f.tribe_id
-           FROM feed_items f WHERE f.id = $1 AND f.author_id <> $2`,
-          [contentId, userId]
+      if (!alreadyAttending) {
+        await client.query("DELETE FROM event_waitlist WHERE content_id = $1 AND user_id = $2", [contentId, userId]);
+        const { rows: countRows } = await client.query(
+          "SELECT COUNT(*)::int AS count FROM event_attendees WHERE content_id = $1",
+          [contentId]
         );
+        const capacity = eventRows[0].max_attendees;
+        if (capacity !== null && countRows[0].count >= capacity) {
+          await client.query(
+            "INSERT INTO event_waitlist (content_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+            [contentId, userId]
+          );
+        } else {
+          await client.query("INSERT INTO event_attendees (content_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [contentId, userId]);
+          await client.query(
+            `INSERT INTO notifications (recipient_id, actor_id, type, content_id, tribe_id)
+             SELECT f.author_id, $2, 'event_attendance', f.id, f.tribe_id
+             FROM feed_items f WHERE f.id = $1 AND f.author_id <> $2`,
+            [contentId, userId]
+          );
+        }
       }
     } else {
-      await client.query("DELETE FROM event_attendees WHERE content_id = $1 AND user_id = $2", [contentId, userId]);
+      const removed = await client.query("DELETE FROM event_attendees WHERE content_id = $1 AND user_id = $2 RETURNING user_id", [contentId, userId]);
+      await client.query("DELETE FROM event_waitlist WHERE content_id = $1 AND user_id = $2", [contentId, userId]);
+      if (removed.rowCount > 0) {
+        const { rows: next } = await client.query(
+          `SELECT user_id FROM event_waitlist WHERE content_id = $1
+           ORDER BY created_at ASC, user_id ASC LIMIT 1 FOR UPDATE`,
+          [contentId]
+        );
+        if (next.length) {
+          await client.query("DELETE FROM event_waitlist WHERE content_id = $1 AND user_id = $2", [contentId, next[0].user_id]);
+          await client.query("INSERT INTO event_attendees (content_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [contentId, next[0].user_id]);
+        }
+      }
     }
 
     const { rows } = await client.query(
       `SELECT COUNT(*)::int AS count,
-              EXISTS (SELECT 1 FROM event_attendees WHERE content_id = $1 AND user_id = $2) AS attending
+              EXISTS (SELECT 1 FROM event_attendees WHERE content_id = $1 AND user_id = $2) AS attending,
+              EXISTS (SELECT 1 FROM event_waitlist WHERE content_id = $1 AND user_id = $2) AS waitlisted,
+              (SELECT COUNT(*)::int FROM event_waitlist WHERE content_id = $1) AS waitlist_count
        FROM event_attendees WHERE content_id = $1`,
       [contentId, userId]
     );
     await client.query("COMMIT");
-    return { attendeesCount: rows[0].count, attendingByMe: rows[0].attending };
+    return {
+      attendeesCount: rows[0].count,
+      attendingByMe: rows[0].attending,
+      waitlistedByMe: rows[0].waitlisted,
+      waitlistCount: rows[0].waitlist_count,
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
