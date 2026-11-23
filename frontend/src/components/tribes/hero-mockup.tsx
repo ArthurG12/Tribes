@@ -6,28 +6,19 @@ import {
   MapPin,
   Users,
   Pin,
-  CheckCircle2,
   Sparkles,
   ShieldCheck,
   MessageSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 interface HeroMockupProps {
   onInteract?: () => void;
 }
 
 export function HeroMockup({ onInteract }: HeroMockupProps) {
-  const [rsvpConfirmed, setRsvpConfirmed] = useState(false);
   const [activeTab, setActiveTab] = useState<"evento" | "chat">("evento");
-
-  const confirmedCount = rsvpConfirmed ? 15 : 14;
-
-  const handleToggleRsvp = () => {
-    setRsvpConfirmed((prev) => !prev);
-    onInteract?.();
-  };
+  const confirmedCount = 14;
 
   return (
     <div className="relative mx-auto w-full max-w-xl">
@@ -37,7 +28,6 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
       />
 
       <div className="overflow-hidden rounded-xl border border-[#c8d3be] bg-[#f4f7f0] shadow-[0_16px_40px_rgba(48,66,45,0.09)] ring-1 ring-white/[0.04] ">
-        {/* Top bar of tribe room */}
         <div className="flex items-center justify-between border-b border-[#c8d3be] bg-[#e7efe1] px-4 py-3.5 sm:px-5">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/15 font-heading text-sm font-bold text-primary">
@@ -60,7 +50,6 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
           </Badge>
         </div>
 
-        {/* Mode switcher: Pinned Event vs Organized Chat */}
         <div className="grid grid-cols-2 gap-1 border-b border-[#c8d3be] bg-[#eef3e9] p-1.5">
           <button
             type="button"
@@ -96,7 +85,7 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
 
         {activeTab === "evento" ? (
           <div className="space-y-4 p-4 sm:p-5">
-            <div className="rounded-2xl border border-primary/35 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] p-4">
+            <div className="rounded-2xl border border-primary/35 bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
                   <Sparkles className="size-3.5" />
@@ -126,50 +115,28 @@ export function HeroMockup({ onInteract }: HeroMockupProps) {
                 </div>
               </div>
 
-              {/* Progress bar */}
               <div className="mt-3.5">
                 <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
                   <div
-                    className="h-full rounded-full bg-primary transition-all duration-300"
+                    className="h-full rounded-full bg-primary"
                     style={{ width: `${Math.round((confirmedCount / 18) * 100)}%` }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Interactive RSVP test */}
-            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex -space-x-2">
-                {["MS", "LT", "CA", "IG", rsvpConfirmed ? "VC" : "+10"].map((initials, idx) => (
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex -space-x-2" aria-label="Participantes confirmados">
+                {["MS", "LT", "CA", "IG", "+10"].map((initials, idx) => (
                   <div
                     key={initials + idx}
-                    className={`flex size-8 items-center justify-center rounded-full border-2 border-card text-[11px] font-bold ${
-                      initials === "VC"
-                        ? "bg-[#bd5148] text-[#ffffff]"
-                        : "bg-secondary text-secondary-foreground"
-                    }`}
+                    className="flex size-8 items-center justify-center rounded-full border-2 border-card bg-secondary text-[11px] font-bold text-secondary-foreground"
                   >
                     {initials}
                   </div>
                 ))}
               </div>
-
-              <Button
-                type="button"
-                size="lg"
-                variant={rsvpConfirmed ? "secondary" : "default"}
-                onClick={handleToggleRsvp}
-                className="rounded-xl font-semibold"
-              >
-                {rsvpConfirmed ? (
-                  <>
-                    <CheckCircle2 className="size-4 text-[#657f4f]" />
-                    Presença confirmada!
-                  </>
-                ) : (
-                  "Confirmar presença em 1 clique"
-                )}
-              </Button>
+              <span className="text-xs font-medium text-muted-foreground">14 pessoas confirmadas</span>
             </div>
           </div>
         ) : (

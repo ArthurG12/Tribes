@@ -14,6 +14,7 @@ const PAGE_SIZE = 20;
 export default function FeedPage() {
   const [focusId, setFocusId] = useState<string | null>(null);
   const focusedItemRef = useRef<string | null>(null);
+  const focusLoadingRef = useRef(false);
   const requestSequence = useRef(0);
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [selectedTribe, setSelectedTribe] = useState("all");
@@ -82,6 +83,20 @@ export default function FeedPage() {
       document.getElementById(`feed-item-${focusId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     });
   }, [focusId, items, loading]);
+
+  useEffect(() => {
+    if (!focusId || loading || loadingMore || !nextCursor || focusLoadingRef.current || items.some((item) => item.id === focusId)) return;
+    focusLoadingRef.current = true;
+    setLoadingMore(true);
+    void fetchPage(nextCursor)
+      .catch((loadError) => {
+        setError(loadError instanceof Error ? loadError.message : "Não foi possível localizar a publicação.");
+      })
+      .finally(() => {
+        focusLoadingRef.current = false;
+        setLoadingMore(false);
+      });
+  }, [focusId, items, loading, loadingMore, nextCursor, fetchPage]);
 
   function removeItem(itemId: string) {
     setItems((current) => current.filter((item) => item.id !== itemId));
