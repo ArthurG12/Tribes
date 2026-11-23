@@ -25,7 +25,9 @@ type EventItem = {
 };
 
 function dateKey(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value));
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Data indisponível";
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(date);
 }
 
 function escapeIcs(value: string) {
@@ -33,7 +35,9 @@ function escapeIcs(value: string) {
 }
 
 function toIcsDate(value: string) {
-  return new Date(value).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 }
 
 export default function EventsPage() {
@@ -98,18 +102,23 @@ export default function EventsPage() {
       "VERSION:2.0",
       "PRODID:-//Tribes//Agenda//PT-BR",
       "CALSCALE:GREGORIAN",
-      ...visibleEvents.flatMap((event) => [
-        "BEGIN:VEVENT",
-        `UID:${event.id}@tribes`,
-        `DTSTAMP:${toIcsDate(new Date().toISOString())}`,
-        `DTSTART:${toIcsDate(event.startsAt)}`,
-        ...(event.endsAt ? [`DTEND:${toIcsDate(event.endsAt)}`] : []),
-        `SUMMARY:${escapeIcs(event.title)}`,
-        `DESCRIPTION:${escapeIcs(event.body)}`,
-        `LOCATION:${escapeIcs(event.location)}`,
-        `CATEGORIES:${escapeIcs(event.tribe.name)}`,
-        "END:VEVENT",
-      ]),
+      ...visibleEvents.flatMap((event) => {
+        const start = toIcsDate(event.startsAt);
+        const end = event.endsAt ? toIcsDate(event.endsAt) : null;
+        if (!start) return [];
+        return [
+          "BEGIN:VEVENT",
+          `UID:${event.id}@tribes`,
+          `DTSTAMP:${toIcsDate(new Date().toISOString())}`,
+          `DTSTART:${start}`,
+          ...(end ? [`DTEND:${end}`] : []),
+          `SUMMARY:${escapeIcs(event.title)}`,
+          `DESCRIPTION:${escapeIcs(event.body)}`,
+          `LOCATION:${escapeIcs(event.location)}`,
+          `CATEGORIES:${escapeIcs(event.tribe.name)}`,
+          "END:VEVENT",
+        ];
+      }),
       "END:VCALENDAR",
     ];
     const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
