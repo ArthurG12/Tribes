@@ -18,7 +18,6 @@ export interface EventMapPoint {
 }
 
 const DEFAULT_CENTER: [number, number] = [-14.2, -51.9];
-const TILE_ATTRIBUTION = 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | © OpenStreetMap';
 let mapsApiKeyRequest: Promise<string> | null = null;
 
 async function requestMapsApiKey() {
@@ -72,11 +71,10 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
   const markersRef = useRef<Leaflet.LayerGroup | null>(null);
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const apiKey = useMapsApiKey();
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !apiKey) return;
+    if (!container) return;
 
     let active = true;
     let map: Leaflet.Map | null = null;
@@ -86,11 +84,16 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
       const leaflet = await import("leaflet");
       if (!active || !container) return;
 
-      map = leaflet.map(container, { scrollWheelZoom: false }).setView(DEFAULT_CENTER, 4);
-      leaflet.tileLayer(
-        `https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${apiKey}`,
-        { attribution: TILE_ATTRIBUTION, maxZoom: 20 },
-      ).addTo(map);
+      map = leaflet.map(container, {
+        zoomControl: false,
+        attributionControl: false,
+        dragging: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false,
+        touchZoom: false,
+      }).setView(DEFAULT_CENTER, 4);
       markers = leaflet.layerGroup().addTo(map);
       leafletRef.current = leaflet;
       mapRef.current = map;
@@ -106,7 +109,7 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
       markersRef.current = null;
       map?.remove();
     };
-  }, [apiKey]);
+  }, []);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -129,15 +132,7 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
     }
   }, [mapReady, points]);
 
-  if (apiKey === null) {
-    return <div aria-hidden="true" className={`event-location-map h-56 w-full animate-pulse rounded-xl border border-border bg-muted ${className}`} />;
-  }
-
-  if (!apiKey) {
-    return <p className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">Configure MAPS_API para exibir o mapa.</p>;
-  }
-
-  return <div ref={containerRef} aria-label="Mapa do local do evento" role="region" className={`event-location-map h-56 w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`} />;
+  return <div ref={containerRef} aria-label="Localização exata do evento" role="img" className={`event-location-map h-56 w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`} />;
 }
 
 export function EventLocationPicker({
@@ -243,7 +238,7 @@ export function EventLocationPicker({
           {mapsApiKey === "" && <p className="text-xs text-muted-foreground">Configure MAPS_API para ativar a busca de endereços.</p>}
         </>
       )}
-      {mapsApiKey && <EventLocationMap points={mapPoints} />}
+      {coordinates && <EventLocationMap points={mapPoints} />}
     </div>
   );
 }
