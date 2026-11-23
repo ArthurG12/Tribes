@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Compass, LoaderCircle, MapPin, Plus, Search, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +10,18 @@ import { apiRequest, type Tribe } from "@/lib/social-types";
 
 export default function TribesPage() {
   const [query, setQuery] = useState("");
+  const [cityFilter, setCityFilter] = useState("all");
+  const [interestFilter, setInterestFilter] = useState("all");
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [loading, setLoading] = useState(true);
   const [workingTribe, setWorkingTribe] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const sortedTribes = [...tribes].sort((a, b) => b.memberCount - a.memberCount);
+  const cities = useMemo(() => [...new Set(tribes.map((tribe) => tribe.city).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")), [tribes]);
+  const interests = useMemo(() => [...new Set(tribes.map((tribe) => tribe.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")), [tribes]);
+  const sortedTribes = useMemo(() => tribes
+    .filter((tribe) => cityFilter === "all" || tribe.city === cityFilter)
+    .filter((tribe) => interestFilter === "all" || tribe.category === interestFilter)
+    .sort((a, b) => b.memberCount - a.memberCount), [tribes, cityFilter, interestFilter]);
 
   useEffect(() => {
     let active = true;
@@ -59,10 +66,26 @@ export default function TribesPage() {
         <Button render={<Link href="/tribos/nova" />} className="rounded-xl"><Plus className="size-4" />Criar tribo</Button>
       </section>
 
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, interesse ou cidade..." aria-label="Buscar tribos" className="h-12 rounded-2xl pl-10" />
-      </div>
+      <section className="space-y-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, interesse ou cidade..." aria-label="Buscar tribos" className="h-12 rounded-xl pl-10" />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1.5 text-xs font-semibold text-muted-foreground">Cidade
+            <select value={cityFilter} onChange={(event) => setCityFilter(event.target.value)} className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm font-normal text-foreground">
+              <option value="all">Todas as cidades</option>
+              {cities.map((city) => <option key={city} value={city}>{city}</option>)}
+            </select>
+          </label>
+          <label className="space-y-1.5 text-xs font-semibold text-muted-foreground">Interesse
+            <select value={interestFilter} onChange={(event) => setInterestFilter(event.target.value)} className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm font-normal text-foreground">
+              <option value="all">Todos os interesses</option>
+              {interests.map((interest) => <option key={interest} value={interest}>{interest}</option>)}
+            </select>
+          </label>
+        </div>
+      </section>
       {error && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
       {loading ? <div className="flex justify-center py-14"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : sortedTribes.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
