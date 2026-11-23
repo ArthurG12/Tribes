@@ -151,7 +151,7 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
       <DialogContent className="box-border w-[calc(100%-2rem)] max-w-2xl min-w-0 max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto rounded-2xl p-5 sm:p-6">
         <DialogHeader>
           <DialogTitle className="font-heading text-xl font-bold">Compartilhe com sua tribo</DialogTitle>
-          <DialogDescription>Publique uma novidade ou crie um evento para os membros da sua tribo.</DialogDescription>
+          <DialogDescription>Publique uma novidade, crie um evento ou faça uma enquete para sua tribo.</DialogDescription>
         </DialogHeader>
         <form className="w-full min-w-0 space-y-3" onSubmit={(event) => void submitContent(event)}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -173,7 +173,7 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
             <Input aria-label="Custo do evento" placeholder="Custo (opcional)" value={eventCost} onChange={(event) => setEventCost(event.target.value)} />
             <Input aria-label="Limite de participantes" type="number" min="1" placeholder="Limite de participantes" value={eventCapacity} onChange={(event) => setEventCapacity(event.target.value)} />
           </div>}
-          <Textarea placeholder={eventMode ? "Conte um pouco sobre o evento..." : "O que está acontecendo na sua tribo?"} value={body} onChange={(event) => setBody(event.target.value)} maxLength={5000} required />
+          <Textarea placeholder={eventMode ? "Conte um pouco sobre o evento..." : pollMode ? "Qual é a sua pergunta?" : "O que está acontecendo na sua tribo?"} value={body} onChange={(event) => setBody(event.target.value)} maxLength={5000} required />
           {pollMode && <div className="space-y-2">
             <p className="text-sm font-semibold">Opções da enquete</p>
             {pollOptions.map((option, index) => <div key={index} className="flex gap-2">
