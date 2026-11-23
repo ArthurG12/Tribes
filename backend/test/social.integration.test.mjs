@@ -332,6 +332,51 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal((await call(bob, `/api/tribes/${tribeOne.id}/join`, { method: "POST" })).response.status, 200);
 
   const postId = await createPost(alice, tribeOne, "Uma publicação para todos os membros.");
+  const pollResponse = await call(alice, `/api/tribes/${tribeOne.id}/posts`, {
+    method: "POST",
+    body: JSON.stringify({ body: "Qual atividade devemos organizar?", pollOptions: ["Cinema", "Jogos", "Piquenique"] }),
+  });
+  assert.equal(pollResponse.response.status, 201, JSON.stringify(pollResponse.data));
+  const pollId = pollResponse.data.id;
+  const pollFeed = await call(alice, "/api/feed");
+  const pollItem = pollFeed.data.items.find((item) => item.id === pollId);
+  assert.equal(pollItem.type, "poll");
+  assert.equal(pollItem.poll.options.length, 3);
+  assert.equal(pollItem.poll.totalVotes, 0);
+  assert.equal(pollItem.poll.votedOptionId, null);
+  assert.equal((await call(null, `/api/content/${pollId}/vote`, {
+    method: "POST", body: JSON.stringify({ optionId: pollItem.poll.options[0].id }),
+  })).response.status, 401);
+  assert.equal((await call(empty, `/api/content/${pollId}/vote`, {
+    method: "POST", body: JSON.stringify({ optionId: pollItem.poll.options[0].id }),
+  })).response.status, 404);
+  assert.equal((await call(alice, `/api/content/${pollId}/vote`, {
+    method: "POST", body: JSON.stringify({ optionId: "00000000-0000-4000-8000-000000000000" }),
+  })).response.status, 400);
+  const firstVote = await call(bob, `/api/content/${pollId}/vote`, {
+    method: "POST", body: JSON.stringify({ optionId: pollItem.poll.options[0].id }),
+  });
+  assert.equal(firstVote.response.status, 200);
+  assert.equal(firstVote.data.totalVotes, 1);
+  const changedVote = await call(bob, `/api/content/${pollId}/vote`, {
+    method: "POST", body: JSON.stringify({ optionId: pollItem.poll.options[1].id }),
+  });
+  assert.equal(changedVote.response.status, 200);
+  assert.equal(changedVote.data.totalVotes, 1);
+  assert.equal(changedVote.data.votedOptionId, pollItem.poll.options[1].id);
+  const updatedPollFeed = await call(bob, "/api/feed");
+  const updatedPoll = updatedPollFeed.data.items.find((item) => item.id === pollId);
+  assert.equal(updatedPoll.poll.totalVotes, 1);
+  assert.equal(updatedPoll.poll.options.find((option) => option.id === pollItem.poll.options[1].id).votes, 1);
+  assert.equal((await call(alice, `/api/tribes/${tribeOne.id}/posts`, {
+    method: "POST",
+    body: JSON.stringify({ body: "Enquete inválida", pollOptions: ["Só uma opção"] }),
+  })).response.status, 400);
+  assert.equal((await call(alice, `/api/tribes/${tribeOne.id}/posts`, {
+    method: "POST",
+    body: JSON.stringify({ body: "Enquete duplicada", pollOptions: ["Igual", "igual"] }),
+  })).response.status, 400);
+
   const membersResponse = await call(alice, `/api/tribes/${tribeOne.id}/members`);
   assert.equal(membersResponse.response.status, 200);
   assert.deepEqual(new Set(membersResponse.data.members.map((member) => member.id)), new Set([alice.user.id, bob.user.id]));
