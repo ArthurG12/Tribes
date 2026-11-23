@@ -554,7 +554,30 @@ export async function handleSocialRequest(request, response, url) {
       const contentId = requireUuid(contentItemMatch[1], "Publicação");
       if (method === "PATCH") {
         const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });
-        const item = await updateContent(user.id, contentId, requiredString(payload.body, "texto", 1, 5000));
+        let event;
+        if (payload.event !== undefined) {
+          if (!payload.event || typeof payload.event !== "object" || Array.isArray(payload.event)) throw invalid("Dados do evento inválidos.");
+          const startsAt = requiredString(payload.event.startsAt, "data do evento", 10, 40);
+          if (!Number.isFinite(Date.parse(startsAt))) throw invalid("Data do evento inválida.");
+          const endsAt = payload.event.endsAt ? requiredString(payload.event.endsAt, "fim do evento", 10, 40) : null;
+          if (endsAt && (!Number.isFinite(Date.parse(endsAt)) || Date.parse(endsAt) <= Date.parse(startsAt))) {
+            throw invalid("A data de término deve ser posterior ao início.");
+          }
+          const maxAttendees = payload.event.maxAttendees === "" || payload.event.maxAttendees == null
+            ? null : Number(payload.event.maxAttendees);
+          if (maxAttendees !== null && (!Number.isInteger(maxAttendees) || maxAttendees < 1 || maxAttendees > 10000)) {
+            throw invalid("Limite de participantes inválido.");
+          }
+          event = {
+            title: requiredString(payload.event.title, "título do evento", 2, 120),
+            startsAt,
+            endsAt,
+            location: requiredString(payload.event.location, "local", 2, 240),
+            cost: typeof payload.event.cost === "string" ? payload.event.cost.trim().slice(0, 100) : "",
+            maxAttendees,
+          };
+        }
+        const item = await updateContent(user.id, contentId, requiredString(payload.body, "texto", 1, 5000), event);
         if (!item) {
           sendJson(response, 404, { error: "Publicação não encontrada ou sem permissão." });
           return true;
