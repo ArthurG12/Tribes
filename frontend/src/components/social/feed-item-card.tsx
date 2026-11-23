@@ -250,6 +250,8 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
     }
   }
 
+  const postImage = item.imageUrl ? <Image src={item.imageUrl} alt={`Imagem da publicação de ${item.author.name}`} width={1200} height={900} unoptimized className="max-h-[32rem] w-full rounded-2xl bg-muted/30 object-contain" /> : null;
+
   return (
     <article id={`feed-item-${item.id}`} className="scroll-mt-28 overflow-hidden rounded-3xl border border-border bg-card shadow-xs">
       <header className="flex items-start justify-between gap-2 border-b border-border/70 p-4 sm:items-center sm:gap-3 sm:p-5">
@@ -271,6 +273,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
       </header>
       {shareCopied && <p role="status" className="px-5 pt-3 text-xs font-medium text-primary">Link copiado para compartilhar.</p>}
       <div className="space-y-4 p-4 sm:p-5">
+        {item.event && postImage}
         {item.event && !editingPost && <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><CalendarDays className="size-4" />Evento da tribo</div>
           <h2 className="mt-2 font-heading text-lg font-bold">{item.event.title}</h2>
@@ -303,6 +306,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
             <Button type="button" size="sm" variant="destructive" disabled={postPending} onClick={() => void removePost()}>{postPending ? <LoaderCircle className="size-4 animate-spin" /> : item.event ? "Cancelar evento" : "Excluir"}</Button>
           </div>
         </div>}
+        {!item.event && postImage}
         {item.poll && <section className="rounded-2xl border border-primary/20 bg-primary/[0.035] p-4">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><BarChart3 className="size-4" />Enquete · {item.poll.totalVotes} {item.poll.totalVotes === 1 ? "voto" : "votos"}</div>
           <div className="space-y-2">
@@ -317,7 +321,6 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
           </div>
           <p className="mt-2 text-xs text-muted-foreground">{item.poll.multiple ? "Você pode escolher várias opções. Toque de novo para desfazer." : item.poll.votedOptionIds.length ? "Você pode alterar seu voto." : "Escolha uma opção para votar."}</p>
         </section>}
-        {item.imageUrl && <Image src={item.imageUrl} alt={`Imagem da publicação de ${item.author.name}`} width={1200} height={900} unoptimized className="max-h-[32rem] w-full rounded-2xl bg-muted/30 object-contain" />}
         {item.event && <div className="border-t border-border/70 pt-3">
           <div className="flex justify-end">
             <Button type="button" size="sm" variant="ghost" aria-pressed={item.event.attendingByMe} disabled={attendancePending} onClick={() => void toggleAttendance()} className={`w-fit justify-end px-0 text-right ${item.event.attendingByMe ? "text-primary" : "text-muted-foreground"}`}>
