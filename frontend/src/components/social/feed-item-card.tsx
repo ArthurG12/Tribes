@@ -302,7 +302,14 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
           <p className="mt-2 text-xs text-muted-foreground">{item.poll.votedOptionId ? "Você pode alterar seu voto." : "Escolha uma opção para votar."}</p>
         </section>}
         {item.imageUrl && <Image src={item.imageUrl} alt={`Imagem da publicação de ${item.author.name}`} width={1200} height={900} unoptimized className="max-h-[32rem] w-full rounded-2xl bg-muted/30 object-contain" />}
-        <div className="flex flex-nowrap items-center justify-between gap-0.5 border-t border-border/70 pt-3"ame="flex flex-nowrap items-center justify-between gap-0.5 border-t border-border/70 pt-3">
+        {item.event && <div className="border-t border-border/70 pt-3">
+          <div className="flex justify-start">
+            <Button type="button" size="sm" variant="ghost" aria-pressed={item.event.attendingByMe} disabled={attendancePending} onClick={() => void toggleAttendance()} className={item.event.attendingByMe ? "text-primary" : "text-muted-foreground"}>
+              <Users className="size-4" />{item.event.attendingByMe ? "Presença confirmada" : item.event.waitlistedByMe ? "Sair da espera" : "Confirmar presença"} · {item.event.attendeesCount}{item.event.maxAttendees ? `/${item.event.maxAttendees}` : ""}{item.event.waitlistCount ? ` · ${item.event.waitlistCount} na espera` : ""}
+            </Button>
+          </div>
+        </div>}
+        <div className="flex flex-nowrap items-center justify-between gap-0.5 pt-2">
           <Button type="button" size="sm" variant="ghost" aria-pressed={item.savedByMe} disabled={savePending} onClick={() => void toggleSaved()} className={`min-w-0 flex-1 gap-1 px-1.5 text-xs whitespace-nowrap sm:flex-none sm:gap-2 sm:px-3 sm:text-sm ${item.savedByMe ? "text-primary" : "text-muted-foreground"}`}>
             <Bookmark className={`size-4 ${item.savedByMe ? "fill-current" : ""}`} />{item.savedByMe ? "Salva" : "Salvar"}
           </Button>
@@ -312,9 +319,6 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
           <Button type="button" size="sm" variant="ghost" aria-expanded={expandedComments} onClick={() => void toggleComments()} className="min-w-0 flex-1 gap-1 px-1.5 text-xs whitespace-nowrap sm:flex-none sm:gap-2 sm:px-3 sm:text-sm text-muted-foreground">
             <MessageCircle className="size-4" />{item.commentsCount} {item.commentsCount === 1 ? "comentário" : "comentários"}
           </Button>
-          {item.event && <Button type="button" size="sm" variant="ghost" aria-pressed={item.event.attendingByMe} disabled={attendancePending} onClick={() => void toggleAttendance()} className={item.event.attendingByMe ? "text-primary" : "text-muted-foreground"}>
-            <Users className="size-4" />{item.event.attendingByMe ? "Presença confirmada" : item.event.waitlistedByMe ? "Sair da espera" : "Confirmar presença"} · {item.event.attendeesCount}{item.event.maxAttendees ? `/${item.event.maxAttendees}` : ""}{item.event.waitlistCount ? ` · ${item.event.waitlistCount} na espera` : ""}
-          </Button>}
         </div>
         {expandedComments && <div className="space-y-3 border-t border-border/70 pt-3">
           {(comments ?? []).map((comment) => <div key={comment.id} className="rounded-xl bg-muted/55 p-3">
