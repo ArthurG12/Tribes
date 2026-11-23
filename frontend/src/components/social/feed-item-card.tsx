@@ -230,8 +230,8 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
 
   return (
     <article id={`feed-item-${item.id}`} className="scroll-mt-28 overflow-hidden rounded-3xl border border-border bg-card shadow-xs">
-      <header className="flex flex-col gap-3 border-b border-border/70 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
-        <div className="flex min-w-0 items-start gap-3">
+      <header className="flex flex-row items-center justify-between gap-2 border-b border-border/70 p-4 sm:gap-3 sm:p-5">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <Link href={`/usuarios/${item.author.id}`} aria-label={`Ver perfil de ${item.author.name}`}>
             <UserAvatar name={item.author.name} avatarUrl={item.author.avatarUrl} />
           </Link>
@@ -241,7 +241,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
             <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(item.createdAt)}{item.editedAt ? " · editado" : ""}</p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1 self-end sm:self-start">
+        <div className="flex shrink-0 items-center gap-1">
           <Button type="button" size="icon-sm" variant="ghost" aria-label="Compartilhar publicação" onClick={() => void sharePost()}><Share2 className="size-4" /></Button>
           {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label={item.event ? "Editar evento" : "Editar publicação"} onClick={() => { setEditPostBody(item.body); setEventDraft(item.event ? { title: item.event.title, startsAt: toLocalDateTimeInput(item.event.startsAt), endsAt: toLocalDateTimeInput(item.event.endsAt), location: item.event.location, cost: item.event.cost, maxAttendees: item.event.maxAttendees ? String(item.event.maxAttendees) : "" } : null); setEditingPost(true); }}><Pencil className="size-4" /></Button>}
           {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label={item.event ? "Cancelar evento" : "Excluir publicação"} onClick={() => setConfirmDelete(true)}><Trash2 className="size-4 text-destructive" /></Button>}
@@ -304,7 +304,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
         {item.imageUrl && <Image src={item.imageUrl} alt={`Imagem da publicação de ${item.author.name}`} width={1200} height={900} unoptimized className="max-h-[32rem] w-full rounded-2xl bg-muted/30 object-contain" />}
         {item.event && <div className="border-t border-border/70 pt-3">
           <div className="flex justify-start">
-            <Button type="button" size="sm" variant="ghost" aria-pressed={item.event.attendingByMe} disabled={attendancePending} onClick={() => void toggleAttendance()} className={item.event.attendingByMe ? "text-primary" : "text-muted-foreground"}>
+            <Button type="button" size="sm" variant="ghost" aria-pressed={item.event.attendingByMe} disabled={attendancePending} onClick={() => void toggleAttendance()} className={`w-fit justify-start px-0 text-left ${item.event.attendingByMe ? "text-primary" : "text-muted-foreground"}`}>
               <Users className="size-4" />{item.event.attendingByMe ? "Presença confirmada" : item.event.waitlistedByMe ? "Sair da espera" : "Confirmar presença"} · {item.event.attendeesCount}{item.event.maxAttendees ? `/${item.event.maxAttendees}` : ""}{item.event.waitlistCount ? ` · ${item.event.waitlistCount} na espera` : ""}
             </Button>
           </div>
