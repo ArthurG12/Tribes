@@ -53,7 +53,7 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
             />
           </span>
         </Link>
-        <nav aria-label="Navegação principal" className="order-3 flex w-full min-w-0 items-center gap-1 overflow-x-auto pb-1 sm:order-none sm:w-auto sm:overflow-visible sm:pb-0 sm:gap-2">
+        <nav aria-label="Navegação principal" className="order-3 flex w-full min-w-0 items-center justify-start gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:order-none sm:w-auto sm:overflow-visible sm:px-0 sm:pb-0 sm:gap-2">
           {nav.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href || (item.href === "/minhas-tribos" && pathname.startsWith("/minhas-tribos/"));
