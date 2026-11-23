@@ -39,6 +39,7 @@ export default function FeedPage() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
     apiRequest<{ tribes: Tribe[] }>("/api/tribes?mine=true")
       .then(({ tribes: joined }) => {
         if (!active) return;
@@ -83,8 +84,8 @@ export default function FeedPage() {
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input aria-label="Pesquisar publicações" type="search" value={searchTerm} onChange={(event) => { setLoading(true); setSearchTerm(event.target.value); }} placeholder="Pesquisar publicações, autores, tribos ou eventos..." className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-10 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring" />
-          {searchTerm && <button type="button" aria-label="Limpar pesquisa" onClick={() => { setSearchTerm(""); setLoading(true); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="size-4" /></button>}
+          <input aria-label="Pesquisar publicações" type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Pesquisar publicações, autores, tribos ou eventos..." className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-10 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring" />
+          {searchTerm && <button type="button" aria-label="Limpar pesquisa" onClick={() => setSearchTerm("") className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="size-4" /></button>}
         </div>
         <div>
         <label htmlFor="tribe-filter" className="mb-2 block text-sm font-semibold">Filtrar feed</label>
