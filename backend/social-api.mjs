@@ -7,6 +7,9 @@ import { registrationMessageForDelivery } from "./registration-message.mjs";
 import {
   addComment,
   listNotifications,
+  listTribeMembers,
+  listUpcomingEvents,
+  toggleSavedContent,
   markNotificationRead,
   markAllNotificationsRead,
   completePasswordReset,
@@ -113,8 +116,8 @@ export async function handleSocialRequest(request, response, url) {
   const method = request.method ?? "GET";
   const routeKnown = pathname.startsWith("/api/auth/") ||
     pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
-    pathname === "/api/feed" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
-    /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events)$/.test(pathname) ||
+    pathname === "/api/feed" || pathname === "/api/saved" || /^\/api\/content\/[^/]+\/save$/.test(pathname) || pathname === "/api/events" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
+    /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members)$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance)$/.test(pathname) ||
     /^\/api\/comments\/[^/]+$/.test(pathname);
@@ -366,20 +369,45 @@ export async function handleSocialRequest(request, response, url) {
       return true;
     }
 
-    if (pathname === "/api/feed" && method === "GET") {
+    if ((pathname === "/api/feed" || pathname === "/api/saved") && method === "GET") {
       const rawLimit = url.searchParams.get("limit");
       const limit = rawLimit === null ? 20 : Number(rawLimit);
       if (!Number.isInteger(limit) || limit < 1 || limit > 50) throw invalid("Limite de página inválido (1–50).");
-      const tribeId = url.searchParams.get("tribeId") || undefined;
-      if (tribeId) requireUuid(tribeId, "Tribo");
       const query = (url.searchParams.get("q") ?? "").trim();
       if (query.length > 100) throw invalid("A busca deve ter até 100 caracteres.");
       const result = await getFeed(user.id, {
-        tribeId,
         query,
         cursor: decodeCursor(url.searchParams.get("cursor")),
         limit,
+        savedOnly: pathname === "/api/saved",
       });
+      sendJson(response, 200, result);
+      return true;
+    }
+
+    if (pathname === "/api/events" && method === "GET") {
+      sendJson(response, 200, { events: await listUpcomingEvents(user.id) });
+      return true;
+    }
+
+    const membersMatch = pathname.match(/^\/api\/tribes\/([^/]+)\/members$/);
+    if (membersMatch && method === "GET") {
+      const members = await listTribeMembers(user.id, requireUuid(membersMatch[1], "Tribo"));
+      if (!members) {
+        sendJson(response, 404, { error: "Tribo não encontrada ou você não participa dela." });
+        return true;
+      }
+      sendJson(response, 200, { members });
+      return true;
+    }
+
+    const saveMatch = pathname.match(/^\/api\/content\/([^/]+)\/save$/);
+    if (saveMatch && ["POST", "DELETE"].includes(method)) {
+      const result = await toggleSavedContent(user.id, requireUuid(saveMatch[1], "Publicação"), method === "POST");
+      if (!result) {
+        sendJson(response, 404, { error: "Publicação não encontrada ou sem acesso." });
+        return true;
+      }
       sendJson(response, 200, result);
       return true;
     }
