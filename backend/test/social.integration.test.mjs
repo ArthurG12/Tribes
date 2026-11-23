@@ -537,6 +537,13 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.ok(searchedEvent.data.items.some((item) => item.id === eventId));
   const searchedByLocation = await call(alice, "/api/feed?q=Centro%20de%20Belo%20Horizonte&limit=50");
   assert.ok(searchedByLocation.data.items.some((item) => item.id === eventId));
+  const onlyEvents = await call(alice, "/api/feed?type=event&limit=50");
+  assert.equal(onlyEvents.response.status, 200);
+  assert.ok(onlyEvents.data.items.length > 0);
+  assert.ok(onlyEvents.data.items.every((item) => item.type === "event"));
+  const filteredEvents = await call(alice, `/api/events?q=Noite%20de%20jogos&tribeId=${tribeOne.id}`);
+  assert.equal(filteredEvents.response.status, 200);
+  assert.ok(filteredEvents.data.events.some((item) => item.id === eventId));
   assert.equal((await call(alice, `/api/feed?q=${"x".repeat(101)}`)).response.status, 400);
   const forbidden = await call(alice, `/api/feed?tribeId=${outsiderTribe.id}`);
   assert.equal(forbidden.response.status, 403);
@@ -561,10 +568,18 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal((await call(empty, likePath, { method: "POST" })).response.status, 404);
 
   const attendancePath = `/api/content/${eventId}/attendance`;
-  assert.deepEqual((await call(bob, attendancePath, { method: "POST" })).data, { attendeesCount: 1, attendingByMe: true });
-  assert.deepEqual((await call(bob, attendancePath, { method: "POST" })).data, { attendeesCount: 1, attendingByMe: true });
-  assert.deepEqual((await call(alice, attendancePath, { method: "POST" })).data, { attendeesCount: 2, attendingByMe: true });
-  assert.deepEqual((await call(bob, attendancePath, { method: "DELETE" })).data, { attendeesCount: 1, attendingByMe: false });
+  assert.deepEqual((await call(bob, attendancePath, { method: "POST" })).data, {
+    attendeesCount: 1, attendingByMe: true, waitlistedByMe: false, waitlistCount: 0,
+  });
+  assert.deepEqual((await call(bob, attendancePath, { method: "POST" })).data, {
+    attendeesCount: 1, attendingByMe: true, waitlistedByMe: false, waitlistCount: 0,
+  });
+  assert.deepEqual((await call(alice, attendancePath, { method: "POST" })).data, {
+    attendeesCount: 1, attendingByMe: false, waitlistedByMe: true, waitlistCount: 1,
+  });
+  assert.deepEqual((await call(bob, attendancePath, { method: "DELETE" })).data, {
+    attendeesCount: 1, attendingByMe: false, waitlistedByMe: false, waitlistCount: 0,
+  });
   assert.equal((await call(empty, attendancePath, { method: "POST" })).response.status, 404);
   assert.equal((await call(alice, `/api/content/${postId}/attendance`, { method: "POST" })).response.status, 404);
   const feedWithAttendance = await call(alice, `/api/feed?tribeId=${tribeOne.id}&limit=50`);
