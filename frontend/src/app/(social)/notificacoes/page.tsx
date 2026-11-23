@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 type Notification = {
   id: string;
-  type: "post_like" | "post_comment" | "event_created";
+  type: "post_like" | "post_comment" | "event_created" | "event_attendance";
   contentId: string;
   tribeId: string;
   tribeName: string;
@@ -20,6 +20,7 @@ const copy = {
   post_like: { verb: "curtiu sua publicação", Icon: Heart },
   post_comment: { verb: "comentou em sua publicação", Icon: MessageCircle },
   event_created: { verb: "publicou um novo evento em", Icon: CalendarDays },
+  event_attendance: { verb: "confirmou presença no seu evento em", Icon: CalendarDays },
 };
 
 function relativeDate(value: string) {
