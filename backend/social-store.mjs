@@ -706,6 +706,7 @@ export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly
   const { rows } = await pool.query(
     `SELECT f.id, f.kind, f.body, f.created_at, f.edited_at,
             author.id AS author_id, author.display_name AS author_name,
+            (f.author_id = $1) AS is_mine,
             EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = author.id AND i.is_deleted = FALSE) AS author_has_avatar,
             t.id AS tribe_id, t.name AS tribe_name,
             e.title AS event_title, e.starts_at, e.ends_at, e.location, e.cost, e.max_attendees,
@@ -754,6 +755,7 @@ export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly
     imageUrl: row.has_image ? `/api/content/${row.id}/image` : null,
     createdAt: row.created_at,
     editedAt: row.edited_at,
+    isMine: row.is_mine,
     author: {
       id: row.author_id,
       name: row.author_name,
@@ -862,6 +864,47 @@ export async function createContent(userId, tribeId, { type, body, event, image,
   } catch (error) {
     await client.query("ROLLBACK");
     if (imageKey) await removeObjectBestEffort(imageKey);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function updateContent(userId, contentId, body) {
+  const { rows } = await pool.query(
+    `UPDATE feed_items f SET body = $3, edited_at = CURRENT_TIMESTAMP
+     FROM tribe_memberships m
+     WHERE f.id = $1 AND f.author_id = $2
+       AND m.tribe_id = f.tribe_id AND m.user_id = $2 AND m.status = 'active'
+     RETURNING f.id, f.body, f.edited_at`,
+    [contentId, userId, body]
+  );
+  return rows[0] ?? null;
+}
+
+export async function deleteContent(userId, contentId) {
+  const client = await pool.connect();
+  let imageKey = null;
+  try {
+    await client.query("BEGIN");
+    const { rows: images } = await client.query(
+      `SELECT i.image_key FROM content_images i
+       JOIN feed_items f ON f.id = i.content_id
+       JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $2 AND m.status = 'active'
+       WHERE f.id = $1 AND f.author_id = $2 FOR UPDATE OF f`,
+      [contentId, userId]
+    );
+    if (!images.length) {
+      await client.query("ROLLBACK");
+      return false;
+    }
+    imageKey = images[0].image_key;
+    const removed = await client.query("DELETE FROM feed_items WHERE id = $1 AND author_id = $2 RETURNING id", [contentId, userId]);
+    await client.query("COMMIT");
+    if (imageKey) await removeObjectBestEffort(imageKey);
+    return removed.rowCount > 0;
+  } catch (error) {
+    await client.query("ROLLBACK");
     throw error;
   } finally {
     client.release();
