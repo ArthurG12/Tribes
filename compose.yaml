@@ -4,7 +4,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "4317:4317"
+      - "127.0.0.1:4317:4317"
     environment:
       NODE_ENV: development
       BACKEND_URL: http://backend:4000
@@ -76,7 +76,7 @@ services:
   mailhog:
     image: mailhog/mailhog:v1.0.1
     ports:
-      - "8026:8025"
+      - "127.0.0.1:8026:8025"
     expose:
       - "1025"
 
@@ -101,8 +101,8 @@ services:
       rustfs-data-init:
         condition: service_completed_successfully
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     expose:
       - "9000"
 
