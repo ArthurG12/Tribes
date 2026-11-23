@@ -7,6 +7,7 @@ import { ArrowLeft, LoaderCircle, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { apiRequest, type Tribe } from "@/lib/social-types";
+import { SAMPLE_TRIBES } from "@/lib/tribes-data";
 
 function TribeDetailContent() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +17,23 @@ function TribeDetailContent() {
 
   useEffect(() => {
     let active = true;
+    const sample = SAMPLE_TRIBES.find((item) => item.id === id);
+    if (sample) {
+      setTribe({
+        id: sample.id,
+        name: sample.name,
+        description: sample.tagline,
+        category: sample.categoryLabel,
+        format: sample.format,
+        city: sample.city,
+        neighborhood: sample.neighborhood,
+        createdAt: "",
+        memberCount: sample.membersCount,
+        isMember: false,
+      });
+      setLoading(false);
+      return () => { active = false; };
+    }
     apiRequest<{ tribe: Tribe }>(`/api/tribes/${id}`).then(({ tribe: current }) => {
       if (!active) return;
       setTribe(current);
@@ -24,6 +42,8 @@ function TribeDetailContent() {
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [id]);
+
+  const isSampleTribe = SAMPLE_TRIBES.some((sample) => sample.id === id);
 
   if (loading) return <main className="flex justify-center py-20"><LoaderCircle className="size-6 animate-spin text-primary" /></main>;
 
@@ -44,7 +64,7 @@ function TribeDetailContent() {
             </div>
 
           </div>
-          <Button nativeButton={false} render={<Link href={`/feed?tribeId=${tribe.id}`} />} className="mt-5 w-full sm:w-auto">Ver publicações e eventos</Button>
+          {!isSampleTribe && <Button nativeButton={false} render={<Link href={`/feed?tribeId=${tribe.id}`} />} className="mt-5 w-full sm:w-auto">Ver publicações e eventos</Button>}
         </section>
 
       </>}
