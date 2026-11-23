@@ -11,6 +11,7 @@ type Member = {
   name: string;
   aboutMe: string;
   city: string;
+  interests: string[];
   joinedAt: string;
   isOwner: boolean;
   avatarUrl: string | null;
@@ -21,6 +22,8 @@ export default function MembersPage() {
   const [tribeId, setTribeId] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
   const [query, setQuery] = useState("");
+  const [cityFilter, setCityFilter] = useState("all");
+  const [interestFilter, setInterestFilter] = useState("all");
   const [loadingTribes, setLoadingTribes] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [error, setError] = useState("");
@@ -45,10 +48,18 @@ export default function MembersPage() {
     return () => { active = false; };
   }, [tribeId]);
 
-  const filtered = useMemo(() => members.filter((member) =>
-    member.name.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR")) ||
-    member.city.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR"))
-  ), [members, query]);
+  const cities = useMemo(() => [...new Set(members.map((member) => member.city).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")), [members]);
+  const interests = useMemo(() => [...new Set(members.flatMap((member) => member.interests ?? []))].sort((a, b) => a.localeCompare(b, "pt-BR")), [members]);
+  const filtered = useMemo(() => members.filter((member) => {
+    const normalizedQuery = query.toLocaleLowerCase("pt-BR");
+    const matchesQuery = !normalizedQuery ||
+      member.name.toLocaleLowerCase("pt-BR").includes(normalizedQuery) ||
+      member.city.toLocaleLowerCase("pt-BR").includes(normalizedQuery) ||
+      member.interests.some((interest) => interest.toLocaleLowerCase("pt-BR").includes(normalizedQuery));
+    const matchesCity = cityFilter === "all" || member.city === cityFilter;
+    const matchesInterest = interestFilter === "all" || member.interests.includes(interestFilter);
+    return matchesQuery && matchesCity && matchesInterest;
+  }), [members, query, cityFilter, interestFilter]);
 
   return (
     <main className="mx-auto max-w-3xl space-y-6">
@@ -66,6 +77,22 @@ export default function MembersPage() {
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input aria-label="Pesquisar membros" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar por nome ou cidade..." className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" />
           </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1.5 text-xs font-semibold text-muted-foreground">
+              Cidade
+              <select value={cityFilter} onChange={(event) => setCityFilter(event.target.value)} className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm font-normal text-foreground">
+                <option value="all">Todas as cidades</option>
+                {cities.map((city) => <option key={city} value={city}>{city}</option>)}
+              </select>
+            </label>
+            <label className="space-y-1.5 text-xs font-semibold text-muted-foreground">
+              Interesse
+              <select value={interestFilter} onChange={(event) => setInterestFilter(event.target.value)} className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm font-normal text-foreground">
+                <option value="all">Todos os interesses</option>
+                {interests.map((interest) => <option key={interest} value={interest}>{interest}</option>)}
+              </select>
+            </label>
+          </div>
           {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
           {loadingMembers ? <div className="flex justify-center py-8"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : (
             <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
@@ -75,6 +102,7 @@ export default function MembersPage() {
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2 text-sm font-semibold">{member.name}{member.isOwner && <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary"><Crown className="size-3" />Criador</span>}</span>
                     <span className="mt-1 block truncate text-xs text-muted-foreground">{member.aboutMe || (member.city ? <><MapPin className="mr-1 inline size-3" />{member.city}</> : "Ver perfil")}</span>
+                    {member.interests.length > 0 && <span className="mt-2 flex flex-wrap gap-1.5">{member.interests.slice(0, 3).map((interest) => <span key={interest} className="rounded-full bg-primary/8 px-2 py-0.5 text-[10px] font-medium text-primary">{interest}</span>)}</span>}
                   </span>
                 </Link>
               ))}
