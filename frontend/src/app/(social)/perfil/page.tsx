@@ -146,11 +146,11 @@ export default function ProfileSettingsPage() {
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">
-            <label htmlFor="profile-name" className="text-sm font-semibold">Nome</label>
+            <label htmlFor="profile-name" className="flex h-5 items-center text-sm font-semibold leading-5">Nome</label>
             <Input id="profile-name" value={name} onChange={(event) => { setName(event.target.value); setSaved(false); }} minLength={2} maxLength={80} required autoComplete="name" />
           </div>
           <div className="space-y-2">
-            <label htmlFor="profile-city" className="flex items-center gap-2 text-sm font-semibold"><MapPin className="size-4 text-primary" />Cidade</label>
+            <label htmlFor="profile-city" className="flex h-5 items-center gap-2 text-sm font-semibold leading-5"><MapPin className="size-4 shrink-0 text-primary" />Cidade</label>
             <div className="relative">
               <Input id="profile-city" value={city} onChange={(event) => { setCity(event.target.value); setCitySelected(false); setSaved(false); }} autoComplete="off" placeholder="Digite sua cidade..." role="combobox" aria-autocomplete="list" aria-expanded={citySuggestions.length > 0} />
               {citySuggestions.length > 0 && (
@@ -165,7 +165,7 @@ export default function ProfileSettingsPage() {
                 </ul>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">{cityLoading ? "Carregando municípios..." : citySelected ? "" : "Digite pelo menos 2 letras e escolha uma sugestão."}</p>
+
             {cityError && <p role="status" className="text-xs text-destructive">{cityError}</p>}
           </div>
         </div>
