@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -22,6 +23,24 @@ export function Navbar() {
 function NavbarContent() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-md">
@@ -52,28 +71,6 @@ function NavbarContent() {
           {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button type="button" aria-label="Fechar menu" onClick={() => setMobileOpen(false)} className="absolute inset-0 bg-black/45" />
-          <aside className="absolute inset-y-0 right-0 flex w-[min(20rem,86vw)] flex-col border-l border-border bg-background p-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-border pb-4">
-              <span className="font-heading text-lg font-bold">Menu</span>
-              <button type="button" aria-label="Fechar menu" onClick={() => setMobileOpen(false)} className="inline-flex size-9 items-center justify-center rounded-xl hover:bg-muted"><X className="size-5" /></button>
-            </div>
-            <nav className="flex flex-1 flex-col gap-1 py-5">
-              {NAV_LINKS.map((item) => (
-                <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} aria-current={pathname === item.href ? "page" : undefined} className={`rounded-xl px-3 py-3 text-sm font-semibold transition-colors ${pathname === item.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{item.label}</Link>
-              ))}
-            </nav>
-            <Link href="/entrar" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold text-foreground hover:bg-muted">
-              <LogIn className="size-4" /> Entrar
-            </Link>
-            <Button size="lg" className="mt-3 w-full rounded-full font-semibold" nativeButton={false} onClick={() => setMobileOpen(false)} render={<Link href="/cadastro" />}>
-              Começar <ArrowRight className="size-4" />
-            </Button>
-          </aside>
-        </div>
-      )}
     </header>
   );
 }
@@ -92,5 +89,30 @@ function NavbarFallback() {
         <div className="hidden h-9 w-40 animate-pulse rounded-full bg-muted lg:block" />
       </div>
     </header>
+    {mobileOpen && createPortal(
+      <div className="fixed inset-0 z-[100] lg:hidden">
+        <button type="button" aria-label="Fechar menu" onClick={() => setMobileOpen(false)} className="absolute inset-0 bg-black/50" />
+        <aside role="dialog" aria-modal="true" aria-label="Menu principal" className="absolute inset-y-0 right-0 flex h-[100dvh] w-[min(20rem,86vw)] flex-col overflow-y-auto border-l border-border bg-background p-5 shadow-2xl">
+          <div className="flex shrink-0 items-center justify-between border-b border-border pb-4">
+            <span className="font-heading text-lg font-bold">Menu</span>
+            <button type="button" aria-label="Fechar menu" onClick={() => setMobileOpen(false)} className="inline-flex size-9 items-center justify-center rounded-xl hover:bg-muted"><X className="size-5" /></button>
+          </div>
+          <nav className="flex flex-1 flex-col gap-1 py-5">
+            {NAV_LINKS.map((item) => (
+              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} aria-current={pathname === item.href ? "page" : undefined} className={`rounded-xl px-3 py-3 text-sm font-semibold transition-colors ${pathname === item.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{item.label}</Link>
+            ))}
+          </nav>
+          <div className="mt-auto flex shrink-0 flex-col gap-2 border-t border-border pt-4">
+            <Link href="/entrar" onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold text-foreground hover:bg-muted">
+              <LogIn className="size-4" /> Entrar
+            </Link>
+            <Button size="lg" className="w-full rounded-full font-semibold" nativeButton={false} onClick={() => setMobileOpen(false)} render={<Link href="/cadastro" />}>
+              Começar <ArrowRight className="size-4" />
+            </Button>
+          </div>
+        </aside>
+      </div>,
+      document.body
+    )}
   );
 }
