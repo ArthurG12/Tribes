@@ -290,10 +290,11 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
         </div>}
         {editingPost ? <div className="space-y-3">
           {item.event && eventDraft && <div className="grid gap-2 sm:grid-cols-2">
-            <Input aria-label="Título do evento" value={eventDraft.title} onChange={(event) => setEventDraft((current) => current ? { ...current, title: event.target.value } : current)} maxLength={120} placeholder="Título do evento" />
+            <Input className="sm:col-span-2" aria-label="Título do evento" value={eventDraft.title} onChange={(event) => setEventDraft((current) => current ? { ...current, title: event.target.value } : current)} maxLength={120} placeholder="Título do evento" />
             <EventLocationPicker
               id={`event-location-${item.id}`}
               label="Local do evento"
+              className="sm:col-span-2"
               value={eventDraft.location}
               coordinates={eventDraft.lat !== null && eventDraft.lon !== null ? { lat: eventDraft.lat, lon: eventDraft.lon } : null}
               onChange={(value, location) => setEventDraft((current) => current ? {

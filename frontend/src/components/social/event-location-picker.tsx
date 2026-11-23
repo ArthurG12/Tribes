@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type * as Leaflet from "leaflet";
+import { LoaderCircle, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export interface EventLocation {
@@ -71,10 +72,12 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
   const markersRef = useRef<Leaflet.LayerGroup | null>(null);
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const mapsApiKey = useMapsApiKey();
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || mapsApiKey === null || mapsApiKey === "") return;
+    const apiKey: string = mapsApiKey;
 
     let active = true;
     let map: Leaflet.Map | null = null;
@@ -86,7 +89,6 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
 
       map = leaflet.map(container, {
         zoomControl: false,
-        attributionControl: false,
         dragging: false,
         scrollWheelZoom: false,
         doubleClickZoom: false,
@@ -94,6 +96,10 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
         keyboard: false,
         touchZoom: false,
       }).setView(DEFAULT_CENTER, 4);
+      leaflet.tileLayer(`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${encodeURIComponent(apiKey)}`, {
+        attribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank" rel="noreferrer">Geoapify</a> | <a href="https://openmaptiles.org/" target="_blank" rel="noreferrer">© OpenMapTiles</a> | <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>',
+        maxZoom: 20,
+      }).addTo(map);
       markers = leaflet.layerGroup().addTo(map);
       leafletRef.current = leaflet;
       mapRef.current = map;
@@ -109,7 +115,7 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
       markersRef.current = null;
       map?.remove();
     };
-  }, []);
+  }, [mapsApiKey]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -132,7 +138,17 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
     }
   }, [mapReady, points]);
 
-  return <div ref={containerRef} aria-label="Localização exata do evento" role="img" className={`event-location-map h-56 w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`} />;
+  return (
+    <div className={`relative h-56 w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`}>
+      {mapsApiKey ? (
+        <div ref={containerRef} aria-label="Localização exata do evento" role="img" className="event-location-map h-full w-full" />
+      ) : (
+        <p className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
+          {mapsApiKey === null ? "Carregando mapa…" : "Configure MAPS_API para exibir o mapa."}
+        </p>
+      )}
+    </div>
+  );
 }
 
 export function EventLocationPicker({
@@ -141,17 +157,51 @@ export function EventLocationPicker({
   value,
   coordinates,
   onChange,
+  className = "",
 }: {
   id: string;
   label: string;
   value: string;
   coordinates: Pick<EventLocation, "lat" | "lon"> | null;
   onChange: (value: string, location: EventLocation | null) => void;
+  className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const autocompleteRef = useRef<import("@geoapify/geocoder-autocomplete").GeocoderAutocomplete | null>(null);
   const selectedFormattedRef = useRef("");
+  const proximityRef = useRef<{ lat: number; lon: number } | null>(null);
   const mapsApiKey = useMapsApiKey();
+  const [locating, setLocating] = useState(false);
+  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [locationError, setLocationError] = useState("");
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      setLocationError("Este navegador não oferece acesso à localização.");
+      return;
+    }
+
+    setLocating(true);
+    setLocationError("");
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const proximity = { lat: coords.latitude, lon: coords.longitude };
+        proximityRef.current = proximity;
+        const autocomplete = autocompleteRef.current;
+        if (autocomplete) {
+          autocomplete.addBiasByProximity(proximity);
+          if (autocomplete.getValue().trim()) autocomplete.open();
+        }
+        setLocationEnabled(true);
+        setLocating(false);
+      },
+      () => {
+        setLocationError("Não foi possível acessar sua localização. Verifique a permissão do navegador e tente novamente.");
+        setLocating(false);
+      },
+      { enableHighAccuracy: false, maximumAge: 300_000, timeout: 10_000 },
+    );
+  }
 
   useEffect(() => {
     const container = containerRef.current;
@@ -171,6 +221,7 @@ export function EventLocationPicker({
         placeholder: "Busque um endereço ou local...",
         debounceDelay: 300,
       });
+      if (proximityRef.current) autocomplete.addBiasByProximity(proximityRef.current);
       autocompleteRef.current = autocomplete;
       autocomplete.setValue(value);
       const input = container.querySelector<HTMLInputElement>("input");
@@ -228,8 +279,19 @@ export function EventLocationPicker({
     : [];
 
   return (
-    <div className="space-y-2">
-      <label htmlFor={id} className="text-sm font-semibold">{label}</label>
+    <div className={`min-w-0 space-y-2 ${className}`}>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <label htmlFor={id} className="text-sm font-semibold">{label}</label>
+        {mapsApiKey && <button
+          type="button"
+          onClick={useCurrentLocation}
+          disabled={locating}
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+        >
+          {locating ? <LoaderCircle className="size-3.5 animate-spin" /> : <MapPin className="size-3.5" />}
+          {locating ? "Localizando…" : "Usar minha localização"}
+        </button>}
+      </div>
       {mapsApiKey ? (
         <div ref={containerRef} className="event-location-autocomplete" />
       ) : (
@@ -238,6 +300,8 @@ export function EventLocationPicker({
           {mapsApiKey === "" && <p className="text-xs text-muted-foreground">Configure MAPS_API para ativar a busca de endereços.</p>}
         </>
       )}
+      {locationEnabled && <p role="status" className="text-xs text-muted-foreground">Sugestões priorizadas perto de você.</p>}
+      {locationError && <p role="status" className="text-xs text-destructive">{locationError}</p>}
       {coordinates && <EventLocationMap points={mapPoints} />}
     </div>
   );

@@ -192,10 +192,11 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
           />
 
           {eventMode && <div className="mt-2 grid min-w-0 gap-2 sm:grid-cols-2">
-            <Input aria-label="Título do evento" placeholder="Título do evento" value={eventTitle} onChange={(event) => setEventTitle(event.target.value)} maxLength={120} required />
+            <Input className="sm:col-span-2" aria-label="Título do evento" placeholder="Título do evento" value={eventTitle} onChange={(event) => setEventTitle(event.target.value)} maxLength={120} required />
             <EventLocationPicker
               id="event-location"
               label="Local do evento"
+              className="sm:col-span-2"
               value={eventLocation}
               coordinates={eventLocationCoordinates}
               onChange={(value, location) => {
