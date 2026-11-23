@@ -416,7 +416,6 @@ function toUser(row) {
     aboutMe: row.about_me ?? "",
     city: row.city ?? "",
     interests: Array.isArray(row.interests) ? row.interests : [],
-    profileVisibility: row.profile_visibility ?? { aboutMe: "public", city: "public", interests: "public" },
     avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
   };
 }
