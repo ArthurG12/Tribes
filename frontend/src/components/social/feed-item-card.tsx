@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  Bookmark,
   CalendarDays,
   Clock3,
   Heart,
@@ -33,6 +34,7 @@ export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps)
   const [editingComment, setEditingComment] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
   const [attendancePending, setAttendancePending] = useState(false);
+  const [savePending, setSavePending] = useState(false);
 
   async function toggleLike() {
     const method = item.likedByMe ? "DELETE" : "POST";
@@ -41,6 +43,20 @@ export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps)
       onUpdateItem(item.id, (current) => ({ ...current, ...result }));
     } catch (likeError) {
       onError(likeError instanceof Error ? likeError.message : "Não foi possível atualizar a curtida.");
+    }
+  }
+
+  async function toggleSaved() {
+    if (savePending) return;
+    setSavePending(true);
+    try {
+      const method = item.savedByMe ? "DELETE" : "POST";
+      const result = await apiRequest<{ savedByMe: boolean }>(`/api/content/${item.id}/save`, { method });
+      onUpdateItem(item.id, (current) => ({ ...current, ...result }));
+    } catch (saveError) {
+      onError(saveError instanceof Error ? saveError.message : "Não foi possível atualizar os salvos.");
+    } finally {
+      setSavePending(false);
     }
   }
 
@@ -145,6 +161,9 @@ export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps)
         <p className="whitespace-pre-wrap text-sm leading-relaxed">{item.body}</p>
         {item.imageUrl && <Image src={item.imageUrl} alt={`Imagem da publicação de ${item.author.name}`} width={1200} height={900} unoptimized className="max-h-[32rem] w-full rounded-2xl bg-muted/30 object-contain" />}
         <div className="flex flex-wrap items-center gap-2 border-t border-border/70 pt-3">
+          <Button type="button" size="sm" variant="ghost" aria-pressed={item.savedByMe} disabled={savePending} onClick={() => void toggleSaved()} className={item.savedByMe ? "text-primary" : "text-muted-foreground"}>
+            <Bookmark className={`size-4 ${item.savedByMe ? "fill-current" : ""}`} />{item.savedByMe ? "Salva" : "Salvar"}
+          </Button>
           <Button type="button" size="sm" variant="ghost" aria-pressed={item.likedByMe} onClick={() => void toggleLike()} className={item.likedByMe ? "text-primary" : "text-muted-foreground"}>
             <Heart className={`size-4 ${item.likedByMe ? "fill-current" : ""}`} />{item.likesCount} {item.likesCount === 1 ? "curtida" : "curtidas"}
           </Button>
