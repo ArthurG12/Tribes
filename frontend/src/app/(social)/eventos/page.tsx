@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CalendarDays, Clock3, MapPin, Users, LoaderCircle, Search, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EventLocationMap } from "@/components/social/event-location-picker";
 import { apiRequest, formatDateTime, type Tribe } from "@/lib/social-types";
 
 type EventItem = {
@@ -14,6 +15,8 @@ type EventItem = {
   startsAt: string;
   endsAt: string | null;
   location: string;
+  lat: number | null;
+  lon: number | null;
   cost: string | null;
   maxAttendees: number | null;
   tribe: { id: string; name: string };
@@ -95,6 +98,7 @@ export default function EventsPage() {
   }
 
   const visibleEvents = events;
+  const mappedEvents = visibleEvents.filter((event) => event.lat !== null && event.lon !== null);
 
   function exportCalendar() {
     const lines = [
@@ -174,6 +178,15 @@ export default function EventsPage() {
       {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
       {loading ? <div className="flex justify-center py-12"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : visibleEvents.length ? (
         <div className="space-y-4">
+          {process.env.NEXT_PUBLIC_MAPS_API && mappedEvents.length > 0 && (
+            <section className="space-y-2 rounded-2xl border border-border bg-card p-4 sm:p-5">
+              <h2 className="font-heading text-lg font-bold">Mapa dos eventos</h2>
+              <EventLocationMap
+                points={mappedEvents.map((event) => ({ id: event.id, lat: event.lat!, lon: event.lon!, formatted: `${event.title} · ${event.location}` }))}
+                className="h-72"
+              />
+            </section>
+          )}
           {visibleEvents.map((event) => (
             <article key={event.id} className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">

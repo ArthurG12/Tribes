@@ -104,6 +104,21 @@ function requiredString(value, field, min, max) {
   return trimmed;
 }
 
+function eventCoordinates(payload) {
+  const hasLat = payload.lat !== undefined && payload.lat !== null && payload.lat !== "";
+  const hasLon = payload.lon !== undefined && payload.lon !== null && payload.lon !== "";
+  if (hasLat !== hasLon) throw invalid("Informe latitude e longitude juntas.");
+  if (!hasLat) return { lat: null, lon: null };
+
+  const lat = payload.lat;
+  const lon = payload.lon;
+  if (typeof lat !== "number" || !Number.isFinite(lat) || lat < -90 || lat > 90 ||
+    typeof lon !== "number" || !Number.isFinite(lon) || lon < -180 || lon > 180) {
+    throw invalid("Coordenadas do local inválidas.");
+  }
+  return { lat, lon };
+}
+
 function requireUuid(value, label) {
   if (typeof value !== "string" || !UUID_PATTERN.test(value)) throw invalid(`${label} inválido.`);
   return value;
@@ -558,6 +573,7 @@ export async function handleSocialRequest(request, response, url) {
           startsAt,
           endsAt,
           location: requiredString(payload.location, "local", 2, 240),
+          ...eventCoordinates(payload),
           cost: typeof payload.cost === "string" ? payload.cost.trim().slice(0, 100) : "",
           maxAttendees,
         };
@@ -591,6 +607,7 @@ export async function handleSocialRequest(request, response, url) {
             startsAt,
             endsAt,
             location: requiredString(payload.event.location, "local", 2, 240),
+            ...eventCoordinates(payload.event),
             cost: typeof payload.event.cost === "string" ? payload.event.cost.trim().slice(0, 100) : "",
             maxAttendees,
           };

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { EventLocationPicker, type EventLocation } from "@/components/social/event-location-picker";
 import { ImageFileError, readImageAsDataUrl } from "@/lib/image-file";
 import { apiRequest, type Tribe } from "@/lib/social-types";
 
@@ -36,6 +37,7 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
   const [eventStartsAt, setEventStartsAt] = useState("");
   const [eventEndsAt, setEventEndsAt] = useState("");
   const [eventLocation, setEventLocation] = useState("");
+  const [eventLocationCoordinates, setEventLocationCoordinates] = useState<Pick<EventLocation, "lat" | "lon"> | null>(null);
   const [eventCost, setEventCost] = useState("");
   const [eventCapacity, setEventCapacity] = useState("");
   useEffect(() => {
@@ -124,6 +126,8 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
             startsAt: new Date(eventStartsAt).toISOString(),
             endsAt: eventEndsAt ? new Date(eventEndsAt).toISOString() : null,
             location: eventLocation,
+            lat: eventLocationCoordinates?.lat ?? null,
+            lon: eventLocationCoordinates?.lon ?? null,
             cost: eventCost,
             maxAttendees: eventCapacity ? Number(eventCapacity) : null,
           }),
@@ -143,6 +147,7 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
       setEventStartsAt("");
       setEventEndsAt("");
       setEventLocation("");
+      setEventLocationCoordinates(null);
       setEventCost("");
       setEventCapacity("");
       await onPublished();
@@ -175,7 +180,16 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
           </select>
           {eventMode && <div className="grid min-w-0 gap-2 sm:grid-cols-2">
             <Input aria-label="Título do evento" placeholder="Título do evento" value={eventTitle} onChange={(event) => setEventTitle(event.target.value)} required />
-            <Input aria-label="Local do evento" placeholder="Local" value={eventLocation} onChange={(event) => setEventLocation(event.target.value)} required />
+            <EventLocationPicker
+              id="event-location"
+              label="Local do evento"
+              value={eventLocation}
+              coordinates={eventLocationCoordinates}
+              onChange={(value, location) => {
+                setEventLocation(value);
+                setEventLocationCoordinates(location ? { lat: location.lat, lon: location.lon } : null);
+              }}
+            />
             <Input aria-label="Início do evento" type="datetime-local" value={eventStartsAt} onChange={(event) => setEventStartsAt(event.target.value)} required />
             <Input aria-label="Término do evento" type="datetime-local" value={eventEndsAt} onChange={(event) => setEventEndsAt(event.target.value)} />
             <Input aria-label="Custo do evento" placeholder="Custo (opcional)" value={eventCost} onChange={(event) => setEventCost(event.target.value)} />
