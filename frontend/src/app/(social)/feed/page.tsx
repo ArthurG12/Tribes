@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { Bookmark, LoaderCircle, Search, Send, Users, X } from "lucide-react";
 import { FeedComposer } from "@/components/social/feed-composer";
 import { FeedItemCard } from "@/components/social/feed-item-card";
@@ -13,8 +12,7 @@ import { apiRequest, type FeedItem, type Tribe } from "@/lib/social-types";
 const PAGE_SIZE = 20;
 
 export default function FeedPage() {
-  const searchParams = useSearchParams();
-  const focusId = searchParams.get("focus");
+  const [focusId, setFocusId] = useState<string | null>(null);
   const focusedItemRef = useRef<string | null>(null);
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [selectedTribe, setSelectedTribe] = useState("all");
@@ -26,6 +24,10 @@ export default function FeedPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
   const [composerOpen, setComposerOpen] = useState(false);
+
+  useEffect(() => {
+    setFocusId(new URLSearchParams(window.location.search).get("focus"));
+  }, []);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
