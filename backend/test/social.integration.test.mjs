@@ -302,6 +302,8 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   })).response.status, 400);
 
   assert.equal((await call(null, "/api/feed")).response.status, 401);
+  assert.equal((await call(null, "/api/saved")).response.status, 401);
+  assert.equal((await call(null, "/api/events")).response.status, 401);
   assert.deepEqual((await call(empty, "/api/tribes?mine=true")).data.tribes, []);
   const tribeOne = await createTribe(alice, "one");
   const tribeTwo = await createTribe(alice, "two");
