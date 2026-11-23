@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EventLocationMap, EventLocationPicker } from "@/components/social/event-location-picker";
+import { EventLocationActions } from "@/components/social/event-location-actions";
 import { apiRequest, formatDateTime, type FeedComment, type FeedItem } from "@/lib/social-types";
 
 type EventDraft = { title: string; startsAt: string; endsAt: string; location: string; lat: number | null; lon: number | null; cost: string; maxAttendees: string };
@@ -285,6 +286,9 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
             <p className="inline-flex items-center gap-2 break-words"><MapPin className="size-4 shrink-0 text-primary" />{item.event.location}</p>
             {item.event.cost && <p>{item.event.cost}</p>}
             {item.event.maxAttendees && <p className="inline-flex items-center gap-2"><Users className="size-4 text-primary" />Limite de {item.event.maxAttendees} participantes</p>}
+          </div>
+          <div className="mt-3">
+            <EventLocationActions location={item.event.location} lat={item.event.lat} lon={item.event.lon} />
           </div>
           {item.event.lat !== null && item.event.lon !== null && <div className="mt-4"><EventLocationMap points={[{ id: item.id, lat: item.event.lat, lon: item.event.lon, formatted: item.event.location }]} className="h-48" /></div>}
         </div>}
