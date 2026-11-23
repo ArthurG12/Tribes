@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CalendarDays, Clock3, MapPin, Users, LoaderCircle, Search, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EventLocationMap } from "@/components/social/event-location-picker";
+import { EventLocationMap, useMapsApiKey } from "@/components/social/event-location-picker";
 import { apiRequest, formatDateTime, type Tribe } from "@/lib/social-types";
 
 type EventItem = {
@@ -44,6 +44,7 @@ function toIcsDate(value: string) {
 }
 
 export default function EventsPage() {
+  const mapsApiKey = useMapsApiKey();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [query, setQuery] = useState("");
@@ -178,7 +179,7 @@ export default function EventsPage() {
       {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
       {loading ? <div className="flex justify-center py-12"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : visibleEvents.length ? (
         <div className="space-y-4">
-          {process.env.NEXT_PUBLIC_MAPS_API && mappedEvents.length > 0 && (
+          {mapsApiKey && mappedEvents.length > 0 && (
             <section className="space-y-2 rounded-2xl border border-border bg-card p-4 sm:p-5">
               <h2 className="font-heading text-lg font-bold">Mapa dos eventos</h2>
               <EventLocationMap

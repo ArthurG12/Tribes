@@ -5,7 +5,6 @@ services:
       dockerfile: Dockerfile.prod
       args:
         BACKEND_URL: http://backend:4000
-        MAPS_API: ${MAPS_API:-}
     ports:
       - "${TRIBES_BIND_ADDRESS:-127.0.0.1}:${TRIBES_HTTP_PORT:-4317}:3000"
     environment:
@@ -31,6 +30,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env.production}
       FRONTEND_URL: ${FRONTEND_URL:?Set FRONTEND_URL to the public HTTPS origin}
       FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:-}
+      MAPS_API: ${MAPS_API:-}
       EMAIL_PROVIDER: resend
       RESEND_API_KEY: ${RESEND_API_KEY:?Set RESEND_API_KEY}
       EMAIL_FROM: ${EMAIL_FROM:?Set EMAIL_FROM}

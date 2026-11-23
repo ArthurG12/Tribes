@@ -8,7 +8,6 @@ services:
     environment:
       NODE_ENV: development
       BACKEND_URL: http://backend:4000
-      MAPS_API: ${MAPS_API:-}
       WATCHPACK_POLLING: "true"
     volumes:
       - ./frontend:/app
@@ -30,6 +29,7 @@ services:
       PORT: 4000
       DATABASE_URL: postgres://tribes:tribes_dev_password@database:5432/tribes
       FRONTEND_URL: http://localhost:4317
+      MAPS_API: ${MAPS_API:-}
       EMAIL_PROVIDER: mailhog
       SMTP_URL: smtp://mailhog:1025
       EMAIL_FROM: Tribes <no-reply@tribes.local>
