@@ -293,7 +293,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
           </Link>
           <div className="min-w-0 flex-1">
             <Link href={`/usuarios/${item.author.id}`} className="block break-words font-heading text-sm font-bold hover:text-primary">{item.author.name}</Link>
-            <p className="mt-0.5 whitespace-normal break-words text-xs leading-relaxed text-muted-foreground">em <span className="font-semibold text-foreground/80">{item.tribe.name}</span></p>
+            <p className="mt-0.5 whitespace-normal break-words text-xs leading-relaxed text-muted-foreground">em <Link href={`/tribos/${item.tribe.id}`} className="font-semibold text-foreground/80 transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{item.tribe.name}</Link></p>
             <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(item.createdAt)}{item.editedAt ? " · editado" : ""}</p>
           </div>
         </div>
