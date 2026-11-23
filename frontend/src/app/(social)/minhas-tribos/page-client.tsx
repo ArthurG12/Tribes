@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, LoaderCircle, MapPin, Plus, Users } from "lucide-react";
+import { ArrowRight, LoaderCircle, MapPin, Plus, Users, UserRoundSearch } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { apiRequest, type Tribe } from "@/lib/social-types";
@@ -38,9 +38,14 @@ export default function MyTribesPage() {
           <h1 className="mt-2 font-heading text-3xl font-extrabold">Minhas tribos</h1>
           <p className="mt-1 text-sm text-muted-foreground">Gerencie as comunidades que você criou.</p>
         </div>
-        <Button nativeButton={false} render={<Link href="/tribos/nova" />} className="rounded-xl">
-          <Plus className="size-4" />Criar tribo
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button nativeButton={false} render={<Link href="/membros" />} variant="outline" className="rounded-xl">
+            <UserRoundSearch className="size-4" />Diretório de membros
+          </Button>
+          <Button nativeButton={false} render={<Link href="/tribos/nova" />} className="rounded-xl">
+            <Plus className="size-4" />Criar tribo
+          </Button>
+        </div>
       </section>
 
       {error && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
