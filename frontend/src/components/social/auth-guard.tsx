@@ -23,6 +23,7 @@ export interface CurrentUser {
   aboutMe: string;
   city: string;
   interests: string[];
+  profileVisibility: { aboutMe: "public" | "private"; city: "public" | "private"; interests: "public" | "private" };
   avatarUrl: string | null;
 }
 
