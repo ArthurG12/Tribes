@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Bookmark, CalendarDays, Compass, Flame, LogOut, Users } from "lucide-react";
+import { Bell, CalendarDays, Compass, Flame, LogOut, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { CurrentUser } from "@/components/social/auth-guard";
@@ -37,9 +37,7 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
     { href: "/feed", label: "Feed", icon: Flame },
     { href: "/tribos", label: "Explorar tribos", icon: Compass },
     { href: "/minhas-tribos", label: "Minhas tribos", icon: Users },
-    { href: "/membros", label: "Membros", icon: Users },
     { href: "/eventos", label: "Eventos", icon: CalendarDays },
-    { href: "/salvos", label: "Salvos", icon: Bookmark },
   ];
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md">
