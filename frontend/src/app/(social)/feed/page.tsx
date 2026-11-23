@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bookmark, LoaderCircle, Search, Send, Users, X } from "lucide-react";
+import { Bookmark, ChevronDown, Filter, LoaderCircle, Search, Send, Users, X } from "lucide-react";
 import { FeedComposer } from "@/components/social/feed-composer";
 import { FeedItemCard } from "@/components/social/feed-item-card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ export default function FeedPage() {
   const [selectedType, setSelectedType] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [items, setItems] = useState<FeedItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,29 +111,47 @@ export default function FeedPage() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input aria-label="Pesquisar publicações" type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Pesquisar publicações, autores, tribos ou eventos..." className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-10 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring" />
-          {searchTerm && <button type="button" aria-label="Limpar pesquisa" onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="size-4" /></button>}
-        </div>
-        <div>
-        <label htmlFor="tribe-filter" className="mb-2 block text-sm font-semibold">Filtrar feed</label>
-        <select id="tribe-filter" value={selectedTribe} onChange={(event) => { setLoading(true); setSelectedTribe(event.target.value); }}
-          className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <option value="all">Todas as tribos</option>
-          {tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>)}
-        </select>
-        </div>
-        <div>
-          <label htmlFor="content-type-filter" className="mb-2 block text-sm font-semibold">Tipo de conteúdo</label>
-          <select id="content-type-filter" value={selectedType} onChange={(event) => { setLoading(true); setSelectedType(event.target.value); }}
-            className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <option value="all">Tudo</option>
-            <option value="post">Publicações</option>
-            <option value="event">Eventos</option>
-            <option value="poll">Enquetes</option>
-          </select>
+      <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input aria-label="Pesquisar publicações" type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Pesquisar publicações, autores, tribos ou eventos..." className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-10 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring" />
+              {searchTerm && <button type="button" aria-label="Limpar pesquisa" onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="size-4" /></button>}
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              aria-expanded={filtersOpen}
+              aria-controls="feed-filter-controls"
+              onClick={() => setFiltersOpen((open) => !open)}
+              className="h-11 shrink-0 gap-2 rounded-xl px-3 text-muted-foreground hover:text-foreground"
+            >
+              <Filter className="size-4" />
+              Filtros
+              <ChevronDown className={`size-4 transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
+            </Button>
+          </div>
+          <div id="feed-filter-controls" hidden={!filtersOpen} className="space-y-3">
+            <div>
+              <label htmlFor="tribe-filter" className="mb-2 block text-sm font-semibold">Filtrar feed</label>
+              <select id="tribe-filter" value={selectedTribe} onChange={(event) => { setLoading(true); setSelectedTribe(event.target.value); }}
+                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <option value="all">Todas as tribos</option>
+                {tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="content-type-filter" className="mb-2 block text-sm font-semibold">Tipo de conteúdo</label>
+              <select id="content-type-filter" value={selectedType} onChange={(event) => { setLoading(true); setSelectedType(event.target.value); }}
+                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <option value="all">Tudo</option>
+                <option value="post">Publicações</option>
+                <option value="event">Eventos</option>
+                <option value="poll">Enquetes</option>
+              </select>
+            </div>
+          </div>
         </div>
       </section>
 

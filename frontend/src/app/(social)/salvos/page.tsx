@@ -32,8 +32,6 @@ export default function SavedPostsPage() {
   useEffect(() => {
     let active = true;
     requestSequence.current += 1;
-    setLoading(true);
-    setError("");
     load()
       .then((result) => {
         if (!active) return;
@@ -51,6 +49,10 @@ export default function SavedPostsPage() {
 
   function updateItem(id: string, update: (item: FeedItem) => FeedItem) {
     setItems((current) => current.map((item) => item.id === id ? update(item) : item).filter((item) => item.savedByMe));
+  }
+
+  function removeItem(id: string) {
+    setItems((current) => current.filter((item) => item.id !== id));
   }
 
   async function loadMore() {
@@ -83,12 +85,12 @@ export default function SavedPostsPage() {
       </section>
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <input aria-label="Pesquisar publicações salvas" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar nos salvos..." className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+        <input aria-label="Pesquisar publicações salvas" value={query} onChange={(event) => { const nextQuery = event.target.value; setQuery(nextQuery); if (nextQuery.trim() !== search) { setLoading(true); setError(""); } }} placeholder="Pesquisar nos salvos..." className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" />
       </div>
       {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
       {loading ? <div className="flex justify-center py-12"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : items.length ? (
         <div className="space-y-4">
-          {items.map((item) => <FeedItemCard key={item.id} item={item} onUpdateItem={updateItem} onError={setError} onRemoveItem={(id) => setItems((current) => current.filter((entry) => entry.id !== id))} />)}
+          {items.map((item) => <FeedItemCard key={item.id} item={item} onUpdateItem={updateItem} onError={setError} onRemoveItem={removeItem} />)}
         </div>
       ) : (
         <section className="rounded-3xl border border-dashed border-border bg-card px-5 py-12 text-center">
