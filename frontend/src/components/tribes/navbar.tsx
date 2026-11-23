@@ -72,23 +72,6 @@ function NavbarContent() {
         </button>
       </div>
     </header>
-  );
-}
-
-function NavbarFallback() {
-  return (
-    <header
-      className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-md"
-      aria-hidden="true"
-    >
-      <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <span className="relative h-12 w-[7.25rem] shrink-0 overflow-hidden">
-          <Image src="/tribes-logo.png" alt="" fill priority sizes="116px" className="object-contain" />
-        </span>
-        <div className="size-10 animate-pulse rounded-xl bg-muted lg:hidden" />
-        <div className="hidden h-9 w-40 animate-pulse rounded-full bg-muted lg:block" />
-      </div>
-    </header>
     {mobileOpen && createPortal(
       <div className="fixed inset-0 z-[100] lg:hidden">
         <button type="button" aria-label="Fechar menu" onClick={() => setMobileOpen(false)} className="absolute inset-0 bg-black/50" />
@@ -114,5 +97,23 @@ function NavbarFallback() {
       </div>,
       document.body
     )}
+  );
+}
+
+function NavbarFallback() {
+  return (
+    <header
+      className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-md"
+      aria-hidden="true"
+    >
+      <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <span className="relative h-12 w-[7.25rem] shrink-0 overflow-hidden">
+          <Image src="/tribes-logo.png" alt="" fill priority sizes="116px" className="object-contain" />
+        </span>
+        <div className="size-10 animate-pulse rounded-xl bg-muted lg:hidden" />
+        <div className="hidden h-9 w-40 animate-pulse rounded-full bg-muted lg:block" />
+      </div>
+    </header>
+
   );
 }
