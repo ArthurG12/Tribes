@@ -161,6 +161,12 @@
     box-shadow: 0 12px 28px rgba(65, 35, 30, 0.075);
   }
 
+  .dark .surface-card,
+  .dark .metric-card,
+  .dark .event-card {
+    box-shadow: 0 8px 24px oklch(0.08 0.01 35 / 0.24);
+  }
+
   .metric-card {
     border: 1px solid var(--border);
     border-radius: 1rem;
@@ -185,10 +191,14 @@
   }
 
   .glass-panel {
-    border: 1px solid oklch(0.9 0.015 45 / 0.9);
-    background: oklch(0.995 0.003 55 / 0.94);
+    border: 1px solid color-mix(in oklab, var(--border) 90%, transparent);
+    background: color-mix(in oklab, var(--card) 94%, transparent);
     box-shadow: 0 12px 36px oklch(0.32 0.025 35 / 0.05);
     backdrop-filter: blur(14px);
+  }
+
+  .dark .glass-panel {
+    box-shadow: 0 12px 36px oklch(0.08 0.01 35 / 0.28);
   }
 
   .neon-glow {
@@ -239,6 +249,11 @@
   html {
     min-width: 320px;
     overflow-x: clip;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="456" height="169" viewBox="0 0 456 169" fill="none">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M43 75C19 57 18 28 34 13C54 25 60 49 43 75Z" fill="#D98742"/>
+    <path d="M54 72C43 42 53 13 74 5C86 29 78 54 54 72Z" fill="#B85C32"/>
+    <path d="M66 75C71 46 91 28 112 31C112 55 94 73 66 75Z" fill="#E5A65D"/>
+    <path d="M38 83C17 75 7 54 15 38C36 43 47 61 38 83Z" fill="#B96A3C"/>
+    <path d="M76 83C93 62 116 60 130 75C116 95 94 98 76 83Z" fill="#8C9A6C"/>
+    <path d="M30 94C44 79 68 77 83 91C70 110 48 113 30 94Z" fill="#657B4F"/>
+    <path d="M23 106C43 98 63 106 69 126C48 135 29 126 23 106Z" fill="#A9A77B"/>
+    <path d="M68 104C83 91 105 94 115 112C98 128 77 125 68 104Z" fill="#78885B"/>
+    <path d="M16 132C37 143 85 145 111 126" stroke="#D6B7A0" stroke-width="8"/>
+    <path d="M12 139C41 158 91 155 119 135" stroke="#D6B7A0" stroke-width="5"/>
+  </g>
+  <text x="139" y="113" fill="#F0DFD0" font-family="Georgia, 'Times New Roman', serif" font-size="79" font-weight="700" letter-spacing="-4">Tribes</text>
+</svg>

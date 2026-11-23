@@ -3,22 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, CalendarDays, Compass, Flame, LogOut, Menu, Moon, Sun, Users, X } from "lucide-react";
+import { Bell, CalendarDays, Compass, Flame, LogOut, Menu, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import type { CurrentUser } from "@/components/social/auth-guard";
 import { UserAvatar } from "@/components/social/user-avatar";
 
-export function SocialHeader({
-  user,
-  darkMode,
-  onToggleTheme,
-}: {
-  user: CurrentUser;
-  darkMode: boolean;
-  onToggleTheme: () => void;
-}) {
+export function SocialHeader({ user }: { user: CurrentUser }) {
   const pathname = usePathname();
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -79,7 +72,8 @@ export function SocialHeader({
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
         <Link href="/feed" className="flex shrink-0 items-center gap-2 font-heading text-lg font-extrabold">
           <span className="relative h-10 w-24 shrink-0 overflow-hidden sm:h-11 sm:w-[6.5rem] lg:h-12 lg:w-[7.25rem]">
-            <Image src="/tribes-logo.png" alt="Tribes" fill sizes="116px" className="object-contain" />
+            <Image src="/tribes-logo.svg" alt="Tribes" fill sizes="116px" className="object-contain dark:hidden" />
+            <Image src="/tribes-logo-dark.svg" alt="" fill sizes="116px" className="hidden object-contain dark:block" />
           </span>
         </Link>
 
@@ -101,9 +95,7 @@ export function SocialHeader({
             <Bell className="size-4" />
             {unreadCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-4 text-primary-foreground">{unreadCount > 99 ? "99+" : unreadCount}</span>}
           </Link>
-          <Button variant="ghost" size="icon-sm" aria-label={darkMode ? "Modo escuro ativo. Ativar modo claro" : "Modo claro ativo. Ativar modo escuro"} aria-pressed={darkMode} title={darkMode ? "Modo escuro" : "Modo claro"} onClick={onToggleTheme}>
-            {darkMode ? <Moon className="size-4" /> : <Sun className="size-4" />}
-          </Button>
+          <ThemeToggle />
           <Link href="/perfil" aria-label="Meu perfil" className="flex min-w-0 items-center gap-2 rounded-xl p-1 transition-colors hover:bg-muted">
             <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-8 text-xs" />
             <span className="hidden max-w-32 truncate text-xs font-medium text-muted-foreground xl:inline">{user.name}</span>
@@ -141,6 +133,7 @@ export function SocialHeader({
               <Bell className="size-5" />Notificações{unreadCount > 0 && <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">{unreadCount > 99 ? "99+" : unreadCount}</span>}
             </Link>
           </nav>
+          <ThemeToggle showLabel className="mb-3 w-full justify-start" />
           <Button variant="outline" className="w-full justify-start" onClick={() => void logout()}><LogOut className="size-4" />Sair da conta</Button>
         </aside>
       </div>,

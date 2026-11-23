@@ -4,7 +4,7 @@ import { TribesMark } from "@/components/tribes/tribes-mark";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-white py-8">
+    <footer className="border-t border-border bg-background py-8">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 sm:flex-row">
         <Link href="/" aria-label="Tribes — página inicial" className="flex items-center gap-2 font-heading font-extrabold text-foreground">
           <TribesMark className="size-5 text-primary" /> Tribes

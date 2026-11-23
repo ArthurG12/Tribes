@@ -7,6 +7,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X, ArrowRight, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const NAV_LINKS = [
   { href: "/explorar", label: "Explorar tribos" },
@@ -48,7 +49,8 @@ function NavbarContent() {
       <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" aria-label="Tribes — página inicial" className="flex shrink-0 items-center gap-2.5">
           <span className="relative h-12 w-[7.25rem] shrink-0 overflow-hidden">
-            <Image src="/tribes-logo.png" alt="Tribes" fill priority sizes="116px" className="object-contain" />
+            <Image src="/tribes-logo.svg" alt="Tribes" fill priority sizes="116px" className="object-contain dark:hidden" />
+            <Image src="/tribes-logo-dark.svg" alt="" fill priority sizes="116px" className="hidden object-contain dark:block" />
           </span>
         </Link>
         <nav aria-label="Navegação principal" className="hidden items-center gap-6 lg:flex">
@@ -60,6 +62,7 @@ function NavbarContent() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 lg:flex">
+          <ThemeToggle />
           <Button size="lg" className="rounded-full px-4 font-semibold" nativeButton={false} render={<Link href="/cadastro" />}>
             Começar <ArrowRight className="size-4" />
           </Button>
@@ -87,6 +90,7 @@ function NavbarContent() {
             ))}
           </nav>
           <div className="mt-auto flex shrink-0 flex-col gap-2 border-t border-border pt-4">
+            <ThemeToggle showLabel className="w-full justify-start" />
             <Link href="/entrar" onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold text-foreground hover:bg-muted">
               <LogIn className="size-4" /> Entrar
             </Link>
@@ -110,7 +114,8 @@ function NavbarFallback() {
     >
       <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <span className="relative h-12 w-[7.25rem] shrink-0 overflow-hidden">
-          <Image src="/tribes-logo.png" alt="" fill priority sizes="116px" className="object-contain" />
+          <Image src="/tribes-logo.svg" alt="" fill priority sizes="116px" className="object-contain dark:hidden" />
+          <Image src="/tribes-logo-dark.svg" alt="" fill priority sizes="116px" className="hidden object-contain dark:block" />
         </span>
         <div className="size-10 animate-pulse rounded-xl bg-muted lg:hidden" />
         <div className="hidden h-9 w-40 animate-pulse rounded-full bg-muted lg:block" />

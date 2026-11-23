@@ -8,6 +8,7 @@ import { ArrowLeft, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -47,7 +48,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+    <main className="relative flex min-h-screen items-center justify-center px-4 py-10">
+      <ThemeToggle className="absolute right-4 top-4" />
       <section className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-lg sm:p-8">
         <Link href="/" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground">
           <ArrowLeft className="size-4" />

@@ -7,6 +7,7 @@ import { ArrowLeft, Calendar, CheckCircle2, LoaderCircle, MapPin, Pencil, Pin, S
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/social/user-avatar";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { apiRequest, type Tribe } from "@/lib/social-types";
 import { SAMPLE_TRIBES, type TribePreview } from "@/lib/tribes-data";
 
@@ -159,8 +160,13 @@ function TribeDetailContent() {
 
 export default function TribeDetailPage() {
   return (
-    <Suspense fallback={<main className="flex justify-center py-20"><LoaderCircle className="size-6 animate-spin text-primary" /></main>}>
-      <TribeDetailContent />
-    </Suspense>
+    <div className="min-h-screen px-4 py-6 sm:px-6">
+      <div className="mx-auto mb-4 flex max-w-4xl justify-end">
+        <ThemeToggle />
+      </div>
+      <Suspense fallback={<main className="flex justify-center py-20"><LoaderCircle className="size-6 animate-spin text-primary" /></main>}>
+        <TribeDetailContent />
+      </Suspense>
+    </div>
   );
 }
