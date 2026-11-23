@@ -25,6 +25,7 @@ const copy = {
 
 function relativeDate(value: string) {
   const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Data indisponível";
   const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
   if (seconds < 60) return "Agora";
   if (seconds < 3600) return `Há ${Math.floor(seconds / 60)} min`;
