@@ -15,6 +15,8 @@ import {
   completePasswordReset,
   completeRegistration,
   createContent,
+  updateContent,
+  deleteContent,
   createSession,
   createTribe,
   decodeCursor,
@@ -118,7 +120,7 @@ export async function handleSocialRequest(request, response, url) {
   const method = request.method ?? "GET";
   const routeKnown = pathname.startsWith("/api/auth/") ||
     pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar|follow)$/.test(pathname) ||
-    pathname === "/api/feed" || pathname === "/api/saved" || /^\/api\/content\/[^/]+\/save$/.test(pathname) || pathname === "/api/events" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
+    pathname === "/api/feed" || pathname === "/api/saved" || /^\/api\/content\/[^/]+$/.test(pathname) || /^\/api\/content\/[^/]+\/save$/.test(pathname) || pathname === "/api/events" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
     /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members)$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/(?:like|comments|attendance|vote)$/.test(pathname) ||
@@ -544,6 +546,28 @@ export async function handleSocialRequest(request, response, url) {
       }
       const item = await createContent(user.id, tribeId, { type: pollOptions ? "poll" : type, body, event, image, pollOptions });
       sendJson(response, 201, { id: item.id, createdAt: item.created_at });
+      return true;
+    }
+
+    const contentItemMatch = pathname.match(/^\/api\/content\/([^/]+)$/);
+    if (contentItemMatch && ["PATCH", "DELETE"].includes(method)) {
+      const contentId = requireUuid(contentItemMatch[1], "Publicação");
+      if (method === "PATCH") {
+        const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });
+        const item = await updateContent(user.id, contentId, requiredString(payload.body, "texto", 1, 5000));
+        if (!item) {
+          sendJson(response, 404, { error: "Publicação não encontrada ou sem permissão." });
+          return true;
+        }
+        sendJson(response, 200, { item: { id: item.id, body: item.body, editedAt: item.edited_at } });
+        return true;
+      }
+      const deleted = await deleteContent(user.id, contentId);
+      if (!deleted) {
+        sendJson(response, 404, { error: "Publicação não encontrada ou sem permissão." });
+        return true;
+      }
+      sendJson(response, 200, { ok: true });
       return true;
     }
 
