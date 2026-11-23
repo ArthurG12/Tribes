@@ -318,10 +318,17 @@ export async function handleSocialRequest(request, response, url) {
         throw invalid("Informe até 20 interesses, com no máximo 30 caracteres cada.");
       }
       const interests = [...new Set(payload.interests.map((interest) => interest.trim()))];
+      const visibilityValues = ["public", "followers", "private"];
+      const profileVisibility = payload.profileVisibility;
+      if (!profileVisibility || typeof profileVisibility !== "object" ||
+        !["aboutMe", "city", "interests"].every((field) => visibilityValues.includes(profileVisibility[field])) ||
+        Object.keys(profileVisibility).some((field) => !["aboutMe", "city", "interests"].includes(field))) {
+        throw invalid("Configurações de privacidade inválidas.");
+      }
       const avatar = Object.hasOwn(payload, "avatar")
         ? payload.avatar === null ? null : await parseImage(payload.avatar)
         : undefined;
-      const updatedUser = await updateUserProfile(user.id, { name, aboutMe, city, interests, avatar });
+      const updatedUser = await updateUserProfile(user.id, { name, aboutMe, city, interests, profileVisibility, avatar });
       if (!updatedUser) {
         sendJson(response, 404, { error: "Usuário não encontrado." });
         return true;
