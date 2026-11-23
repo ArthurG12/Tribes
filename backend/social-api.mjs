@@ -26,6 +26,7 @@ import {
   getContentImage,
   getFeed,
   getPublicUserProfile,
+  getPublicTribe,
   getSessionUser,
   getUserByEmail,
   waitForEmailQueueDelivery,
@@ -271,6 +272,17 @@ export async function handleSocialRequest(request, response, url) {
     if (pathname === "/api/auth/logout" && method === "POST") {
       await deleteSession(readCookie(request, SESSION_COOKIE));
       return sendJson(response, 200, { ok: true }, { "Set-Cookie": clearSessionCookie() }), true;
+    }
+
+    const publicTribeMatch = pathname.match(/^\/api\/tribes\/([^/]+)$/);
+    if (publicTribeMatch && method === "GET") {
+      const tribe = await getPublicTribe(requireUuid(publicTribeMatch[1], "Tribo"));
+      if (!tribe) {
+        sendJson(response, 404, { error: "Tribo não encontrada." });
+        return true;
+      }
+      sendJson(response, 200, { tribe });
+      return true;
     }
 
     const user = await authenticatedUser(request);
