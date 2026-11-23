@@ -24,6 +24,7 @@ export default function ProfileSettingsPage() {
   const [cityLoading, setCityLoading] = useState(false);
   const [cityError, setCityError] = useState("");
   const [interests, setInterests] = useState<string[]>(user.interests ?? []);
+  const [profileVisibility, setProfileVisibility] = useState(user.profileVisibility ?? { aboutMe: "public" as const, city: "public" as const, interests: "public" as const });
   const [interestInput, setInterestInput] = useState("");
   const [avatar, setAvatar] = useState<string | null | undefined>(undefined);
   const [saving, setSaving] = useState(false);
@@ -92,7 +93,7 @@ export default function ProfileSettingsPage() {
     setError("");
     setSaved(false);
     try {
-      const payload = { name, aboutMe, city, interests, ...(avatar !== undefined ? { avatar } : {}) };
+      const payload = { name, aboutMe, city, interests, profileVisibility, ...(avatar !== undefined ? { avatar } : {}) };
       const result = await apiRequest<{ user: CurrentUser }>("/api/profile", {
         method: "PATCH",
         body: JSON.stringify(payload),
@@ -103,6 +104,7 @@ export default function ProfileSettingsPage() {
       setCity(result.user.city);
       setCitySelected(Boolean(result.user.city));
       setInterests(result.user.interests);
+      setProfileVisibility(result.user.profileVisibility);
       setAvatar(undefined);
       setSaved(true);
     } catch (saveError) {
@@ -173,6 +175,36 @@ export default function ProfileSettingsPage() {
           <Textarea id="profile-about" value={aboutMe} onChange={(event) => { setAboutMe(event.target.value); setSaved(false); }} maxLength={500} rows={4} placeholder="Conte um pouco sobre você..." />
           <p className="text-right text-xs text-muted-foreground">{aboutMe.length}/500</p>
         </div>
+
+        <section className="space-y-4 rounded-2xl border border-border p-4">
+          <div>
+            <h2 className="font-heading text-lg font-bold">Privacidade do perfil</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Escolha quem pode ver cada informação. A configuração também é aplicada na API.</p>
+          </div>
+          {([
+            ["city", "Cidade"],
+            ["interests", "Interesses"],
+            ["aboutMe", "Sobre mim"],
+          ] as const).map(([field, label]) => (
+            <div key={field} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <label htmlFor={`privacy-${field}`} className="text-sm font-medium">{label}</label>
+              <select
+                id={`privacy-${field}`}
+                value={profileVisibility[field]}
+                onChange={(event) => {
+                  const value = event.target.value as "public" | "followers" | "private";
+                  setProfileVisibility((current) => ({ ...current, [field]: value }));
+                  setSaved(false);
+                }}
+                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm sm:w-52"
+              >
+                <option value="public">Todos</option>
+                <option value="followers">Seguidores</option>
+                <option value="private">Somente eu</option>
+              </select>
+            </div>
+          ))}
+        </section>
 
         <section className="space-y-3">
           <div>
