@@ -10,6 +10,7 @@ import {
   Heart,
   MapPin,
   MessageCircle,
+  BarChart3,
   Send,
   Users,
 } from "lucide-react";
@@ -35,6 +36,7 @@ export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps)
   const [editDraft, setEditDraft] = useState("");
   const [attendancePending, setAttendancePending] = useState(false);
   const [savePending, setSavePending] = useState(false);
+  const [votePending, setVotePending] = useState(false);
 
   async function toggleLike() {
     const method = item.likedByMe ? "DELETE" : "POST";
@@ -145,9 +147,29 @@ export function FeedItemCard({ item, onUpdateItem, onError }: FeedItemCardProps)
             <p className="mt-0.5 truncate text-xs text-muted-foreground">em <span className="font-semibold text-foreground/80">{item.tribe.name}</span> · {formatDateTime(item.createdAt)}{item.editedAt ? " · editado" : ""}</p>
           </div>
         </div>
-        <Badge variant={item.type === "event" ? "default" : "secondary"}>{item.type === "event" ? "Evento" : "Publicação"}</Badge>
+        <Badge variant={item.type === "event" ? "default" : "secondary"}>{item.type === "event" ? "Evento" : item.type === "poll" ? "Enquete" : "Publicação"}</Badge>
       </header>
       <div className="space-y-4 p-4 sm:p-5">
+        {item.poll && <section className="rounded-2xl border border-primary/20 bg-primary/[0.035] p-4">
+          <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><BarChart3 className="size-4" />Enquete · {item.poll.totalVotes} {item.poll.totalVotes === 1 ? "voto" : "votos"}</div>
+          <div className="space-y-2">
+            {item.poll.options.map((option) => {
+              const percentage = item.poll!.totalVotes ? Math.round(option.votes / item.poll!.totalVotes * 100) : 0;
+              const selected = item.poll!.votedOptionId === option.id;
+              return <button key={option.id} type="button" disabled={votePending} onClick={() => {
+                setVotePending(true);
+                void apiRequest<{ totalVotes: number; votedOptionId: string }>(`/api/content/${item.id}/vote`, { method: "POST", body: JSON.stringify({ optionId: option.id }) })
+                  .then((result) => onUpdateItem(item.id, (current) => current.poll ? { ...current, poll: { ...current.poll, totalVotes: result.totalVotes, votedOptionId: result.votedOptionId, options: current.poll.options.map((entry) => ({ ...entry, votes: entry.id === option.id ? entry.votes + (selected ? 0 : 1) : entry.id === current.poll!.votedOptionId ? Math.max(0, entry.votes - 1) : entry.votes })) } } : current))
+                  .catch((error: unknown) => onError(error instanceof Error ? error.message : "Não foi possível registrar seu voto."))
+                  .finally(() => setVotePending(false));
+              }} className={`relative w-full overflow-hidden rounded-xl border px-3 py-3 text-left text-sm ${selected ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/50"}`}>
+                <span className="absolute inset-y-0 left-0 bg-primary/10 transition-all" style={{ width: `${percentage}%` }} />
+                <span className="relative flex items-center justify-between gap-3"><span className="font-medium">{option.label}</span><span className="shrink-0 text-xs text-muted-foreground">{percentage}% · {option.votes}</span></span>
+              </button>;
+            })}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">{item.poll.votedOptionId ? "Você pode alterar seu voto." : "Escolha uma opção para votar."}</p>
+        </section>}
         {item.event && <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary"><CalendarDays className="size-4" />Evento da tribo</div>
           <h2 className="mt-2 font-heading text-lg font-bold">{item.event.title}</h2>
