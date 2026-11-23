@@ -234,6 +234,8 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
     id: alice.user.id,
     name: "Alice Perfil",
     aboutMe: "Gosto de jogos e comunidades.",
+    city: "",
+    interests: [],
     avatarUrl: `/api/users/${alice.user.id}/avatar`,
   });
   assert.equal("email" in publicProfile.data.profile, false);
@@ -245,7 +247,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(avatarBytes.data.length, Buffer.from(profileImage.split(",")[1], "base64").length);
   const removedAvatar = await call(alice, "/api/profile", {
     method: "PATCH",
-    body: JSON.stringify({ name: "Alice Perfil", aboutMe: "Gosto de jogos e comunidades.", avatar: null }),
+    body: JSON.stringify({ name: "Alice Perfil", aboutMe: "Gosto de jogos e comunidades.", city: "", interests: [], avatar: null }),
   });
   assert.equal(removedAvatar.response.status, 200);
   assert.equal(removedAvatar.data.user.avatarUrl, null);
@@ -271,7 +273,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal((await requestImage(bob, `/api/users/${alice.user.id}/avatar`)).status, 302);
   const removeLegacyAvatar = await call(alice, "/api/profile", {
     method: "PATCH",
-    body: JSON.stringify({ name: "Alice Perfil", aboutMe: "Gosto de jogos e comunidades.", avatar: null }),
+    body: JSON.stringify({ name: "Alice Perfil", aboutMe: "Gosto de jogos e comunidades.", city: "", interests: [], avatar: null }),
   });
   assert.equal(removeLegacyAvatar.response.status, 200);
   const preservedAvatarRecord = await pool.query(

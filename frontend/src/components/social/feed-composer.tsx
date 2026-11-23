@@ -22,7 +22,7 @@ interface FeedComposerProps {
   onPublished: () => Promise<void>;
 }
 
-export function FeedComposer({ tribes, open, onOpenChange, error, onError, onPublished }: FeedComposerProps) {
+export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedComposerProps) {
   const [tribeId, setTribeId] = useState("");
   const [body, setBody] = useState("");
   const [image, setImage] = useState<string | null>(null);
