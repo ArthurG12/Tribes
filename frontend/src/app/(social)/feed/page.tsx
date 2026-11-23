@@ -60,7 +60,7 @@ export default function FeedPage() {
       .then(({ tribes: joined }) => {
         if (!active) return;
         setError("");
-        setTribes(joined);
+        setTribes([...joined].sort((first, second) => first.name.localeCompare(second.name, "pt-BR", { sensitivity: "base" })));
         setItems([]);
         setNextCursor(null);
         return fetchPage(undefined, true);

@@ -524,14 +524,19 @@ export async function handleSocialRequest(request, response, url) {
       const tribeId = requireUuid(contentMatch[1], "Tribo");
       const type = contentMatch[2] === "posts" ? "post" : "event";
       const payload = await readJson(request, {
-        maxSize: type === "post" ? MAX_POST_PAYLOAD_SIZE : 64 * 1024,
+        maxSize: MAX_POST_PAYLOAD_SIZE,
         requireObject: true,
         invalidMessage: "Objeto JSON inválido.",
       });
       const body = requiredString(payload.body, "texto", 1, 5000);
-      const image = type === "post" ? await parseImage(payload.image) : null;
+      const image = await parseImage(payload.image);
       let pollOptions;
+      let pollMultiple = false;
       if (type === "post" && payload.pollOptions !== undefined) {
+        if (payload.pollMultiple !== undefined && typeof payload.pollMultiple !== "boolean") {
+          throw invalid("Configuração de múltiplas respostas inválida.");
+        }
+        pollMultiple = payload.pollMultiple === true;
         if (!Array.isArray(payload.pollOptions) || payload.pollOptions.length < 2 || payload.pollOptions.length > 6) {
           throw invalid("Uma enquete deve ter de 2 a 6 opções.");
         }
@@ -562,7 +567,7 @@ export async function handleSocialRequest(request, response, url) {
           maxAttendees,
         };
       }
-      const item = await createContent(user.id, tribeId, { type: pollOptions ? "poll" : type, body, event, image, pollOptions });
+      const item = await createContent(user.id, tribeId, { type: pollOptions ? "poll" : type, body, event, image, pollOptions, pollMultiple });
       sendJson(response, 201, { id: item.id, createdAt: item.created_at });
       return true;
     }

@@ -33,7 +33,7 @@ export interface FeedItem {
   commentsCount: number;
   likedByMe: boolean;
   savedByMe: boolean;
-  poll: null | { options: { id: string; label: string; votes: number }[]; totalVotes: number; votedOptionId: string | null };
+  poll: null | { options: { id: string; label: string; votes: number }[]; totalVotes: number; votedOptionIds: string[]; multiple: boolean };
   event: null | {
     title: string;
     startsAt: string;

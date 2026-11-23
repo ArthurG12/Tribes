@@ -352,7 +352,8 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(pollItem.type, "poll");
   assert.equal(pollItem.poll.options.length, 3);
   assert.equal(pollItem.poll.totalVotes, 0);
-  assert.equal(pollItem.poll.votedOptionId, null);
+  assert.deepEqual(pollItem.poll.votedOptionIds, []);
+  assert.equal(pollItem.poll.multiple, false);
   assert.equal((await call(null, `/api/content/${pollId}/vote`, {
     method: "POST", body: JSON.stringify({ optionId: pollItem.poll.options[0].id }),
   })).response.status, 401);
@@ -372,11 +373,46 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   });
   assert.equal(changedVote.response.status, 200);
   assert.equal(changedVote.data.totalVotes, 1);
-  assert.equal(changedVote.data.votedOptionId, pollItem.poll.options[1].id);
+  assert.deepEqual(changedVote.data.votedOptionIds, [pollItem.poll.options[1].id]);
   const updatedPollFeed = await call(bob, "/api/feed");
   const updatedPoll = updatedPollFeed.data.items.find((item) => item.id === pollId);
   assert.equal(updatedPoll.poll.totalVotes, 1);
   assert.equal(updatedPoll.poll.options.find((option) => option.id === pollItem.poll.options[1].id).votes, 1);
+  const multiPoll = await call(alice, `/api/tribes/${tribeOne.id}/posts`, {
+    method: "POST",
+    body: JSON.stringify({ body: "Quais dias servem?", pollOptions: ["Sexta", "Sábado", "Domingo"], pollMultiple: true }),
+  });
+  assert.equal(multiPoll.response.status, 201, JSON.stringify(multiPoll.data));
+  const multiPollItem = (await call(bob, "/api/feed")).data.items.find((item) => item.id === multiPoll.data.id);
+  assert.equal(multiPollItem.poll.multiple, true);
+  const [friday, saturday] = multiPollItem.poll.options;
+  await call(bob, `/api/content/${multiPoll.data.id}/vote`, { method: "POST", body: JSON.stringify({ optionId: friday.id }) });
+  const secondChoice = await call(bob, `/api/content/${multiPoll.data.id}/vote`, { method: "POST", body: JSON.stringify({ optionId: saturday.id }) });
+  assert.equal(secondChoice.response.status, 200);
+  assert.equal(secondChoice.data.totalVotes, 1);
+  assert.deepEqual(new Set(secondChoice.data.votedOptionIds), new Set([friday.id, saturday.id]));
+  const toggledOff = await call(bob, `/api/content/${multiPoll.data.id}/vote`, { method: "POST", body: JSON.stringify({ optionId: friday.id }) });
+  assert.deepEqual(toggledOff.data.votedOptionIds, [saturday.id]);
+  assert.equal((await call(alice, `/api/tribes/${tribeOne.id}/posts`, {
+    method: "POST",
+    body: JSON.stringify({ body: "Enquete inválida", pollMultiple: "sim", pollOptions: ["A", "B"] }),
+  })).response.status, 400);
+  const pollWithImage = await call(alice, `/api/tribes/${tribeOne.id}/posts`, {
+    method: "POST",
+    body: JSON.stringify({ body: "Enquete com imagem", pollOptions: ["Sim", "Não"], image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII=" }),
+  });
+  assert.equal(pollWithImage.response.status, 201, JSON.stringify(pollWithImage.data));
+  const eventWithImage = await call(alice, `/api/tribes/${tribeOne.id}/events`, {
+    method: "POST",
+    body: JSON.stringify({
+      body: "Evento com imagem", title: "Encontro", location: "Praça", startsAt: "2030-01-01T18:00:00.000Z",
+      image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII=",
+    }),
+  });
+  assert.equal(eventWithImage.response.status, 201, JSON.stringify(eventWithImage.data));
+  const imageFeed = (await call(alice, "/api/feed")).data.items;
+  assert.ok(imageFeed.find((item) => item.id === eventWithImage.data.id).imageUrl);
+  assert.ok(imageFeed.find((item) => item.id === pollWithImage.data.id).imageUrl);
   assert.equal((await call(alice, `/api/tribes/${tribeOne.id}/posts`, {
     method: "POST",
     body: JSON.stringify({ body: "Enquete inválida", pollOptions: ["Só uma opção"] }),
