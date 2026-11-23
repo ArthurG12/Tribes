@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
   { href: "/explorar", label: "Explorar tribos" },
-  { href: "/planos", label: "Planos" },
 ];
 
 export function Navbar() {
@@ -54,18 +53,25 @@ function NavbarContent() {
         </button>
       </div>
       {mobileOpen && (
-        <div className="border-t border-border bg-background px-4 py-4 lg:hidden">
-          <nav className="mx-auto flex max-w-7xl flex-col gap-1">
-            {NAV_LINKS.map((item) => (
-              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} aria-current={pathname === item.href ? "page" : undefined} className={`rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${pathname === item.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{item.label}</Link>
-            ))}
-            <Link href="/entrar" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button type="button" aria-label="Fechar menu" onClick={() => setMobileOpen(false)} className="absolute inset-0 bg-black/45" />
+          <aside className="absolute inset-y-0 right-0 flex w-[min(20rem,86vw)] flex-col border-l border-border bg-background p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <span className="font-heading text-lg font-bold">Menu</span>
+              <button type="button" aria-label="Fechar menu" onClick={() => setMobileOpen(false)} className="inline-flex size-9 items-center justify-center rounded-xl hover:bg-muted"><X className="size-5" /></button>
+            </div>
+            <nav className="flex flex-1 flex-col gap-1 py-5">
+              {NAV_LINKS.map((item) => (
+                <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} aria-current={pathname === item.href ? "page" : undefined} className={`rounded-xl px-3 py-3 text-sm font-semibold transition-colors ${pathname === item.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{item.label}</Link>
+              ))}
+            </nav>
+            <Link href="/entrar" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold text-foreground hover:bg-muted">
               <LogIn className="size-4" /> Entrar
             </Link>
-            <Button size="lg" className="mt-2 w-full rounded-full font-semibold" nativeButton={false} onClick={() => setMobileOpen(false)} render={<Link href="/cadastro" />}>
+            <Button size="lg" className="mt-3 w-full rounded-full font-semibold" nativeButton={false} onClick={() => setMobileOpen(false)} render={<Link href="/cadastro" />}>
               Começar <ArrowRight className="size-4" />
             </Button>
-          </nav>
+          </aside>
         </div>
       )}
     </header>
