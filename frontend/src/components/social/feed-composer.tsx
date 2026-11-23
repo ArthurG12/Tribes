@@ -156,7 +156,7 @@ export function FeedComposer({ tribes, open, onOpenChange, onPublished }: FeedCo
         <form className="w-full min-w-0 space-y-3" onSubmit={(event) => void submitContent(event)}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex gap-2">
-              <button type="button" disabled={creating} onClick={() => changeEventMode(false)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Publicação</button>
+              <button type="button" disabled={creating} onClick={() => changeEventMode(false)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!eventMode && !pollMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Publicação</button>
               <button type="button" disabled={creating} onClick={() => changeEventMode(true)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${eventMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Evento</button>
               <button type="button" disabled={creating} onClick={() => changePollMode(true)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${pollMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Enquete</button>
             </div>
