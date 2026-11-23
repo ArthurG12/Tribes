@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type * as Leaflet from "leaflet";
 import { LoaderCircle, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { googleMapsSearchUrl } from "@/lib/event-maps";
 
 export interface EventLocation {
   lat: number;
@@ -128,7 +129,14 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
     for (const point of validPoints) {
       const marker = leaflet.marker([point.lat, point.lon], { icon: markerIcon(leaflet) }).addTo(markers);
       const popup = document.createElement("div");
-      popup.textContent = point.formatted;
+      const location = document.createElement("p");
+      location.textContent = point.formatted;
+      const mapsLink = document.createElement("a");
+      mapsLink.href = googleMapsSearchUrl({ location: point.formatted, lat: point.lat, lon: point.lon });
+      mapsLink.target = "_blank";
+      mapsLink.rel = "noopener noreferrer";
+      mapsLink.textContent = "Abrir no Google Maps";
+      popup.append(location, mapsLink);
       marker.bindPopup(popup);
     }
     if (validPoints.length === 1) {
@@ -141,7 +149,7 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
   return (
     <div className={`relative h-56 w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`}>
       {mapsApiKey ? (
-        <div ref={containerRef} aria-label="Localização exata do evento" role="img" className="event-location-map h-full w-full" />
+        <div ref={containerRef} aria-label="Mapa de localização dos eventos" role="region" className="event-location-map h-full w-full" />
       ) : (
         <p className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
           {mapsApiKey === null ? "Carregando mapa…" : "Configure MAPS_API para exibir o mapa."}

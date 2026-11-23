@@ -6,6 +6,7 @@ import { CalendarDays, Clock3, MapPin, Users, LoaderCircle, Search, Download } f
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EventLocationMap } from "@/components/social/event-location-picker";
+import { EventLocationActions } from "@/components/social/event-location-actions";
 import { apiRequest, formatDateTime, type Tribe } from "@/lib/social-types";
 
 type EventItem = {
@@ -201,6 +202,9 @@ export default function EventsPage() {
                 {event.cost && <span>{event.cost}</span> }
                 <span className="inline-flex items-center gap-1.5"><Users className="size-4 text-primary" />{event.attendeesCount}{event.maxAttendees ? `/${event.maxAttendees}` : ""} confirmados</span>
                 {event.waitlistCount > 0 && <span>{event.waitlistCount} na lista de espera</span>}
+              </div>
+              <div className="mt-3">
+                <EventLocationActions location={event.location} lat={event.lat} lon={event.lon} />
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
                 <span className="text-xs font-semibold text-muted-foreground">{event.tribe.name}</span>
