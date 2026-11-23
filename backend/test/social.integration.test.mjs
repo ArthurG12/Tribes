@@ -330,6 +330,11 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal((await call(bob, `/api/tribes/${tribeOne.id}/join`, { method: "POST" })).response.status, 200);
 
   const postId = await createPost(alice, tribeOne, "Uma publicação para todos os membros.");
+  const membersResponse = await call(alice, `/api/tribes/${tribeOne.id}/members`);
+  assert.equal(membersResponse.response.status, 200);
+  assert.deepEqual(new Set(membersResponse.data.members.map((member) => member.id)), new Set([alice.user.id, bob.user.id]));
+  assert.equal((await call(empty, `/api/tribes/${tribeOne.id}/members`)).response.status, 404);
+  assert.equal((await call(bob, "/api/events")).response.status, 200);
   const imageData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII=";
   assert.equal((await call(empty, `/api/tribes/${tribeOne.id}/posts`, {
     method: "POST", body: JSON.stringify({ body: "Sem associação", image: imageData }),
@@ -464,6 +469,14 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   const emptyFeed = await call(empty, "/api/feed");
   assert.equal(emptyFeed.response.status, 200);
   assert.deepEqual(emptyFeed.data, { items: [], nextCursor: null });
+
+  assert.equal((await call(alice, `/api/content/${postId}/save`, { method: "POST" })).response.status, 200);
+  const savedList = await call(alice, "/api/saved");
+  assert.ok(savedList.data.items.some((item) => item.id === postId && item.savedByMe));
+  assert.equal((await call(bob, "/api/saved")).data.items.some((item) => item.id === postId), false);
+  assert.equal((await call(empty, `/api/content/${postId}/save`, { method: "POST" })).response.status, 404);
+  assert.equal((await call(alice, `/api/content/${postId}/save`, { method: "DELETE" })).response.status, 200);
+  assert.equal((await call(alice, "/api/saved")).data.items.some((item) => item.id === postId), false);
 
   const likePath = `/api/content/${eventId}/like`;
   assert.equal((await call(bob, likePath, { method: "POST" })).response.status, 200);
