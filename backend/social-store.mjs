@@ -1296,21 +1296,31 @@ export async function listTribeMembers(userId, tribeId) {
   }));
 }
 
-export async function listUpcomingEvents(userId, limit = 100) {
+export async function listUpcomingEvents(userId, limit = 100, { query = "", tribeId } = {}) {
+  const normalizedQuery = query.trim();
   const { rows } = await pool.query(
-    `SELECT f.id, f.body, e.title, e.starts_at, e.ends_at, e.location,
+    `SELECT f.id, f.body, e.title, e.starts_at, e.ends_at, e.location, e.max_attendees,
             t.id AS tribe_id, t.name AS tribe_name, u.display_name AS author_name,
             (SELECT COUNT(*) FROM event_attendees a WHERE a.content_id = f.id)::int AS attendees_count,
-            EXISTS (SELECT 1 FROM event_attendees a WHERE a.content_id = f.id AND a.user_id = $1) AS attending_by_me
+            EXISTS (SELECT 1 FROM event_attendees a WHERE a.content_id = f.id AND a.user_id = $1) AS attending_by_me,
+            (SELECT COUNT(*) FROM event_waitlist w WHERE w.content_id = f.id)::int AS waitlist_count,
+            EXISTS (SELECT 1 FROM event_waitlist w WHERE w.content_id = f.id AND w.user_id = $1) AS waitlisted_by_me
      FROM feed_items f JOIN tribe_events e ON e.content_id = f.id
      JOIN tribes t ON t.id = f.tribe_id JOIN users u ON u.id = f.author_id
      JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $1 AND m.status = 'active'
-     WHERE e.starts_at >= CURRENT_TIMESTAMP ORDER BY e.starts_at ASC, f.id ASC LIMIT $2`,
-    [userId, limit]
+     WHERE e.starts_at >= CURRENT_TIMESTAMP
+       AND ($3::uuid IS NULL OR f.tribe_id = $3)
+       AND ($4::text IS NULL OR (
+         f.body ILIKE $4 OR e.title ILIKE $4 OR e.location ILIKE $4 OR t.name ILIKE $4
+       ))
+     ORDER BY e.starts_at ASC, f.id ASC LIMIT $2`,
+    [userId, limit, tribeId ?? null, normalizedQuery ? `%${normalizedQuery}%` : null]
   );
   return rows.map((row) => ({
     id: row.id, body: row.body, title: row.title, startsAt: row.starts_at, endsAt: row.ends_at,
-    location: row.location, tribe: { id: row.tribe_id, name: row.tribe_name }, authorName: row.author_name,
-    attendeesCount: row.attendees_count, attendingByMe: row.attending_by_me,
+    location: row.location, maxAttendees: row.max_attendees,
+    tribe: { id: row.tribe_id, name: row.tribe_name }, authorName: row.author_name,
+    attendeesCount: row.attendees_count, waitlistCount: row.waitlist_count,
+    attendingByMe: row.attending_by_me, waitlistedByMe: row.waitlisted_by_me,
   }));
 }
