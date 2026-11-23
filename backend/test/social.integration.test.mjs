@@ -485,6 +485,8 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(eventWithAttendance.event.attendingByMe, true);
   const bobFeedWithAttendance = await call(bob, `/api/feed?tribeId=${tribeOne.id}&limit=50`);
   assert.equal(bobFeedWithAttendance.data.items.find((item) => item.id === eventId).event.attendingByMe, false);
+  const aliceAttendanceNotifications = await call(alice, "/api/notifications");
+  assert.ok(aliceAttendanceNotifications.data.items.some((item) => item.type === "event_attendance" && item.actor.id === bob.user.id));
   assert.equal(feedWithAttendance.data.items.find((item) => item.id === postId).event, null);
 
   const commentsPath = `/api/content/${eventId}/comments`;
