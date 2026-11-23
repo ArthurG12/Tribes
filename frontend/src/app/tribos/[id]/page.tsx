@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, LoaderCircle, MapPin, Users, Pencil } from "lucide-react";
@@ -19,7 +19,7 @@ type TribeMember = {
   avatarUrl: string | null;
 };
 
-export default function TribeDetailPage() {
+function TribeDetailContent() {
   const { id } = useParams<{ id: string }>();
   const [tribe, setTribe] = useState<Tribe | null>(null);
   const [members, setMembers] = useState<TribeMember[]>([]);
@@ -85,5 +85,14 @@ export default function TribeDetailPage() {
         </section>
       </>}
     </main>
+  );
+}
+
+
+export default function TribeDetailPage() {
+  return (
+    <Suspense fallback={<main className="flex justify-center py-20"><LoaderCircle className="size-6 animate-spin text-primary" /></main>}>
+      <TribeDetailContent />
+    </Suspense>
   );
 }
