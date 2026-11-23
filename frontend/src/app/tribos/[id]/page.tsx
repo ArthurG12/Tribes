@@ -71,7 +71,7 @@ export default function TribeDetailPage() {
         </section>
         <section className="rounded-3xl border border-border bg-card p-5 sm:p-7">
           <div className="flex items-center justify-between gap-3">
-            <div><h2 className="font-heading text-xl font-bold">Membros</h2><p className="mt-1 text-sm text-muted-foreground">{members.length} participantes</p></div>
+            <div><h2 className="font-heading text-xl font-bold">Ver membros</h2><p className="mt-1 text-sm text-muted-foreground">{members.length} participantes</p></div>
             <Badge variant="outline"><Users className="size-3" />{members.length}</Badge>
           </div>
           <div className="mt-4 divide-y divide-border">
