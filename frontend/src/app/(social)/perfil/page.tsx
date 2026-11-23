@@ -24,6 +24,7 @@ export default function ProfileSettingsPage() {
   const [cityLoading, setCityLoading] = useState(false);
   const [cityError, setCityError] = useState("");
   const [interests, setInterests] = useState<string[]>(user.interests ?? []);
+  const [profileVisibility, setProfileVisibility] = useState(user.profileVisibility ?? { aboutMe: "public", city: "public", interests: "public" });
   const [interestInput, setInterestInput] = useState("");
   const [avatar, setAvatar] = useState<string | null | undefined>(undefined);
   const [saving, setSaving] = useState(false);
@@ -92,7 +93,7 @@ export default function ProfileSettingsPage() {
     setError("");
     setSaved(false);
     try {
-      const payload = { name, aboutMe, city, interests, ...(avatar !== undefined ? { avatar } : {}) };
+      const payload = { name, aboutMe, city, interests, profileVisibility, ...(avatar !== undefined ? { avatar } : {}) };
       const result = await apiRequest<{ user: CurrentUser }>("/api/profile", {
         method: "PATCH",
         body: JSON.stringify(payload),
@@ -103,6 +104,7 @@ export default function ProfileSettingsPage() {
       setCity(result.user.city);
       setCitySelected(Boolean(result.user.city));
       setInterests(result.user.interests);
+      setProfileVisibility(result.user.profileVisibility);
       setAvatar(undefined);
       setSaved(true);
     } catch (saveError) {
@@ -198,6 +200,35 @@ export default function ProfileSettingsPage() {
             ))}
           </div>
           <p className="text-xs text-muted-foreground">{interests.length}/20 interesses</p>
+        </section>
+
+
+        <section className="space-y-4 border-t border-border pt-6">
+          <div>
+            <h2 className="font-heading text-lg font-bold">Privacidade</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Escolha quem pode ver cada informação.</p>
+          </div>
+          {([
+            ["aboutMe", "Sobre mim"],
+            ["city", "Cidade"],
+            ["interests", "Interesses"],
+          ] as const).map(([field, label]) => (
+            <div key={field} className="flex flex-col gap-2 rounded-xl border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
+              <span className="text-sm font-medium">{label}</span>
+              <select
+                aria-label={"Quem pode ver " + label.toLocaleLowerCase("pt-BR")}
+                value={profileVisibility[field]}
+                onChange={(event) => {
+                  setProfileVisibility((current) => ({ ...current, [field]: event.target.value as "public" | "private" }));
+                  setSaved(false);
+                }}
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm sm:w-48"
+              >
+                <option value="public">Todos</option>
+                <option value="private">Somente eu</option>
+              </select>
+            </div>
+          ))}
         </section>
 
         {error && <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
