@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   recipient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   actor_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('post_like', 'post_comment', 'event_created')),
+  type TEXT NOT NULL CHECK (type IN ('post_like', 'post_comment', 'event_created', 'event_attendance')),
   content_id UUID NOT NULL REFERENCES feed_items(id) ON DELETE CASCADE,
   tribe_id UUID NOT NULL REFERENCES tribes(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
