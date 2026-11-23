@@ -59,6 +59,7 @@ export default function NotificationsPage() {
     if (!response.ok) return;
     setItems((current) => current.map((item) => item.id === id ? { ...item, readAt: new Date().toISOString() } : item));
     setUnreadCount((count) => Math.max(0, count - 1));
+    window.dispatchEvent(new Event("tribes-notifications-updated"));
   }
 
   async function markAllRead() {
@@ -66,6 +67,7 @@ export default function NotificationsPage() {
     if (!response.ok) return;
     setItems((current) => current.map((item) => ({ ...item, readAt: item.readAt ?? new Date().toISOString() })));
     setUnreadCount(0);
+    window.dispatchEvent(new Event("tribes-notifications-updated"));
   }
 
   return (
@@ -93,7 +95,7 @@ export default function NotificationsPage() {
                   <p className="mt-1 text-xs text-muted-foreground">{relativeDate(item.createdAt)}</p>
                 </div>
                 {!item.readAt && <span className="size-2 shrink-0 rounded-full bg-primary" aria-label="Não lida" />}
-                <Link href={`/feed?highlight=${item.contentId}`} onClick={() => { if (!item.readAt) void markRead(item.id); }} aria-label="Abrir publicação" className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"><ArrowRight className="size-4" /></Link>
+                <Link href="/feed" onClick={() => { if (!item.readAt) void markRead(item.id); }} aria-label="Abrir publicação" className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"><ArrowRight className="size-4" /></Link>
               </article>
             );
           })}
