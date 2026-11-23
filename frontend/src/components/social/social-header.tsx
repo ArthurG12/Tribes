@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, CalendarDays, Compass, Flame, LogOut, Menu, Moon, Sun, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import type { CurrentUser } from "@/components/social/auth-guard";
 import { UserAvatar } from "@/components/social/user-avatar";
@@ -26,6 +27,20 @@ export function SocialHeader({
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     let active = true;
@@ -99,35 +114,36 @@ export function SocialHeader({
         </div>
       </div>
 
-      {menuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button type="button" aria-label="Fechar menu" onClick={() => setMenuOpen(false)} className="absolute inset-0 bg-black/45" />
-          <aside aria-label="Menu lateral" className="absolute inset-y-0 left-0 flex w-[min(19rem,85vw)] flex-col border-r border-border bg-background p-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-border pb-4">
-              <span className="font-heading text-lg font-extrabold">Menu</span>
-              <Button variant="ghost" size="icon-sm" aria-label="Fechar menu" onClick={() => setMenuOpen(false)}><X className="size-4" /></Button>
-            </div>
-            <div className="flex items-center gap-3 border-b border-border py-5">
-              <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-10" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">{user.name}</p>
-                <Link href="/perfil" onClick={() => setMenuOpen(false)} className="text-xs text-muted-foreground hover:text-primary">Meu perfil</Link>
-              </div>
-            </div>
-            <nav aria-label="Navegação principal" className="flex flex-1 flex-col gap-1 py-4">
-              {nav.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
-                return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={() => setMenuOpen(false)} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-colors ${active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}><Icon className="size-5" />{item.label}</Link>;
-              })}
-              <Link href="/notificacoes" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">
-                <Bell className="size-5" />Notificações{unreadCount > 0 && <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">{unreadCount > 99 ? "99+" : unreadCount}</span>}
-              </Link>
-            </nav>
-            <Button variant="outline" className="w-full justify-start" onClick={() => void logout()}><LogOut className="size-4" />Sair da conta</Button>
-          </aside>
-        </div>
-      )}
     </header>
+    {menuOpen && createPortal(
+      <div className="fixed inset-0 z-[100] lg:hidden">
+        <button type="button" aria-label="Fechar menu" onClick={() => setMenuOpen(false)} className="absolute inset-0 bg-black/50" />
+        <aside role="dialog" aria-modal="true" aria-label="Menu lateral" className="absolute inset-y-0 left-0 flex max-h-[100dvh] w-[min(20rem,88vw)] flex-col overflow-y-auto border-r border-border bg-background p-5 shadow-2xl">
+          <div className="flex items-center justify-between border-b border-border pb-4">
+            <span className="font-heading text-lg font-extrabold">Menu</span>
+            <Button variant="ghost" size="icon-sm" aria-label="Fechar menu" onClick={() => setMenuOpen(false)}><X className="size-4" /></Button>
+          </div>
+          <div className="flex items-center gap-3 border-b border-border py-5">
+            <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-10" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{user.name}</p>
+              <Link href="/perfil" onClick={() => setMenuOpen(false)} className="text-xs text-muted-foreground hover:text-primary">Meu perfil</Link>
+            </div>
+          </div>
+          <nav aria-label="Navegação principal" className="flex flex-1 flex-col gap-1 py-4">
+            {nav.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={() => setMenuOpen(false)} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-colors ${active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}><Icon className="size-5" />{item.label}</Link>;
+            })}
+            <Link href="/notificacoes" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">
+              <Bell className="size-5" />Notificações{unreadCount > 0 && <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">{unreadCount > 99 ? "99+" : unreadCount}</span>}
+            </Link>
+          </nav>
+          <Button variant="outline" className="w-full justify-start" onClick={() => void logout()}><LogOut className="size-4" />Sair da conta</Button>
+        </aside>
+      </div>,
+      document.body
+    )}
   );
 }
