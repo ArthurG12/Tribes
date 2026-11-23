@@ -575,6 +575,25 @@ export async function searchTribes(userId, { query = "", mine = false, managed =
   }));
 }
 
+export async function getPublicTribe(tribeId) {
+  const { rows } = await pool.query(
+    `SELECT t.id, t.name, t.description, t.category, t.format, t.city, t.neighborhood,
+            t.created_at, COUNT(DISTINCT m.user_id)::int AS member_count
+     FROM tribes t
+     LEFT JOIN tribe_memberships m ON m.tribe_id = t.id AND m.status = 'active'
+     WHERE t.id = $1
+     GROUP BY t.id`,
+    [tribeId]
+  );
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    id: row.id, name: row.name, description: row.description, category: row.category,
+    format: row.format, city: row.city, neighborhood: row.neighborhood,
+    createdAt: row.created_at, memberCount: row.member_count, isMember: false,
+  };
+}
+
 export async function createTribe(userId, tribe) {
   const client = await pool.connect();
   try {
