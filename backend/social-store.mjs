@@ -1141,7 +1141,7 @@ export async function listTribeMembers(userId, tribeId) {
   );
   if (rows.length === 0 && !(await userBelongsToTribe(userId, tribeId))) return null;
   return rows.map((row) => ({
-    id: row.id, name: row.display_name, aboutMe: row.about_me ?? "", city: row.city ?? "",
+    id: row.id, name: row.display_name, aboutMe: row.about_me ?? "", city: row.city ?? "", interests: Array.isArray(row.interests) ? row.interests : [],
     joinedAt: row.joined_at, isOwner: row.is_owner,
     avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
   }));
