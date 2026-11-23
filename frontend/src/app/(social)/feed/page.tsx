@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { LoaderCircle, Send, Users } from "lucide-react";
+import { LoaderCircle, Search, Send, Users, X } from "lucide-react";
 import { FeedComposer } from "@/components/social/feed-composer";
 import { FeedItemCard } from "@/components/social/feed-item-card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,8 @@ const PAGE_SIZE = 20;
 export default function FeedPage() {
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [selectedTribe, setSelectedTribe] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [items, setItems] = useState<FeedItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,14 +22,20 @@ export default function FeedPage() {
   const [error, setError] = useState("");
   const [composerOpen, setComposerOpen] = useState(false);
 
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [searchTerm]);
+
   const fetchPage = useCallback(async (cursor?: string, replace = false) => {
     const query = new URLSearchParams({ limit: String(PAGE_SIZE) });
     if (selectedTribe !== "all") query.set("tribeId", selectedTribe);
+    if (debouncedSearch) query.set("q", debouncedSearch);
     if (cursor) query.set("cursor", cursor);
     const result = await apiRequest<{ items: FeedItem[]; nextCursor: string | null }>(`/api/feed?${query}`);
     setItems((existing) => replace ? result.items : [...existing, ...result.items]);
     setNextCursor(result.nextCursor);
-  }, [selectedTribe]);
+  }, [selectedTribe, debouncedSearch]);
 
   useEffect(() => {
     let active = true;
@@ -72,21 +80,28 @@ export default function FeedPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+      <section className="space-y-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input aria-label="Pesquisar publicações" type="search" value={searchTerm} onChange={(event) => { setLoading(true); setSearchTerm(event.target.value); }} placeholder="Pesquisar publicações, autores, tribos ou eventos..." className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-10 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring" />
+          {searchTerm && <button type="button" aria-label="Limpar pesquisa" onClick={() => { setSearchTerm(""); setLoading(true); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="size-4" /></button>}
+        </div>
+        <div>
         <label htmlFor="tribe-filter" className="mb-2 block text-sm font-semibold">Filtrar feed</label>
         <select id="tribe-filter" value={selectedTribe} onChange={(event) => { setLoading(true); setSelectedTribe(event.target.value); }}
           className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <option value="all">Todas as tribos</option>
           {tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>)}
         </select>
+        </div>
       </section>
 
       {error && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
       {loading ? <div className="flex justify-center py-12"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : items.length === 0 ? (
         <section className="rounded-3xl border border-dashed border-border bg-card px-5 py-12 text-center">
           <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Users className="size-6" /></div>
-          <h2 className="mt-4 font-heading text-xl font-bold">{tribes.length ? "Seu feed está começando" : "Encontre sua primeira tribo"}</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{tribes.length ? "Quando alguém publicar ou criar um evento, ele aparecerá aqui." : "Entre em uma comunidade para acompanhar publicações e eventos por aqui."}</p>
+          <h2 className="mt-4 font-heading text-xl font-bold">{debouncedSearch ? "Nenhum resultado encontrado" : tribes.length ? "Seu feed está começando" : "Encontre sua primeira tribo"}</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{debouncedSearch ? "Tente pesquisar por outro termo ou limpar a busca." : tribes.length ? "Quando alguém publicar ou criar um evento, ele aparecerá aqui." : "Entre em uma comunidade para acompanhar publicações e eventos por aqui."}</p>
         </section>
       ) : <div className="space-y-4">
         {items.map((item) => <FeedItemCard key={item.id} item={item} onUpdateItem={updateItem} onError={setError} />)}
