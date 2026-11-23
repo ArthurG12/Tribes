@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { LoaderCircle, MessageCircle, MoreVertical, Pencil, Send, Trash2 } from "lucide-react";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,20 @@ type TribeMessage = {
 };
 
 const POLL_INTERVAL_MS = 3_000;
+const MESSAGE_MENU_WIDTH = 144;
+const MESSAGE_MENU_HEIGHT = 96;
 const messageTime = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
+
+function messageMenuPosition(anchor: HTMLElement) {
+  const bounds = anchor.getBoundingClientRect();
+  const openBelow = window.innerHeight - bounds.bottom >= MESSAGE_MENU_HEIGHT + 8;
+  const top = openBelow ? bounds.bottom + 4 : bounds.top - MESSAGE_MENU_HEIGHT - 4;
+  const left = Math.max(8, Math.min(bounds.right - MESSAGE_MENU_WIDTH, window.innerWidth - MESSAGE_MENU_WIDTH - 8));
+  return {
+    top: Math.max(8, Math.min(top, window.innerHeight - MESSAGE_MENU_HEIGHT - 8)),
+    left,
+  };
+}
 
 function sortMessages(messages: TribeMessage[]) {
   return [...messages].sort((left, right) =>
@@ -35,8 +49,10 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
   const [editDraft, setEditDraft] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [error, setError] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const menuTriggersRef = useRef(new Map<string, HTMLButtonElement>());
   const messageRevisionRef = useRef(0);
 
   useEffect(() => {
@@ -71,6 +87,20 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
       if (timeout) clearTimeout(timeout);
     };
   }, [tribeId]);
+
+  useEffect(() => {
+    if (!openMenuMessage) return;
+    const repositionMenu = () => {
+      const trigger = menuTriggersRef.current.get(openMenuMessage);
+      if (trigger) setMenuPosition(messageMenuPosition(trigger));
+    };
+    window.addEventListener("resize", repositionMenu);
+    window.addEventListener("scroll", repositionMenu, true);
+    return () => {
+      window.removeEventListener("resize", repositionMenu);
+      window.removeEventListener("scroll", repositionMenu, true);
+    };
+  }, [openMenuMessage]);
 
   const latestMessageId = messages.length ? messages[messages.length - 1].id : null;
   useEffect(() => {
@@ -173,11 +203,29 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
                       aria-label={`Ações da sua mensagem para ${message.author.name}`}
                       aria-haspopup="menu"
                       aria-expanded={openMenuMessage === message.id}
-                      onClick={() => setOpenMenuMessage((current) => current === message.id ? null : message.id)}
+                      aria-controls={`message-actions-${message.id}`}
+                      ref={(element) => {
+                        if (element) menuTriggersRef.current.set(message.id, element);
+                        else menuTriggersRef.current.delete(message.id);
+                      }}
+                      onClick={(event) => {
+                        if (openMenuMessage === message.id) {
+                          setOpenMenuMessage(null);
+                          setMenuPosition(null);
+                        } else {
+                          setMenuPosition(messageMenuPosition(event.currentTarget));
+                          setOpenMenuMessage(message.id);
+                        }
+                      }}
                     >
                       <MoreVertical className="size-4" />
                     </Button>
-                    {openMenuMessage === message.id && <div role="menu" className="absolute right-0 top-full z-10 mt-1 min-w-36 rounded-xl border border-border bg-popover p-1 shadow-lg">
+                    {openMenuMessage === message.id && menuPosition && typeof document !== "undefined" && createPortal(<div
+                      id={`message-actions-${message.id}`}
+                      role="menu"
+                      className="fixed z-[100] w-36 rounded-xl border border-border bg-popover p-1 shadow-lg"
+                      style={{ top: menuPosition.top, left: menuPosition.left }}
+                    >
                       <button
                         type="button"
                         role="menuitem"
@@ -187,6 +235,7 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
                           setEditDraft(message.body);
                           setConfirmDelete(null);
                           setOpenMenuMessage(null);
+                          setMenuPosition(null);
                         }}
                       ><Pencil className="size-4" />Editar</button>
                       <button
@@ -197,9 +246,10 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
                           setConfirmDelete(message.id);
                           setEditingMessage(null);
                           setOpenMenuMessage(null);
+                          setMenuPosition(null);
                         }}
                       ><Trash2 className="size-4" />Apagar</button>
-                    </div>}
+                    </div>, document.body)}
                   </div>}
                 </div>
               </div>
@@ -211,6 +261,11 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
                   maxLength={1000}
                   rows={3}
                   autoFocus
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing || event.repeat) return;
+                    event.preventDefault();
+                    void saveMessage(message.id);
+                  }}
                 />
                 <div className="flex justify-end gap-2">
                   <Button type="button" size="sm" variant="ghost" disabled={pendingMessage === message.id} onClick={() => { setEditingMessage(null); setEditDraft(""); }}>Cancelar</Button>
@@ -223,7 +278,7 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
                 <p className="text-sm">Apagar esta mensagem permanentemente?</p>
                 <div className="flex gap-2">
                   <Button type="button" size="sm" variant="ghost" disabled={pendingMessage === message.id} onClick={() => setConfirmDelete(null)}>Cancelar</Button>
-                  <Button type="button" size="sm" variant="destructive" disabled={pendingMessage === message.id} onClick={() => void deleteMessage(message.id)}>
+                  <Button type="button" size="sm" variant="destructive" autoFocus disabled={pendingMessage === message.id} onClick={() => void deleteMessage(message.id)}>
                     {pendingMessage === message.id && <LoaderCircle className="size-4 animate-spin" />}Apagar
                   </Button>
                 </div>
