@@ -652,7 +652,7 @@ export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly
             (f.author_id = $1) AS is_mine,
             EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = author.id AND i.is_deleted = FALSE) AS author_has_avatar,
             t.id AS tribe_id, t.name AS tribe_name,
-            e.title AS event_title, e.starts_at, e.ends_at, e.location, e.cost, e.max_attendees,
+            e.title AS event_title, e.starts_at, e.ends_at, e.location, e.location_lat, e.location_lon, e.cost, e.max_attendees,
             CASE WHEN f.kind = 'poll' THEN (
               SELECT json_build_object(
                 'options', COALESCE((SELECT json_agg(json_build_object(
@@ -716,6 +716,8 @@ export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly
       startsAt: row.starts_at,
       endsAt: row.ends_at,
       location: row.location,
+      lat: row.location_lat,
+      lon: row.location_lon,
       cost: row.cost,
       maxAttendees: row.max_attendees,
       attendeesCount: row.attendee_count,
@@ -790,9 +792,9 @@ export async function createContent(userId, tribeId, { type, body, event, image,
     }
     if (type === "event") {
       await client.query(
-        `INSERT INTO tribe_events (content_id, title, starts_at, ends_at, location, cost, max_attendees)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [rows[0].id, event.title, event.startsAt, event.endsAt, event.location, event.cost, event.maxAttendees]
+        `INSERT INTO tribe_events (content_id, title, starts_at, ends_at, location, location_lat, location_lon, cost, max_attendees)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [rows[0].id, event.title, event.startsAt, event.endsAt, event.location, event.lat, event.lon, event.cost, event.maxAttendees]
       );
       await client.query(
         `INSERT INTO notifications (recipient_id, actor_id, type, content_id, tribe_id)
@@ -842,9 +844,9 @@ export async function updateContent(userId, contentId, body, event) {
       }
       await client.query(
         `UPDATE tribe_events
-         SET title = $2, starts_at = $3, ends_at = $4, location = $5, cost = $6, max_attendees = $7
+         SET title = $2, starts_at = $3, ends_at = $4, location = $5, location_lat = $6, location_lon = $7, cost = $8, max_attendees = $9
          WHERE content_id = $1`,
-        [contentId, event.title, event.startsAt, event.endsAt, event.location, event.cost, event.maxAttendees]
+        [contentId, event.title, event.startsAt, event.endsAt, event.location, event.lat, event.lon, event.cost, event.maxAttendees]
       );
       let currentCount = attendance[0].count;
       while (event.maxAttendees === null || currentCount < event.maxAttendees) {
@@ -1275,7 +1277,7 @@ export async function listTribeMembers(userId, tribeId) {
 export async function listUpcomingEvents(userId, limit = 100, { query = "", tribeId } = {}) {
   const normalizedQuery = query.trim();
   const { rows } = await pool.query(
-    `SELECT f.id, f.body, e.title, e.starts_at, e.ends_at, e.location, e.cost, e.max_attendees,
+    `SELECT f.id, f.body, e.title, e.starts_at, e.ends_at, e.location, e.location_lat, e.location_lon, e.cost, e.max_attendees,
             t.id AS tribe_id, t.name AS tribe_name, u.display_name AS author_name,
             (SELECT COUNT(*) FROM event_attendees a WHERE a.content_id = f.id)::int AS attendees_count,
             EXISTS (SELECT 1 FROM event_attendees a WHERE a.content_id = f.id AND a.user_id = $1) AS attending_by_me,
@@ -1294,7 +1296,7 @@ export async function listUpcomingEvents(userId, limit = 100, { query = "", trib
   );
   return rows.map((row) => ({
     id: row.id, body: row.body, title: row.title, startsAt: row.starts_at, endsAt: row.ends_at,
-    location: row.location, cost: row.cost, maxAttendees: row.max_attendees,
+    location: row.location, lat: row.location_lat, lon: row.location_lon, cost: row.cost, maxAttendees: row.max_attendees,
     tribe: { id: row.tribe_id, name: row.tribe_name }, authorName: row.author_name,
     attendeesCount: row.attendees_count, waitlistCount: row.waitlist_count,
     attendingByMe: row.attending_by_me, waitlistedByMe: row.waitlisted_by_me,

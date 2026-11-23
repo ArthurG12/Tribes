@@ -23,9 +23,10 @@ import { UserAvatar } from "@/components/social/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { EventLocationMap, EventLocationPicker } from "@/components/social/event-location-picker";
 import { apiRequest, formatDateTime, type FeedComment, type FeedItem } from "@/lib/social-types";
 
-type EventDraft = { title: string; startsAt: string; endsAt: string; location: string; cost: string; maxAttendees: string };
+type EventDraft = { title: string; startsAt: string; endsAt: string; location: string; lat: number | null; lon: number | null; cost: string; maxAttendees: string };
 
 function toLocalDateTimeInput(value: string | null) {
   if (!value) return "";
@@ -84,6 +85,8 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
         startsAt: new Date(eventDraft.startsAt).toISOString(),
         endsAt: eventDraft.endsAt ? new Date(eventDraft.endsAt).toISOString() : null,
         location: eventDraft.location.trim(),
+        lat: eventDraft.lat,
+        lon: eventDraft.lon,
         cost: eventDraft.cost.trim(),
         maxAttendees: eventDraft.maxAttendees ? Number(eventDraft.maxAttendees) : null,
       } : undefined;
@@ -267,7 +270,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <Button type="button" size="icon-sm" variant="ghost" aria-label="Compartilhar publicação" onClick={() => void sharePost()}><Share2 className="size-4" /></Button>
-          {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label={item.event ? "Editar evento" : "Editar publicação"} onClick={() => { setEditPostBody(item.body); setEventDraft(item.event ? { title: item.event.title, startsAt: toLocalDateTimeInput(item.event.startsAt), endsAt: toLocalDateTimeInput(item.event.endsAt), location: item.event.location, cost: item.event.cost, maxAttendees: item.event.maxAttendees ? String(item.event.maxAttendees) : "" } : null); setEditingPost(true); }}><Pencil className="size-4" /></Button>}
+          {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label={item.event ? "Editar evento" : "Editar publicação"} onClick={() => { setEditPostBody(item.body); setEventDraft(item.event ? { title: item.event.title, startsAt: toLocalDateTimeInput(item.event.startsAt), endsAt: toLocalDateTimeInput(item.event.endsAt), location: item.event.location, lat: item.event.lat, lon: item.event.lon, cost: item.event.cost, maxAttendees: item.event.maxAttendees ? String(item.event.maxAttendees) : "" } : null); setEditingPost(true); }}><Pencil className="size-4" /></Button>}
           {item.isMine && <Button type="button" size="icon-sm" variant="ghost" aria-label={item.event ? "Cancelar evento" : "Excluir publicação"} onClick={() => setConfirmDelete(true)}><Trash2 className="size-4 text-destructive" /></Button>}
         </div>
       </header>
@@ -283,11 +286,23 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
             {item.event.cost && <p>{item.event.cost}</p>}
             {item.event.maxAttendees && <p className="inline-flex items-center gap-2"><Users className="size-4 text-primary" />Limite de {item.event.maxAttendees} participantes</p>}
           </div>
+          {item.event.lat !== null && item.event.lon !== null && <div className="mt-4"><EventLocationMap points={[{ id: item.id, lat: item.event.lat, lon: item.event.lon, formatted: item.event.location }]} className="h-48" /></div>}
         </div>}
         {editingPost ? <div className="space-y-3">
           {item.event && eventDraft && <div className="grid gap-2 sm:grid-cols-2">
             <Input aria-label="Título do evento" value={eventDraft.title} onChange={(event) => setEventDraft((current) => current ? { ...current, title: event.target.value } : current)} maxLength={120} placeholder="Título do evento" />
-            <Input aria-label="Local do evento" value={eventDraft.location} onChange={(event) => setEventDraft((current) => current ? { ...current, location: event.target.value } : current)} maxLength={240} placeholder="Local" />
+            <EventLocationPicker
+              id={`event-location-${item.id}`}
+              label="Local do evento"
+              value={eventDraft.location}
+              coordinates={eventDraft.lat !== null && eventDraft.lon !== null ? { lat: eventDraft.lat, lon: eventDraft.lon } : null}
+              onChange={(value, location) => setEventDraft((current) => current ? {
+                ...current,
+                location: value.slice(0, 240),
+                lat: location?.lat ?? null,
+                lon: location?.lon ?? null,
+              } : current)}
+            />
             <Input aria-label="Início do evento" type="datetime-local" value={eventDraft.startsAt} onChange={(event) => setEventDraft((current) => current ? { ...current, startsAt: event.target.value } : current)} />
             <Input aria-label="Término do evento" type="datetime-local" value={eventDraft.endsAt} onChange={(event) => setEventDraft((current) => current ? { ...current, endsAt: event.target.value } : current)} />
             <Input aria-label="Custo do evento" value={eventDraft.cost} onChange={(event) => setEventDraft((current) => current ? { ...current, cost: event.target.value } : current)} maxLength={100} placeholder="Custo (opcional)" />

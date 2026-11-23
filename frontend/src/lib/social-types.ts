@@ -39,6 +39,8 @@ export interface FeedItem {
     startsAt: string;
     endsAt: string | null;
     location: string;
+    lat: number | null;
+    lon: number | null;
     cost: string;
     maxAttendees: number | null;
     attendeesCount: number;

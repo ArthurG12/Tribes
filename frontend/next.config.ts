@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   output: "standalone",
   poweredByHeader: false,
+  env: {
+    NEXT_PUBLIC_MAPS_API: process.env.MAPS_API ?? "",
+  },
   turbopack: {
     rules: {
       "*.css": {

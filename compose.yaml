@@ -8,6 +8,7 @@ services:
     environment:
       NODE_ENV: development
       BACKEND_URL: http://backend:4000
+      MAPS_API: ${MAPS_API:-}
       WATCHPACK_POLLING: "true"
     volumes:
       - ./frontend:/app

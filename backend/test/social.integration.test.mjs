@@ -521,6 +521,17 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal((await requestImage(bob, `/api/content/${imagePostId}/image`)).status, 302);
   assert.equal((await call(empty, `/api/content/${imagePostId}/image`)).response.status, 404);
   await new Promise((resolve) => setTimeout(resolve, 10));
+  const eventWithPartialCoordinates = await call(alice, `/api/tribes/${tribeOne.id}/events`, {
+    method: "POST",
+    body: JSON.stringify({
+      body: "Evento inválido sem longitude.",
+      title: "Evento inválido",
+      startsAt: "2027-01-15T19:00:00.000Z",
+      location: "Centro de Belo Horizonte",
+      lat: -19.9245,
+    }),
+  });
+  assert.equal(eventWithPartialCoordinates.response.status, 400);
   const eventResponse = await call(alice, `/api/tribes/${tribeOne.id}/events`, {
     method: "POST",
     body: JSON.stringify({
@@ -529,6 +540,8 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
       startsAt: "2027-01-15T19:00:00.000Z",
       endsAt: "2027-01-15T22:00:00.000Z",
       location: "Centro de Belo Horizonte",
+      lat: -19.9245,
+      lon: -43.9352,
       cost: "Gratuito",
       maxAttendees: 1,
     }),
@@ -544,6 +557,8 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
         startsAt: "2027-01-15T19:00:00.000Z",
         endsAt: "2027-01-15T22:00:00.000Z",
         location: "Centro de Belo Horizonte",
+        lat: -19.91,
+        lon: -43.94,
         cost: "Gratuito",
         maxAttendees: 1,
       },
@@ -554,6 +569,8 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(upcomingEvents.response.status, 200);
   const listedEvent = upcomingEvents.data.events.find((event) => event.id === eventId);
   assert.ok(listedEvent && listedEvent.title === "Noite de jogos");
+  assert.equal(listedEvent.lat, -19.91);
+  assert.equal(listedEvent.lon, -43.94);
   assert.equal(listedEvent.maxAttendees, 1);
   assert.equal(listedEvent.waitlistCount, 0);
   assert.equal(listedEvent.waitlistedByMe, false);
@@ -572,6 +589,8 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(feed.data.items.find((item) => item.id === imagePostId).imageUrl, `/api/content/${imagePostId}/image`);
   assert.equal(eventInFeed.event.title, "Noite de jogos");
   assert.equal(eventInFeed.event.location, "Centro de Belo Horizonte");
+  assert.equal(eventInFeed.event.lat, -19.91);
+  assert.equal(eventInFeed.event.lon, -43.94);
   for (let index = 1; index < feed.data.items.length; index += 1) {
     assert.ok(new Date(feed.data.items[index - 1].createdAt) >= new Date(feed.data.items[index].createdAt));
   }
