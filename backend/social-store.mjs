@@ -505,7 +505,7 @@ export async function getPublicUserProfile(userId, viewerId) {
               THEN u.city ELSE '' END AS city,
             CASE WHEN u.id = $2 OR u.profile_visibility->>'interests' = 'public'
               THEN u.interests ELSE '[]'::jsonb END AS interests,
-            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar,
+            EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = u.id AND i.is_deleted = FALSE) AS has_avatar
      FROM users u WHERE u.id = $1`,
     [userId, viewerId]
   );
