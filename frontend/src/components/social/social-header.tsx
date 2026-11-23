@@ -37,6 +37,7 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
     { href: "/feed", label: "Feed", icon: Flame },
     { href: "/tribos", label: "Explorar tribos", icon: Compass },
     { href: "/minhas-tribos", label: "Minhas tribos", icon: Users },
+    { href: "/membros", label: "Membros", icon: Users },
     { href: "/eventos", label: "Eventos", icon: CalendarDays },
     { href: "/salvos", label: "Salvos", icon: Bookmark },
   ];
