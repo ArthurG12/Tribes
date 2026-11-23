@@ -37,7 +37,8 @@ test("MailHog selection routes both auth emails through its SMTP transport", asy
   assert.equal(sent[0].message.to, "new@example.test");
   assert.equal(sent[0].message.subject, "Crie sua conta na Tribes");
   assert.equal(new URL(getLink(sent[0].message.text, "/cadastro/confirmar")).searchParams.get("token"), registrationToken);
-  assert.match(sent[0].message.text, /válido por 30 minutos/);
+  assert.match(sent[0].message.text, /válido por 24 horas/);
+  assert.match(sent[0].message.html, /válido por 24 horas/);
   assert.equal(sent[1].message.from, env.EMAIL_FROM);
   assert.equal(sent[1].message.to, "member@example.test");
   assert.equal(sent[1].message.subject, "Redefina sua senha da Tribes");
@@ -110,6 +111,30 @@ test("Resend failures are clear and do not expose provider responses or credenti
       assert.match(error.message, /Resend recusou o envio.*HTTP 403/);
       assert.doesNotMatch(error.message, /re_secret_test_value|request failed/);
       assert.equal(error.cause, undefined);
+      return true;
+    }
+  );
+});
+
+test("Resend quota rejections expose their machine-readable error codes", async () => {
+  await assert.rejects(
+    sendRegistrationEmail("new@example.test", registrationToken, {
+      env: {
+        EMAIL_PROVIDER: "resend",
+        RESEND_API_KEY: "re_test_key_that_is_not_real",
+        EMAIL_FROM: "Tribes <onboarding@resend.dev>",
+        NODE_ENV: "test",
+      },
+      fetchImpl: async () => ({
+        ok: false,
+        status: 429,
+        async json() { return { statusCode: 429, name: "daily_quota_exceeded" }; },
+      }),
+    }),
+    (error) => {
+      assert.ok(error instanceof EmailDeliveryError);
+      assert.equal(error.providerCode, "daily_quota_exceeded");
+      assert.equal(error.retryable, true);
       return true;
     }
   );

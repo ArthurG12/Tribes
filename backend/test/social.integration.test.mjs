@@ -64,6 +64,13 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
     assert.ok(registrationLink, "MailHog deve receber o link de cadastro");
     const token = new URL(registrationLink).searchParams.get("token");
     assert.ok(token);
+    const registrationExpiry = await pool.query(
+      `SELECT EXTRACT(EPOCH FROM (expires_at - created_at)) AS ttl_seconds
+       FROM registration_tokens WHERE email = $1`,
+      [email]
+    );
+    assert.ok(registrationExpiry.rows[0].ttl_seconds >= 23 * 60 * 60);
+    assert.ok(registrationExpiry.rows[0].ttl_seconds <= 25 * 60 * 60);
     const { response, data } = await call(null, "/api/auth/register/complete", {
       method: "POST",
       body: JSON.stringify({ name: `Tester ${label}`, token, password: "integration-test-password" }),
@@ -156,6 +163,7 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
     if (tribeIds.length) await pool.query("DELETE FROM tribes WHERE id = ANY($1::uuid[])", [tribeIds]);
     if (userIds.length) await pool.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [userIds]);
     await pool.query("DELETE FROM registration_tokens WHERE email LIKE $1", [`${marker}-%`]);
+    await pool.query("DELETE FROM email_queue WHERE email LIKE $1", [`${marker}-%`]);
     await pool.end();
   });
 

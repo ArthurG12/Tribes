@@ -1,30 +1,26 @@
-import { randomBytes } from "node:crypto";
 import { hashPassword, verifyPassword, createSessionToken, digestSessionToken } from "./security.mjs";
 import { readJson, sendJson } from "./http-utils.mjs";
 import { MAX_IMAGE_DATA_URL_SIZE, parseImage } from "./images.mjs";
 import { getObjectStorage } from "./object-storage.mjs";
-import { sendRegistrationEmail } from "./registration-email.mjs";
-import { sendPasswordResetEmail } from "./password-reset-email.mjs";
-import { EmailDeliveryError } from "./email-provider.mjs";
+import { wakeEmailQueueWorker } from "./email-queue-worker.mjs";
+import { registrationMessageForDelivery } from "./registration-message.mjs";
 import {
   addComment,
   completePasswordReset,
   completeRegistration,
   createContent,
-  createPasswordResetToken,
-  createRegistrationToken,
   createSession,
   createTribe,
   decodeCursor,
   deleteSession,
-  deletePasswordResetToken,
-  deleteRegistrationToken,
+  enqueueEmail,
   editComment,
   getContentImage,
   getFeed,
   getPublicUserProfile,
   getSessionUser,
   getUserByEmail,
+  waitForEmailQueueDelivery,
   getUserProfileImage,
   joinTribe,
   leaveTribe,
@@ -38,8 +34,6 @@ import {
 
 const SESSION_COOKIE = "tribes_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
-const REGISTRATION_TOKEN_TTL_MS = 30 * 60 * 1000;
-const PASSWORD_RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 const MAX_POST_PAYLOAD_SIZE = MAX_IMAGE_DATA_URL_SIZE;
 const MAX_PROFILE_PAYLOAD_SIZE = MAX_POST_PAYLOAD_SIZE;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -137,26 +131,16 @@ export async function handleSocialRequest(request, response, url) {
       const email = requiredString(payload.email, "e-mail", 3, 254).toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw invalid("Informe um e-mail válido.");
       const existingUser = await getUserByEmail(email);
+      let message;
       if (!existingUser) {
-        const token = randomBytes(32).toString("base64url");
-        const tokenHash = digestSessionToken(token);
-        const created = await createRegistrationToken({
-          email,
-          tokenHash,
-          expiresAt: new Date(Date.now() + REGISTRATION_TOKEN_TTL_MS),
-        });
-        if (created) {
-          try {
-            await sendRegistrationEmail(email, token);
-          } catch (error) {
-            await deleteRegistrationToken(tokenHash);
-            throw error;
-          }
-        }
+        const queuedEmail = await enqueueEmail({ email, kind: "registration" });
+        wakeEmailQueueWorker();
+        const delivery = await waitForEmailQueueDelivery(queuedEmail.id);
+        message = registrationMessageForDelivery(delivery);
+      } else {
+        message = registrationMessageForDelivery(null);
       }
-      return sendJson(response, 202, {
-        message: "Se este e-mail puder ser cadastrado, enviaremos um link para continuar.",
-      }), true;
+      return sendJson(response, 202, { message }), true;
     }
 
     if (pathname === "/api/auth/register/complete" && method === "POST") {
@@ -200,26 +184,14 @@ export async function handleSocialRequest(request, response, url) {
       const payload = await readJson(request);
       const email = requiredString(payload.email, "e-mail", 3, 254).toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw invalid("Informe um e-mail válido.");
-      const token = randomBytes(32).toString("base64url");
-      const tokenHash = digestSessionToken(token);
-      const created = await createPasswordResetToken({
-        email,
-        tokenHash,
-        expiresAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS),
-      });
-      if (created === null) {
+      const existingUser = await getUserByEmail(email);
+      if (!existingUser) {
         return sendJson(response, 404, { error: "Este e-mail não está cadastrado." }), true;
       }
-      if (created) {
-        try {
-          await sendPasswordResetEmail(email, token);
-        } catch (error) {
-          await deletePasswordResetToken(tokenHash);
-          throw error;
-        }
-      }
+      await enqueueEmail({ email, kind: "password_reset" });
+      wakeEmailQueueWorker();
       return sendJson(response, 202, {
-        message: "Se este e-mail estiver cadastrado, enviaremos um link para redefinir sua senha.",
+        message: "Se este e-mail estiver cadastrado, enviaremos um link assim que houver disponibilidade de envio.",
       }), true;
     }
 
@@ -559,9 +531,7 @@ export async function handleSocialRequest(request, response, url) {
     sendJson(response, 404, { error: "Rota não encontrada." });
     return true;
   } catch (error) {
-    if (error instanceof EmailDeliveryError) {
-      console.error("Falha no envio de e-mail:", error.message);
-    } else if ((error.statusCode ?? 500) >= 500) {
+    if ((error.statusCode ?? 500) >= 500) {
       console.error("Falha na API social:", error);
     }
     sendJson(response, error.statusCode ?? 500, {

@@ -46,7 +46,7 @@ export function ForgotPasswordForm() {
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {requested
-            ? "Se este e-mail estiver cadastrado, enviaremos um link para redefinir sua senha."
+            ? "Se este e-mail estiver cadastrado, enviaremos um link assim que houver disponibilidade. Ele será válido por 30 minutos após o envio."
             : "Informe o e-mail da sua conta e enviaremos um link para criar uma nova senha."}
         </p>
         {!requested && <form onSubmit={handleSubmit} className="mt-6 space-y-4">

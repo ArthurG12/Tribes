@@ -14,6 +14,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [registrationMessage, setRegistrationMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [registrationRequested, setRegistrationRequested] = useState(false);
   const registering = mode === "register";
@@ -31,6 +32,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "Não foi possível entrar.");
       if (registering) {
+        setRegistrationMessage(result.message ?? "Se este e-mail puder ser cadastrado, enviaremos um link para continuar.");
         setRegistrationRequested(true);
         return;
       }
@@ -61,7 +63,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         <p className="mt-2 text-sm text-muted-foreground">
           {registering
             ? registrationRequested
-              ? "Se este e-mail puder ser cadastrado, enviaremos um link para você escolher seu nome e senha."
+              ? registrationMessage
               : "Informe seu e-mail e enviaremos um link para criar sua senha."
             : "Suas tribos e conversas estão esperando por você."}
         </p>

@@ -39,6 +39,7 @@ export async function initializeSocialStore() {
   await pool.query("DELETE FROM user_sessions WHERE expires_at <= CURRENT_TIMESTAMP");
   await pool.query("DELETE FROM registration_tokens WHERE expires_at <= CURRENT_TIMESTAMP");
   await pool.query("DELETE FROM password_reset_tokens WHERE expires_at <= CURRENT_TIMESTAMP");
+  await pool.query("DELETE FROM email_queue WHERE status IN ('sent', 'failed', 'skipped') AND created_at < CURRENT_TIMESTAMP - INTERVAL '30 days'");
 }
 
 export async function createRegistrationToken({ email, tokenHash, expiresAt }) {
@@ -46,17 +47,12 @@ export async function createRegistrationToken({ email, tokenHash, expiresAt }) {
   try {
     await client.query("BEGIN");
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [email]);
-    await client.query("DELETE FROM registration_tokens WHERE expires_at <= CURRENT_TIMESTAMP");
-    const recent = await client.query(
-      `SELECT 1 FROM registration_tokens
-       WHERE email = $1 AND created_at > CURRENT_TIMESTAMP - INTERVAL '1 minute'`,
-      [email]
-    );
-    if (recent.rowCount > 0) {
+    const { rowCount } = await client.query("SELECT 1 FROM users WHERE email = $1", [email]);
+    if (rowCount > 0) {
       await client.query("COMMIT");
       return false;
     }
-    await client.query("DELETE FROM registration_tokens WHERE email = $1", [email]);
+    await client.query("DELETE FROM registration_tokens WHERE expires_at <= CURRENT_TIMESTAMP");
     await client.query(
       "INSERT INTO registration_tokens (token_hash, email, expires_at) VALUES ($1, $2, $3)",
       [tokenHash, email, expiresAt]
@@ -87,17 +83,6 @@ export async function createPasswordResetToken({ email, tokenHash, expiresAt }) 
     }
 
     await client.query("DELETE FROM password_reset_tokens WHERE expires_at <= CURRENT_TIMESTAMP");
-    const { rowCount } = await client.query(
-      `SELECT 1 FROM password_reset_tokens
-       WHERE user_id = $1 AND created_at > CURRENT_TIMESTAMP - INTERVAL '1 minute'`,
-      [users[0].id]
-    );
-    if (rowCount > 0) {
-      await client.query("COMMIT");
-      return false;
-    }
-
-    await client.query("DELETE FROM password_reset_tokens WHERE user_id = $1", [users[0].id]);
     await client.query(
       "INSERT INTO password_reset_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
       [tokenHash, users[0].id, expiresAt]
@@ -116,14 +101,190 @@ export async function deletePasswordResetToken(tokenHash) {
   await pool.query("DELETE FROM password_reset_tokens WHERE token_hash = $1", [tokenHash]);
 }
 
+export async function enqueueEmail({ email, kind }) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`${kind}:${email}`]);
+    const { rows: existing } = await client.query(
+      `SELECT id, status FROM email_queue
+       WHERE kind = $1 AND email = $2
+         AND (status IN ('pending', 'processing') OR created_at > CURRENT_TIMESTAMP - INTERVAL '1 minute')
+       LIMIT 1`,
+      [kind, email]
+    );
+    if (existing.length > 0) {
+      await client.query("COMMIT");
+      return existing[0];
+    }
+    const { rows } = await client.query(
+      "INSERT INTO email_queue (email, kind) VALUES ($1, $2) RETURNING id, status",
+      [email, kind]
+    );
+    await client.query("COMMIT");
+    return rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function acquireEmailQueueWorkerLock() {
+  const client = await pool.connect();
+  try {
+    const { rows } = await client.query("SELECT pg_try_advisory_lock(712035) AS acquired");
+    if (!rows[0].acquired) {
+      client.release();
+      return null;
+    }
+    return client;
+  } catch (error) {
+    client.release();
+    throw error;
+  }
+}
+
+export async function releaseEmailQueueWorkerLock(client) {
+  try {
+    await client.query("SELECT pg_advisory_unlock(712035)");
+  } finally {
+    client.release();
+  }
+}
+
+export async function getEmailQueuePause() {
+  const { rows } = await pool.query(
+    "SELECT paused_until, pause_reason FROM email_queue_state WHERE singleton = TRUE"
+  );
+  const state = rows[0];
+  if (!state?.paused_until) return null;
+  if (new Date(state.paused_until) <= new Date()) {
+    await pool.query(
+      "UPDATE email_queue_state SET paused_until = NULL, pause_reason = NULL WHERE singleton = TRUE"
+    );
+    return null;
+  }
+  return state;
+}
+
+export async function getEmailQueueDeliveryStatus(id) {
+  const { rows } = await pool.query(
+    `SELECT q.status, q.available_at, s.paused_until, s.pause_reason
+     FROM email_queue q CROSS JOIN email_queue_state s
+     WHERE q.id = $1 AND s.singleton = TRUE`,
+    [id]
+  );
+  const state = rows[0];
+  if (!state) return null;
+  if (["sent", "failed", "skipped"].includes(state.status)) {
+    return { status: state.status };
+  }
+  if (state.paused_until && new Date(state.paused_until) > new Date()) {
+    return { status: "paused", reason: state.pause_reason };
+  }
+  if (state.status === "pending" && new Date(state.available_at) > new Date()) {
+    return { status: "queued" };
+  }
+  return { status: state.status };
+}
+
+export async function waitForEmailQueueDelivery(id, timeoutMs = 16_000) {
+  const deadline = Date.now() + timeoutMs;
+  let status;
+  do {
+    status = await getEmailQueueDeliveryStatus(id);
+    if (!status || ["sent", "failed", "skipped", "paused", "queued"].includes(status.status)) {
+      return status;
+    }
+    if (Date.now() >= deadline) return status;
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  } while (Date.now() < deadline);
+  return status;
+}
+
+export async function pauseEmailQueue(until, reason) {
+  await pool.query(
+    `UPDATE email_queue_state
+     SET paused_until = GREATEST(COALESCE(paused_until, $1), $1), pause_reason = $2
+     WHERE singleton = TRUE`,
+    [until, reason]
+  );
+}
+
+export async function claimNextEmail() {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `UPDATE email_queue SET status = 'pending', locked_at = NULL
+       WHERE status = 'processing' AND locked_at < CURRENT_TIMESTAMP - INTERVAL '1 minute'`
+    );
+    const { rows } = await client.query(
+      `SELECT id, email, kind, attempts
+       FROM email_queue
+       WHERE status = 'pending' AND available_at <= CURRENT_TIMESTAMP
+       ORDER BY CASE WHEN kind = 'password_reset' THEN 0 ELSE 1 END, created_at, id
+       FOR UPDATE SKIP LOCKED
+       LIMIT 1`
+    );
+    if (rows.length === 0) {
+      await client.query("COMMIT");
+      return null;
+    }
+    await client.query(
+      "UPDATE email_queue SET status = 'processing', locked_at = CURRENT_TIMESTAMP WHERE id = $1",
+      [rows[0].id]
+    );
+    await client.query("COMMIT");
+    return rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function completeEmailQueueItem(id, status = "sent") {
+  await pool.query(
+    `UPDATE email_queue
+     SET status = $2, sent_at = CASE WHEN $2 = 'sent' THEN CURRENT_TIMESTAMP ELSE sent_at END,
+         locked_at = NULL, last_error = NULL
+     WHERE id = $1`,
+    [id, status]
+  );
+}
+
+export async function retryEmailQueueItem(id, delayMs, error, { incrementAttempts = true } = {}) {
+  await pool.query(
+    `UPDATE email_queue
+     SET status = 'pending', attempts = attempts + $2,
+         available_at = CURRENT_TIMESTAMP + ($3::double precision * INTERVAL '1 millisecond'),
+         locked_at = NULL, last_error = $4
+     WHERE id = $1`,
+    [id, incrementAttempts ? 1 : 0, delayMs, String(error).slice(0, 500)]
+  );
+}
+
+export async function failEmailQueueItem(id, error) {
+  await pool.query(
+    `UPDATE email_queue
+     SET status = 'failed', attempts = attempts + 1, locked_at = NULL, last_error = $2
+     WHERE id = $1`,
+    [id, String(error).slice(0, 500)]
+  );
+}
+
 export async function completePasswordReset({ tokenHash, passwordHash, sessionToken, sessionExpiresAt }) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const { rows: tokens } = await client.query(
-      `SELECT user_id FROM password_reset_tokens
-       WHERE token_hash = $1 AND expires_at > CURRENT_TIMESTAMP
-       FOR UPDATE`,
+      `SELECT t.user_id, u.email
+       FROM password_reset_tokens t JOIN users u ON u.id = t.user_id
+       WHERE t.token_hash = $1 AND t.expires_at > CURRENT_TIMESTAMP`,
       [tokenHash]
     );
     if (tokens.length === 0) {
@@ -131,7 +292,19 @@ export async function completePasswordReset({ tokenHash, passwordHash, sessionTo
       return null;
     }
 
-    const userId = tokens[0].user_id;
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [tokens[0].email]);
+    const { rows: validTokens } = await client.query(
+      `SELECT user_id FROM password_reset_tokens
+       WHERE token_hash = $1 AND expires_at > CURRENT_TIMESTAMP
+       FOR UPDATE`,
+      [tokenHash]
+    );
+    if (validTokens.length === 0) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    const userId = validTokens[0].user_id;
     const { rows } = await client.query(
       `UPDATE users SET password_hash = $1
        WHERE id = $2
@@ -143,7 +316,7 @@ export async function completePasswordReset({ tokenHash, passwordHash, sessionTo
       "INSERT INTO user_sessions (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
       [digestSessionToken(sessionToken), userId, sessionExpiresAt]
     );
-    await client.query("DELETE FROM password_reset_tokens WHERE token_hash = $1", [tokenHash]);
+    await client.query("DELETE FROM password_reset_tokens WHERE user_id = $1", [userId]);
     await client.query("COMMIT");
     return toUser(rows[0]);
   } catch (error) {
@@ -161,10 +334,22 @@ export async function completeRegistration({ tokenHash, displayName, passwordHas
     const { rows: tokens } = await client.query(
       `SELECT email FROM registration_tokens
        WHERE token_hash = $1 AND expires_at > CURRENT_TIMESTAMP
-       FOR UPDATE`,
+      `,
       [tokenHash]
     );
     if (tokens.length === 0) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [tokens[0].email]);
+    const { rows: validTokens } = await client.query(
+      `SELECT email FROM registration_tokens
+       WHERE token_hash = $1 AND expires_at > CURRENT_TIMESTAMP
+       FOR UPDATE`,
+      [tokenHash]
+    );
+    if (validTokens.length === 0) {
       await client.query("ROLLBACK");
       return null;
     }
@@ -173,13 +358,13 @@ export async function completeRegistration({ tokenHash, displayName, passwordHas
       `INSERT INTO users (display_name, email, password_hash)
        VALUES ($1, $2, $3)
        RETURNING id, display_name, email`,
-      [displayName, tokens[0].email, passwordHash]
+      [displayName, validTokens[0].email, passwordHash]
     );
     await client.query(
       "INSERT INTO user_sessions (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
       [digestSessionToken(sessionToken), rows[0].id, sessionExpiresAt]
     );
-    await client.query("DELETE FROM registration_tokens WHERE token_hash = $1", [tokenHash]);
+    await client.query("DELETE FROM registration_tokens WHERE email = $1", [validTokens[0].email]);
     await client.query("COMMIT");
     return toUser(rows[0]);
   } catch (error) {

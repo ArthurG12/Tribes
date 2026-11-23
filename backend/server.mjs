@@ -10,6 +10,7 @@ import {
 } from "./metrics-store.mjs";
 import { handleSocialRequest } from "./social-api.mjs";
 import { initializeSocialStore } from "./social-store.mjs";
+import { startEmailQueueWorker } from "./email-queue-worker.mjs";
 
 const PORT = Number(process.env.PORT ?? 4000);
 const MAX_BODY_SIZE = 64 * 1024;
@@ -139,6 +140,7 @@ const server = createServer(async (request, response) => {
 
 Promise.all([initializeMetricsStore(), initializeSocialStore()])
   .then(() => {
+    startEmailQueueWorker();
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`Tribes backend listening on port ${PORT}`);
     });

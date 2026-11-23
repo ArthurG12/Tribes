@@ -10,7 +10,7 @@ export async function sendRegistrationEmail(email, token, options = {}) {
     to: email,
     textEncoding: "base64",
     subject: "Crie sua conta na Tribes",
-    text: `Para escolher seu nome e senha e criar sua conta na Tribes, acesse este link (válido por 30 minutos): ${confirmationUrl.href}\n\nSe você não pediu este cadastro, ignore esta mensagem.`,
-    html: `<p>Para escolher seu nome e senha e criar sua conta na Tribes, acesse o link abaixo. Ele é válido por 30 minutos.</p><p><a href="${confirmationUrl.href}">Criar minha conta</a></p><p>Se você não pediu este cadastro, ignore esta mensagem.</p>`,
+    text: `Para escolher seu nome e senha e criar sua conta na Tribes, acesse este link (válido por 24 horas): ${confirmationUrl.href}\n\nSe você não pediu este cadastro, ignore esta mensagem.`,
+    html: `<p>Para escolher seu nome e senha e criar sua conta na Tribes, acesse o link abaixo. Ele é válido por 24 horas.</p><p><a href="${confirmationUrl.href}">Criar minha conta</a></p><p>Se você não pediu este cadastro, ignore esta mensagem.</p>`,
   }, options);
 }
