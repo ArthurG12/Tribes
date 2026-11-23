@@ -500,6 +500,21 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   });
   assert.equal(eventResponse.response.status, 201, JSON.stringify(eventResponse.data));
   const eventId = eventResponse.data.id;
+  const editedEvent = await call(alice, `/api/content/${eventId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      body: "Descrição atualizada do evento.",
+      event: {
+        title: "Noite de jogos",
+        startsAt: "2027-01-15T19:00:00.000Z",
+        endsAt: "2027-01-15T22:00:00.000Z",
+        location: "Centro de Belo Horizonte",
+        cost: "Gratuito",
+        maxAttendees: 1,
+      },
+    }),
+  });
+  assert.equal(editedEvent.response.status, 200);
   const upcomingEvents = await call(alice, "/api/events");
   assert.equal(upcomingEvents.response.status, 200);
   assert.ok(upcomingEvents.data.events.some((event) => event.id === eventId && event.title === "Noite de jogos"));
