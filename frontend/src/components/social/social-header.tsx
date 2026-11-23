@@ -3,13 +3,21 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, CalendarDays, Compass, Flame, LogOut, Users } from "lucide-react";
+import { Bell, CalendarDays, Compass, Flame, LogOut, Moon, Sun, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { CurrentUser } from "@/components/social/auth-guard";
 import { UserAvatar } from "@/components/social/user-avatar";
 
-export function SocialHeader({ user }: { user: CurrentUser }) {
+export function SocialHeader({
+  user,
+  darkMode,
+  onToggleTheme,
+}: {
+  user: CurrentUser;
+  darkMode: boolean;
+  onToggleTheme: () => void;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -74,6 +82,16 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
             <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-8 text-xs" />
             <span className="hidden max-w-32 truncate text-xs font-medium text-muted-foreground md:inline">{user.name}</span>
           </Link>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={darkMode ? "Modo escuro ativo. Ativar modo claro" : "Modo claro ativo. Ativar modo escuro"}
+            aria-pressed={darkMode}
+            title={darkMode ? "Modo escuro" : "Modo claro"}
+            onClick={onToggleTheme}
+          >
+            {darkMode ? <Moon className="size-4" /> : <Sun className="size-4" />}
+          </Button>
           <Button variant="ghost" size="icon-sm" aria-label="Sair da conta" onClick={() => void logout()}><LogOut className="size-4" /></Button>
         </div>
       </div>

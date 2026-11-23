@@ -5,6 +5,17 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { SocialHeader } from "@/components/social/social-header";
 
+const THEME_STORAGE_KEY = "tribes-theme";
+
+function getStoredDarkMode() {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark";
+  } catch {
+    return false;
+  }
+}
+
 export interface CurrentUser {
   id: string;
   name: string;
@@ -38,8 +49,19 @@ export function AuthLoadingState() {
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [darkMode, setDarkMode] = useState(getStoredDarkMode);
   const pathname = usePathname();
   const router = useRouter();
+
+  function toggleTheme() {
+    const nextDarkMode = !darkMode;
+    setDarkMode(nextDarkMode);
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, nextDarkMode ? "dark" : "light");
+    } catch {
+      // O tema continua alternável mesmo se o armazenamento estiver indisponível.
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -63,14 +85,24 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return () => { active = false; };
   }, [pathname, router]);
 
+  useEffect(() => {
+    if (loaded && user) {
+      document.documentElement.classList.toggle("dark", darkMode);
+    }
+  }, [darkMode, loaded, user]);
+
+  useEffect(() => () => {
+    document.documentElement.classList.remove("dark");
+  }, []);
+
   if (!loaded || !user) {
     return <AuthLoadingState />;
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`${darkMode ? "dark " : ""}min-h-screen bg-background`}>
       <CurrentUserContext.Provider value={{ user, setUser }}>
-        <SocialHeader user={user} />
+        <SocialHeader user={user} darkMode={darkMode} onToggleTheme={toggleTheme} />
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-9">{children}</div>
       </CurrentUserContext.Provider>
     </div>
