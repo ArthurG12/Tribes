@@ -137,37 +137,47 @@ function allowApiAttempt(request, user, method) {
 }
 
 function originAllowed(request) {
-  const origin = request.headers.origin;
-  if (!origin) return request.headers["sec-fetch-site"] !== "cross-site";
+  const originHeader = request.headers.origin;
+  const fetchSite = request.headers["sec-fetch-site"];
 
-  let parsedOrigin;
+  if (!originHeader) {
+    return fetchSite === "same-origin" || fetchSite === "none" ||
+      (process.env.NODE_ENV !== "production" && fetchSite !== "cross-site");
+  }
+
+  let requestOrigin;
   try {
-    parsedOrigin = new URL(origin).origin;
+    requestOrigin = new URL(originHeader).origin;
   } catch {
     return false;
   }
 
   const configuredOrigins = [
     process.env.FRONTEND_URL,
-    ...(process.env.FRONTEND_ORIGINS ?? "").split(","),
-  ].filter(Boolean).flatMap((value) => {
-    try {
-      return [new URL(value.trim()).origin];
-    } catch {
-      return [];
-    }
-  });
+    ...(process.env.FRONTEND_ORIGINS ?? "").split(/[\\s,]+/),
+  ]
+    .map((value) => value.trim().replace(/^["']|["']$/g, ""))
+    .filter(Boolean)
+    .flatMap((value) => {
+      try {
+        return [new URL(value).origin];
+      } catch {
+        return [];
+      }
+    });
 
-  if (configuredOrigins.includes(parsedOrigin)) return true;
+  if (configuredOrigins.includes(requestOrigin)) return true;
+
   if (process.env.NODE_ENV !== "production") {
     try {
-      const parsed = new URL(parsedOrigin);
-      return ["localhost", "127.0.0.1", "::1"].includes(parsed.hostname) &&
+      const parsed = new URL(requestOrigin);
+      return ["localhost", "127.0.0.1", "[::1]"].includes(parsed.hostname) &&
         ["3000", "4317", "4318"].includes(parsed.port);
     } catch {
       return false;
     }
   }
+
   return false;
 }
 
