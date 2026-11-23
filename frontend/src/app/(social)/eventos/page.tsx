@@ -184,7 +184,7 @@ export default function EventsPage() {
                 <span className="text-xs font-semibold text-muted-foreground">{event.tribe.name}</span>
                 <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
                   <Link href={`/feed?focus=${event.id}`} className="text-sm font-semibold text-primary hover:underline">Ver no feed</Link>
-                  <Button className="w-full sm:w-auto" size="sm" variant={event.attendingByMe ? "outline" : "default"} disabled={pendingEvent === event.id} onClick={() => void toggleAttendance(event)}>
+                  <Button className="w-full sm:w-auto" size="sm" variant={event.attendingByMe ? "outline" : "default"} disabled={pendingEvent !== null} onClick={() => void toggleAttendance(event)}>
                     {pendingEvent === event.id ? <LoaderCircle className="size-4 animate-spin" /> : null}
                     {event.attendingByMe ? "Cancelar presença" : event.waitlistedByMe ? "Sair da espera" : event.maxAttendees && event.attendeesCount >= event.maxAttendees ? "Entrar na lista de espera" : "Confirmar presença"}
                   </Button>
