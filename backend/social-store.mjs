@@ -421,17 +421,17 @@ function toUser(row) {
   };
 }
 
-export async function updateUserProfile(userId, { name, aboutMe, city, interests, profileVisibility, avatar }) {
+export async function updateUserProfile(userId, { name, aboutMe, city, interests, avatar }) {
   const client = await pool.connect();
   let newImageKey = null;
   let oldImageKey = null;
   try {
     await client.query("BEGIN");
     const { rows } = await client.query(
-      `UPDATE users SET display_name = $2, about_me = $3, city = $4, interests = $5::jsonb, profile_visibility = $6::jsonb
+      `UPDATE users SET display_name = $2, about_me = $3, city = $4, interests = $5::jsonb
        WHERE id = $1
-       RETURNING id, display_name, email, about_me, city, interests, profile_visibility`,
-      [userId, name, aboutMe, city, JSON.stringify(interests), JSON.stringify(profileVisibility)]
+       RETURNING id, display_name, email, about_me, city, interests`,
+      [userId, name, aboutMe, city, JSON.stringify(interests)]
     );
     if (rows.length === 0) {
       await client.query("ROLLBACK");
