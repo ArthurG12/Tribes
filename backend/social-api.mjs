@@ -392,9 +392,12 @@ export async function handleSocialRequest(request, response, url) {
       if (query.length > 100) throw invalid("A busca deve ter até 100 caracteres.");
       const tribeId = url.searchParams.get("tribeId") || undefined;
       if (tribeId) requireUuid(tribeId, "Tribo");
+      const type = url.searchParams.get("type") ?? "all";
+      if (!["all", "post", "event", "poll"].includes(type)) throw invalid("Tipo de conteúdo inválido.");
       const result = await getFeed(user.id, {
         tribeId,
         query,
+        type,
         cursor: decodeCursor(url.searchParams.get("cursor")),
         limit,
         savedOnly: pathname === "/api/saved",
@@ -404,7 +407,11 @@ export async function handleSocialRequest(request, response, url) {
     }
 
     if (pathname === "/api/events" && method === "GET") {
-      sendJson(response, 200, { events: await listUpcomingEvents(user.id) });
+      const query = (url.searchParams.get("q") ?? "").trim();
+      if (query.length > 100) throw invalid("A busca deve ter até 100 caracteres.");
+      const tribeId = url.searchParams.get("tribeId") || undefined;
+      if (tribeId) requireUuid(tribeId, "Tribo");
+      sendJson(response, 200, { events: await listUpcomingEvents(user.id, 100, { query, tribeId }) });
       return true;
     }
 
