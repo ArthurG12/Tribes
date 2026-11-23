@@ -638,6 +638,19 @@ export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly
             EXISTS (SELECT 1 FROM user_profile_images i WHERE i.user_id = author.id AND i.is_deleted = FALSE) AS author_has_avatar,
             t.id AS tribe_id, t.name AS tribe_name,
             e.title AS event_title, e.starts_at, e.ends_at, e.location, e.cost, e.max_attendees,
+            CASE WHEN f.kind = 'poll' THEN (
+              SELECT json_build_object(
+                'options', COALESCE((SELECT json_agg(json_build_object(
+                  'id', po.id, 'label', po.label, 'votes', po.vote_count
+                ) ORDER BY po.position) FROM (
+                  SELECT o.id, o.label, o.position, COUNT(v.user_id)::int AS vote_count
+                  FROM poll_options o LEFT JOIN poll_votes v ON v.option_id = o.id
+                  WHERE o.content_id = f.id GROUP BY o.id
+                ) po), '[]'::json),
+                'totalVotes', (SELECT COUNT(*)::int FROM poll_votes v JOIN poll_options o ON o.id = v.option_id WHERE o.content_id = f.id),
+                'votedOptionId', (SELECT v.option_id FROM poll_votes v JOIN poll_options o ON o.id = v.option_id WHERE o.content_id = f.id AND v.user_id = $1)
+              )
+            ) ELSE NULL END AS poll_data,
             EXISTS (SELECT 1 FROM content_images i WHERE i.content_id = f.id) AS has_image,
             (SELECT COUNT(*) FROM content_likes l WHERE l.content_id = f.id)::int AS like_count,
             (SELECT COUNT(*) FROM content_comments c WHERE c.content_id = f.id)::int AS comment_count,
@@ -677,6 +690,7 @@ export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly
     commentsCount: row.comment_count,
     likedByMe: row.liked_by_me,
     savedByMe: row.saved_by_me,
+    poll: row.kind === "poll" ? row.poll_data : null,
     event: row.kind === "event" ? {
       title: row.event_title,
       startsAt: row.starts_at,
@@ -716,7 +730,7 @@ export function decodeCursor(value) {
   }
 }
 
-export async function createContent(userId, tribeId, { type, body, event, image }) {
+export async function createContent(userId, tribeId, { type, body, event, image, pollOptions }) {
   const client = await pool.connect();
   let imageKey = null;
   try {
@@ -743,6 +757,14 @@ export async function createContent(userId, tribeId, { type, body, event, image 
          VALUES ($1, $2, NULL, $3, $4)`,
         [rows[0].id, image.mimeType, image.data.length, imageKey]
       );
+    }
+    if (type === "poll") {
+      for (let index = 0; index < pollOptions.length; index += 1) {
+        await client.query(
+          "INSERT INTO poll_options (content_id, position, label) VALUES ($1, $2, $3)",
+          [rows[0].id, index, pollOptions[index]]
+        );
+      }
     }
     if (type === "event") {
       await client.query(
@@ -784,6 +806,49 @@ export async function getContentImage(userId, contentId) {
     data: rows[0].image_data,
     imageKey: rows[0].image_key,
   } : null;
+}
+
+export async function setPollVote(userId, contentId, optionId) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows: access } = await client.query(
+      `SELECT f.id FROM feed_items f
+       JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $1 AND m.status = 'active'
+       WHERE f.id = $2 AND f.kind = 'poll' FOR SHARE OF f`,
+      [userId, contentId]
+    );
+    if (!access.length) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+    const { rowCount: validOption } = await client.query(
+      "SELECT 1 FROM poll_options WHERE id = $1 AND content_id = $2",
+      [optionId, contentId]
+    );
+    if (!validOption) {
+      await client.query("ROLLBACK");
+      return { invalidOption: true };
+    }
+    await client.query(
+      `INSERT INTO poll_votes (content_id, option_id, user_id) VALUES ($1, $2, $3)
+       ON CONFLICT (content_id, user_id) DO UPDATE SET option_id = EXCLUDED.option_id, created_at = CURRENT_TIMESTAMP`,
+      [contentId, optionId, userId]
+    );
+    const { rows } = await client.query(
+      `SELECT COUNT(*)::int AS total,
+              (SELECT option_id FROM poll_votes WHERE content_id = $1 AND user_id = $2) AS voted_option_id
+       FROM poll_votes WHERE content_id = $1`,
+      [contentId, userId]
+    );
+    await client.query("COMMIT");
+    return { totalVotes: rows[0].total, votedOptionId: rows[0].voted_option_id };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function canAccessContent(userId, contentId) {
