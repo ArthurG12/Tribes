@@ -42,6 +42,8 @@ export interface FeedItem {
     maxAttendees: number | null;
     attendeesCount: number;
     attendingByMe: boolean;
+    waitlistCount: number;
+    waitlistedByMe: boolean;
   };
 }
 
