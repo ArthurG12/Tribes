@@ -497,6 +497,24 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(listed.data.comments[0].body, "Vou participar!");
   const feedWithComment = await call(alice, `/api/feed?tribeId=${tribeOne.id}&limit=50`);
   assert.equal(feedWithComment.data.items.find((item) => item.id === eventId).commentsCount, 1);
+
+  const aliceNotifications = await call(alice, "/api/notifications");
+  assert.equal(aliceNotifications.response.status, 200);
+  assert.ok(aliceNotifications.data.unreadCount >= 2);
+  assert.ok(aliceNotifications.data.items.some((item) => item.type === "post_like" && item.actor.id === bob.user.id));
+  assert.ok(aliceNotifications.data.items.some((item) => item.type === "post_comment" && item.actor.id === bob.user.id));
+  const bobNotifications = await call(bob, "/api/notifications");
+  assert.equal(bobNotifications.response.status, 200);
+  const eventNotification = bobNotifications.data.items.find((item) => item.type === "event_created");
+  assert.ok(eventNotification);
+  assert.equal(eventNotification.actor.id, alice.user.id);
+  assert.equal((await call(bob, `/api/notifications/${aliceNotifications.data.items[0].id}/read`, { method: "POST" })).response.status, 404);
+  assert.equal((await call(alice, `/api/notifications/${aliceNotifications.data.items[0].id}/read`, { method: "POST" })).response.status, 200);
+  const markedAll = await call(alice, "/api/notifications/read-all", { method: "POST" });
+  assert.equal(markedAll.response.status, 200);
+  assert.equal(markedAll.data.unreadCount, 0);
+  assert.equal((await call(alice, "/api/notifications")).data.unreadCount, 0);
+  assert.equal((await call(null, "/api/notifications")).response.status, 401);
   const unauthorizedEdit = await call(alice, `/api/comments/${createdComment.data.comment.id}`, {
     method: "PATCH", body: JSON.stringify({ body: "Tentativa de editar comentário alheio" }),
   });
