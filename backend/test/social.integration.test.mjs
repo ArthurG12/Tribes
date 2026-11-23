@@ -394,9 +394,17 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
     body: JSON.stringify({ body: "Enquete duplicada", pollOptions: ["Igual", "igual"] }),
   })).response.status, 400);
 
+  const bobProfileForFilters = await call(bob, "/api/profile", {
+    method: "PATCH",
+    body: JSON.stringify({ name: bob.user.name, aboutMe: "", city: "Belo Horizonte - MG", interests: ["Games", "Leitura"] }),
+  });
+  assert.equal(bobProfileForFilters.response.status, 200);
   const membersResponse = await call(alice, `/api/tribes/${tribeOne.id}/members`);
   assert.equal(membersResponse.response.status, 200);
   assert.deepEqual(new Set(membersResponse.data.members.map((member) => member.id)), new Set([alice.user.id, bob.user.id]));
+  const bobDirectoryEntry = membersResponse.data.members.find((member) => member.id === bob.user.id);
+  assert.equal(bobDirectoryEntry.city, "Belo Horizonte - MG");
+  assert.deepEqual(bobDirectoryEntry.interests, ["Games", "Leitura"]);
   assert.equal((await call(empty, `/api/tribes/${tribeOne.id}/members`)).response.status, 404);
   assert.equal((await call(bob, "/api/events")).response.status, 200);
   const imageData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII=";
