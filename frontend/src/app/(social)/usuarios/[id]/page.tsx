@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, LoaderCircle, MapPin, UserRound, UserPlus, UserMinus, Users } from "lucide-react";
+import { ArrowLeft, LoaderCircle, MapPin, UserRound, UserPlus, UserMinus } from "lucide-react";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { Button } from "@/components/ui/button";
 import { apiRequest, type PublicProfile } from "@/lib/social-types";
@@ -16,11 +16,6 @@ export default function PublicProfilePage() {
   const [followError, setFollowError] = useState("");
   const [followPending, setFollowPending] = useState(false);
   const loading = loadedId !== id;
-
-  const loadProfile = useCallback(async () => {
-    const { profile: loadedProfile } = await apiRequest<{ profile: PublicProfile }>(`/api/users/${encodeURIComponent(id)}/profile`);
-    setProfile(loadedProfile);
-  }, [id]);
 
   useEffect(() => {
     let active = true;
