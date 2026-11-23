@@ -448,6 +448,16 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal(filtered.response.status, 200);
   assert.ok(filtered.data.items.length >= 2);
   assert.ok(filtered.data.items.every((item) => item.tribe.id === tribeOne.id));
+  const searchedPost = await call(alice, "/api/feed?q=Publicação%20para%20todos&limit=50");
+  assert.equal(searchedPost.response.status, 200);
+  assert.ok(searchedPost.data.items.some((item) => item.id === postId));
+  assert.ok(searchedPost.data.items.every((item) => item.body.toLowerCase().includes("publicação para todos")));
+  const searchedEvent = await call(alice, "/api/feed?q=Noite%20de%20jogos&limit=50");
+  assert.equal(searchedEvent.response.status, 200);
+  assert.ok(searchedEvent.data.items.some((item) => item.id === eventId));
+  const searchedByLocation = await call(alice, "/api/feed?q=Centro%20de%20Belo%20Horizonte&limit=50");
+  assert.ok(searchedByLocation.data.items.some((item) => item.id === eventId));
+  assert.equal((await call(alice, `/api/feed?q=${"x".repeat(101)}`)).response.status, 400);
   const forbidden = await call(alice, `/api/feed?tribeId=${outsiderTribe.id}`);
   assert.equal(forbidden.response.status, 403);
 
