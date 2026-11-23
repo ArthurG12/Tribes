@@ -8,6 +8,8 @@ const png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwM
 test("accepts an allowed image based on its actual file signature", async () => {
   const image = await parseImage(`data:image/png;base64,${png}`);
   assert.equal(image.mimeType, "image/png");
+  assert.equal(image.width, 1);
+  assert.equal(image.height, 1);
   assert.ok(image.data.length > 0);
 });
 
@@ -17,6 +19,15 @@ test("rejects declared MIME types that do not match the actual bytes", async () 
     { statusCode: 400 }
   );
   await assert.rejects(parseImage("data:image/png;base64,ZmFrZQ=="), { statusCode: 400 });
+});
+
+test("rejects images with excessive pixel dimensions", async () => {
+  const oversizedDimensions = Buffer.from(png, "base64");
+  oversizedDimensions.writeUInt32BE(5000, 16);
+  await assert.rejects(
+    parseImage(`data:image/png;base64,${oversizedDimensions.toString("base64")}`),
+    { statusCode: 400 }
+  );
 });
 
 test("rejects image data above five MiB", async () => {
