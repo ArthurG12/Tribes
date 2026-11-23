@@ -193,3 +193,26 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+@layer base {
+  html {
+    min-width: 320px;
+    overflow-x: clip;
+  }
+
+  body {
+    min-width: 320px;
+    overflow-x: clip;
+  }
+
+  img, video, canvas, svg {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 639px) {
+  button, a, input, select, textarea {
+    scroll-margin-bottom: 1rem;
+  }
+}
