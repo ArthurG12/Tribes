@@ -378,6 +378,13 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.equal((await call(bob, `/api/tribes/${tribeOne.id}/join`, { method: "POST" })).response.status, 200);
 
   const postId = await createPost(alice, tribeOne, "Uma publicação para todos os membros.");
+  assert.equal((await call(null, `/api/content/${postId}`)).response.status, 401);
+  const directPost = await call(alice, `/api/content/${postId}`);
+  assert.equal(directPost.response.status, 200, JSON.stringify(directPost.data));
+  assert.equal(directPost.data.item.id, postId);
+  assert.equal(directPost.data.item.body, "Uma publicação para todos os membros.");
+  assert.equal(directPost.data.item.tribe.id, tribeOne.id);
+  assert.equal((await call(empty, `/api/content/${postId}`)).response.status, 404);
   const pollResponse = await call(alice, `/api/tribes/${tribeOne.id}/posts`, {
     method: "POST",
     body: JSON.stringify({ body: "Qual atividade devemos organizar?", pollOptions: ["Cinema", "Jogos", "Piquenique"] }),

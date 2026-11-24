@@ -706,7 +706,7 @@ export async function userBelongsToTribe(userId, tribeId) {
   return rowCount > 0;
 }
 
-export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly = false, type = "all" }) {
+export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly = false, type = "all", contentId }) {
   if (tribeId && !(await userBelongsToTribe(userId, tribeId))) {
     const error = new Error("Você não participa desta tribo.");
     error.statusCode = 403;
@@ -747,14 +747,15 @@ export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly
      JOIN users author ON author.id = f.author_id
      JOIN tribes t ON t.id = f.tribe_id
      LEFT JOIN tribe_events e ON e.content_id = f.id
-     WHERE ($2::uuid IS NULL OR f.tribe_id = $2)
-       AND ($3::text IS NULL OR (f.body ILIKE $3 OR author.display_name ILIKE $3 OR t.name ILIKE $3 OR e.title ILIKE $3 OR e.location ILIKE $3))
+      WHERE ($2::uuid IS NULL OR f.tribe_id = $2)
+        AND ($9::uuid IS NULL OR f.id = $9)
+        AND ($3::text IS NULL OR (f.body ILIKE $3 OR author.display_name ILIKE $3 OR t.name ILIKE $3 OR e.title ILIKE $3 OR e.location ILIKE $3))
        AND ($4::timestamptz IS NULL OR (f.created_at, f.id) < ($4, $5::uuid))
        AND ($7::boolean = false OR EXISTS (SELECT 1 FROM saved_content s WHERE s.content_id = f.id AND s.user_id = $1))
        AND ($8::text = 'all' OR f.kind = $8)
      ORDER BY f.created_at DESC, f.id DESC
      LIMIT $6`,
-    [userId, tribeId ?? null, query ? `%${query}%` : null, cursor?.createdAt ?? null, cursor?.id ?? null, limit + 1, savedOnly, type]
+    [userId, tribeId ?? null, query ? `%${query}%` : null, cursor?.createdAt ?? null, cursor?.id ?? null, limit + 1, savedOnly, type, contentId ?? null]
   );
   const hasMore = rows.length > limit;
   const pageRows = rows.slice(0, limit);
@@ -797,6 +798,11 @@ export async function getFeed(userId, { tribeId, query, cursor, limit, savedOnly
     items,
     nextCursor: hasMore && last ? encodeCursor({ createdAt: last.created_at, id: last.id }) : null,
   };
+}
+
+export async function getContentItem(userId, contentId) {
+  const { items } = await getFeed(userId, { contentId, limit: 1 });
+  return items[0] ?? null;
 }
 
 function encodeCursor(cursor) {

@@ -132,7 +132,7 @@ export function FeedItemCard({ item, onUpdateItem, onError, onRemoveItem }: Feed
   }
 
   async function sharePost() {
-    const url = `${window.location.origin}/feed?focus=${item.id}`;
+    const url = `${window.location.origin}/publicacoes/${item.id}`;
     try {
       if (navigator.share) await navigator.share({ title: "Tribes", url });
       else {

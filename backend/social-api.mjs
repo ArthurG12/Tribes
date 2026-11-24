@@ -31,6 +31,7 @@ import {
   enqueueEmail,
   editComment,
   getContentImage,
+  getContentItem,
   getFeed,
   getPublicUserProfile,
   getPublicTribe,
@@ -708,6 +709,16 @@ export async function handleSocialRequest(request, response, url) {
     }
 
     const contentItemMatch = pathname.match(/^\/api\/content\/([^/]+)$/);
+    if (contentItemMatch && method === "GET") {
+      const contentId = requireUuid(contentItemMatch[1], "Publicação");
+      const item = await getContentItem(user.id, contentId);
+      if (!item) {
+        sendJson(response, 404, { error: "Publicação não encontrada ou sem acesso." });
+        return true;
+      }
+      sendJson(response, 200, { item });
+      return true;
+    }
     if (contentItemMatch && ["PATCH", "DELETE"].includes(method)) {
       const contentId = requireUuid(contentItemMatch[1], "Publicação");
       if (method === "PATCH") {

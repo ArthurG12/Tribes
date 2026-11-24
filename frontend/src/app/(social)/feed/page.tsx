@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bookmark, ChevronDown, Filter, LoaderCircle, Search, Users, X } from "lucide-react";
 import { FeedComposer } from "@/components/social/feed-composer";
 import { FeedItemCard } from "@/components/social/feed-item-card";
@@ -12,9 +13,7 @@ import { apiRequest, type FeedItem, type Tribe } from "@/lib/social-types";
 const PAGE_SIZE = 20;
 
 export default function FeedPage() {
-  const [focusId, setFocusId] = useState<string | null>(null);
-  const focusedItemRef = useRef<string | null>(null);
-  const focusLoadingRef = useRef(false);
+  const router = useRouter();
   const requestSequence = useRef(0);
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [selectedTribe, setSelectedTribe] = useState("all");
@@ -30,10 +29,14 @@ export default function FeedPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setFocusId(params.get("focus"));
+    const focusId = params.get("focus");
+    if (focusId) {
+      router.replace(`/publicacoes/${encodeURIComponent(focusId)}`);
+      return;
+    }
     const tribeId = params.get("tribeId");
     if (tribeId) setSelectedTribe(tribeId);
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
@@ -54,6 +57,7 @@ export default function FeedPage() {
   }, [selectedTribe, selectedType, debouncedSearch]);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("focus")) return;
     let active = true;
     setLoading(true);
     apiRequest<{ tribes: Tribe[] }>("/api/tribes?mine=true")
@@ -73,32 +77,6 @@ export default function FeedPage() {
       });
     return () => { active = false; };
   }, [fetchPage]);
-
-  useEffect(() => {
-    if (!focusId) {
-      focusedItemRef.current = null;
-      return;
-    }
-    if (loading || focusedItemRef.current === focusId || !items.some((item) => item.id === focusId)) return;
-    focusedItemRef.current = focusId;
-    window.requestAnimationFrame(() => {
-      document.getElementById(`feed-item-${focusId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-  }, [focusId, items, loading]);
-
-  useEffect(() => {
-    if (!focusId || loading || loadingMore || !nextCursor || focusLoadingRef.current || items.some((item) => item.id === focusId)) return;
-    focusLoadingRef.current = true;
-    setLoadingMore(true);
-    void fetchPage(nextCursor)
-      .catch((loadError) => {
-        setError(loadError instanceof Error ? loadError.message : "Não foi possível localizar a publicação.");
-      })
-      .finally(() => {
-        focusLoadingRef.current = false;
-        setLoadingMore(false);
-      });
-  }, [focusId, items, loading, loadingMore, nextCursor, fetchPage]);
 
   function removeItem(itemId: string) {
     setItems((current) => current.filter((item) => item.id !== itemId));

@@ -233,7 +233,7 @@ export default function EventsPage() {
               <li key={event.id}>
                 <Link
                   id={`monthly-event-${event.id}`}
-                  href={`/feed?focus=${event.id}`}
+                  href={`/publicacoes/${event.id}`}
                   className="group block rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5"
                 >
                   <h3 className="font-heading font-bold transition-colors group-hover:text-primary">{event.title}</h3>
