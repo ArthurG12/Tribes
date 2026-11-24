@@ -24,6 +24,16 @@ interface FeedComposerProps {
 }
 
 const toolButton = "inline-flex size-9 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
+const MAX_TRIBE_LABEL_CHARACTERS = 17;
+
+function getTribeButtonLabel(name?: string) {
+  if (!name) return "Selecione a Tribo";
+
+  const characters = Array.from(name);
+  return characters.length > MAX_TRIBE_LABEL_CHARACTERS
+    ? `${characters.slice(0, MAX_TRIBE_LABEL_CHARACTERS - 1).join("")}…`
+    : name;
+}
 
 export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
   const { user } = useCurrentUser();
@@ -256,8 +266,8 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
               </button>
             </div>
 
-            <div className="ml-auto flex shrink-0 flex-col items-stretch gap-2">
-              <div className="relative">
+            <div className="ml-auto grid w-full min-w-0 grid-cols-2 items-stretch gap-2 sm:flex sm:w-auto sm:shrink-0 sm:flex-col">
+              <div className="relative min-w-0 sm:flex-none">
                 <div id="composer-tribe-options" hidden={!tribePickerOpen || !tribes.length} role="group" aria-label="Escolha uma tribo para publicar" className="absolute bottom-full right-0 z-30 mb-2 max-h-64 w-64 max-w-[calc(100vw-3rem)] overflow-y-auto rounded-xl border border-border bg-background p-3 shadow-lg">
                   <div className="flex flex-wrap gap-2">
                     {tribes.map((tribe) => <button
@@ -279,6 +289,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
                 <Button
                   type="button"
                   aria-label={selectedTribe ? `Tribo selecionada: ${selectedTribe.name}. Alterar tribo` : "Selecionar tribo para publicar (obrigatório)"}
+                  title={selectedTribe?.name}
                   aria-expanded={tribePickerOpen}
                   aria-controls="composer-tribe-options"
                   disabled={!tribes.length || creating}
@@ -286,20 +297,20 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
                     setTribePickerOpen((open) => !open);
                     setComposerError("");
                   }}
-                  className={`rounded-full px-5 ${tribePickerOpen || selectedTribe ? "ring-2 ring-primary/30" : ""}`}
+                  className={`w-full min-w-0 rounded-full px-3 sm:w-auto sm:px-5 ${tribePickerOpen || selectedTribe ? "ring-2 ring-primary/30" : ""}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-flame-kindling size-5" aria-hidden="true">
                     <path d="M12 2c1 3 2.5 3.5 3.5 4.5A5 5 0 0 1 17 10a5 5 0 1 1-10 0c0-.3 0-.6.1-.9a2 2 0 1 0 3.3-2C8 4.5 11 2 12 2Z" />
                     <path d="m5 22 14-4" />
                     <path d="m5 18 14 4" />
                   </svg>
-                  Selecione a Tribo
+                  <span className="min-w-0 truncate">{getTribeButtonLabel(selectedTribe?.name)}</span>
                 </Button>
               </div>
 
-              <Button type="submit" disabled={creating || !tribes.length || !selectedTribeId || !body.trim() || pollInvalid} className="rounded-full px-5">
+              <Button type="submit" disabled={creating || !tribes.length || !selectedTribeId || !body.trim() || pollInvalid} className="w-full min-w-0 rounded-full px-3 sm:w-auto sm:px-5">
                 {creating ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
-                {eventMode ? "Publicar evento" : pollMode ? "Publicar enquete" : "Publicar"}
+                <span className="min-w-0 truncate">{eventMode ? "Publicar evento" : pollMode ? "Publicar enquete" : "Publicar"}</span>
               </Button>
             </div>
           </div>

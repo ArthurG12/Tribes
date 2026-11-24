@@ -7,9 +7,13 @@ import { registrationMessageForDelivery } from "./registration-message.mjs";
 import { recordAnalyticsEvent } from "./analytics-store.mjs";
 import {
   addComment,
+  createDirectMessage,
+  createOrGetDirectConversation,
   createTribeMessage,
   deleteTribeMessage,
   listNotifications,
+  listDirectConversations,
+  listDirectMessages,
   listTribeMembers,
   listTribeMessages,
   listUpcomingEvents,
@@ -32,6 +36,7 @@ import {
   editComment,
   getContentImage,
   getContentItem,
+  getDirectConversation,
   getFeed,
   getPublicUserProfile,
   getPublicTribe,
@@ -43,6 +48,7 @@ import {
   leaveTribe,
   listComments,
   searchTribes,
+  searchDirectMessageUsers,
   setEventAttendance,
   setPollVote,
   toggleLike,
@@ -166,6 +172,7 @@ export async function handleSocialRequest(request, response, url) {
   const method = request.method ?? "GET";
   const routeKnown = pathname.startsWith("/api/auth/") || pathname === "/api/maps-config" ||
     pathname === "/api/profile" || /^\/api\/users\/[^/]+\/(?:profile|avatar)$/.test(pathname) ||
+    pathname === "/api/dm/users" || pathname === "/api/dm/conversations" || /^\/api\/dm\/conversations\/[^/]+(?:\/messages)?$/.test(pathname) ||
     pathname === "/api/feed" || pathname === "/api/saved" || /^\/api\/content\/[^/]+$/.test(pathname) || /^\/api\/content\/[^/]+\/save$/.test(pathname) || pathname === "/api/events" || pathname === "/api/notifications" || /^\/api\/notifications\/[^/]+\/read$/.test(pathname) || pathname === "/api/notifications/read-all" || pathname === "/api/tribes" ||
     /^\/api\/tribes\/[^/]+$/.test(pathname) || /^\/api\/tribes\/[^/]+\/(?:join|membership|posts|events|members|messages)$/.test(pathname) || /^\/api\/tribes\/[^/]+\/messages\/[^/]+$/.test(pathname) ||
     /^\/api\/content\/[^/]+\/image$/.test(pathname) ||
@@ -404,6 +411,68 @@ export async function handleSocialRequest(request, response, url) {
         "X-Content-Type-Options": "nosniff",
       });
       response.end(avatar.data);
+      return true;
+    }
+
+    if (pathname === "/api/dm/users" && method === "GET") {
+      const query = (url.searchParams.get("q") ?? "").trim();
+      if (query.length > 100) throw invalid("A busca deve ter até 100 caracteres.");
+      sendJson(response, 200, { users: query.length < 2 ? [] : await searchDirectMessageUsers(user.id, query, 20) });
+      return true;
+    }
+
+    if (pathname === "/api/dm/conversations" && method === "GET") {
+      sendJson(response, 200, { conversations: await listDirectConversations(user.id) });
+      return true;
+    }
+
+    if (pathname === "/api/dm/conversations" && method === "POST") {
+      const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });
+      const recipientId = requireUuid(payload.recipientId, "Destinatário");
+      if (recipientId === user.id) {
+        sendJson(response, 400, { error: "Escolha outra pessoa para iniciar a conversa." });
+        return true;
+      }
+      const conversation = await createOrGetDirectConversation(user.id, recipientId);
+      if (!conversation) {
+        sendJson(response, 404, { error: "Usuário não encontrado." });
+        return true;
+      }
+      sendJson(response, 201, { conversation });
+      return true;
+    }
+
+    const directConversationMatch = pathname.match(/^\/api\/dm\/conversations\/([^/]+)$/);
+    if (directConversationMatch && method === "GET") {
+      const conversation = await getDirectConversation(user.id, requireUuid(directConversationMatch[1], "Conversa"));
+      if (!conversation) {
+        sendJson(response, 404, { error: "Conversa não encontrada." });
+        return true;
+      }
+      sendJson(response, 200, { conversation });
+      return true;
+    }
+
+    const directMessagesMatch = pathname.match(/^\/api\/dm\/conversations\/([^/]+)\/messages$/);
+    if (directMessagesMatch && ["GET", "POST"].includes(method)) {
+      const conversationId = requireUuid(directMessagesMatch[1], "Conversa");
+      if (method === "GET") {
+        const messages = await listDirectMessages(user.id, conversationId);
+        if (!messages) {
+          sendJson(response, 404, { error: "Conversa não encontrada." });
+          return true;
+        }
+        sendJson(response, 200, { messages });
+        return true;
+      }
+      const payload = await readJson(request, { requireObject: true, invalidMessage: "Objeto JSON inválido." });
+      const body = requiredString(payload.body, "mensagem", 1, 1000);
+      const message = await createDirectMessage(user.id, conversationId, body);
+      if (!message) {
+        sendJson(response, 404, { error: "Conversa não encontrada." });
+        return true;
+      }
+      sendJson(response, 201, { message });
       return true;
     }
 

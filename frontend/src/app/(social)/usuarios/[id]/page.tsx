@@ -2,17 +2,20 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { ArrowLeft, LoaderCircle, MapPin, UserRound } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, LoaderCircle, MapPin, MessageCircle, UserRound } from "lucide-react";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { Button } from "@/components/ui/button";
 import { apiRequest, type PublicProfile } from "@/lib/social-types";
 
 export default function PublicProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loadedId, setLoadedId] = useState("");
   const [error, setError] = useState("");
+  const [startingConversation, setStartingConversation] = useState(false);
+  const [conversationError, setConversationError] = useState("");
   const loading = loadedId !== id;
 
   useEffect(() => {
@@ -31,6 +34,22 @@ export default function PublicProfilePage() {
       .finally(() => { if (active) setLoadedId(id); });
     return () => { active = false; };
   }, [id]);
+
+  async function startConversation() {
+    if (startingConversation || !profile || profile.isMe) return;
+    setStartingConversation(true);
+    setConversationError("");
+    try {
+      const { conversation } = await apiRequest<{ conversation: { id: string } }>("/api/dm/conversations", {
+        method: "POST",
+        body: JSON.stringify({ recipientId: profile.id }),
+      });
+      router.push(`/mensagens/${conversation.id}`);
+    } catch (startError) {
+      setConversationError(startError instanceof Error ? startError.message : "Não foi possível iniciar a conversa.");
+      setStartingConversation(false);
+    }
+  }
 
 
   return (
@@ -55,7 +74,12 @@ export default function PublicProfilePage() {
                 <h1 className="break-words font-heading text-3xl font-extrabold">{profile.name}</h1>
                 {profile.city && <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground"><MapPin className="size-4 shrink-0 text-primary" />{profile.city}</p>}
               </div>
+              {!profile.isMe && <Button onClick={() => void startConversation()} disabled={startingConversation} className="shrink-0 rounded-xl">
+                {startingConversation ? <LoaderCircle className="size-4 animate-spin" /> : <MessageCircle className="size-4" />}
+                Enviar mensagem
+              </Button>}
             </div>
+            {conversationError && <p role="alert" className="mt-3 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{conversationError}</p>}
             {profile.interests.length > 0 && (
               <section className="mt-6">
                 <h2 className="font-heading text-lg font-bold">Interesses</h2>

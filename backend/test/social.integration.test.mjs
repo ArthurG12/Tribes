@@ -230,6 +230,57 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   const bob = await register("bob");
   const empty = await register("empty");
 
+  assert.equal((await call(null, "/api/dm/conversations")).response.status, 401);
+  const dmUserSearch = await call(alice, "/api/dm/users?q=Tester%20bob");
+  assert.equal(dmUserSearch.response.status, 200);
+  assert.equal(dmUserSearch.data.users.length, 1);
+  assert.equal(dmUserSearch.data.users[0].id, bob.user.id);
+  assert.equal("email" in dmUserSearch.data.users[0], false);
+  assert.equal((await call(alice, `/api/dm/users?q=${encodeURIComponent(alice.user.name)}`)).data.users.length, 0);
+
+  assert.equal((await call(alice, "/api/dm/conversations", {
+    method: "POST", body: JSON.stringify({ recipientId: alice.user.id }),
+  })).response.status, 400);
+  assert.equal((await call(alice, "/api/dm/conversations", {
+    method: "POST", body: JSON.stringify({ recipientId: "00000000-0000-4000-8000-000000000000" }),
+  })).response.status, 404);
+  const openedConversation = await call(alice, "/api/dm/conversations", {
+    method: "POST", body: JSON.stringify({ recipientId: bob.user.id }),
+  });
+  assert.equal(openedConversation.response.status, 201);
+  const directConversationId = openedConversation.data.conversation.id;
+  const reopenedConversation = await call(bob, "/api/dm/conversations", {
+    method: "POST", body: JSON.stringify({ recipientId: alice.user.id }),
+  });
+  assert.equal(reopenedConversation.response.status, 201);
+  assert.equal(reopenedConversation.data.conversation.id, directConversationId);
+  const directMessagesPath = `/api/dm/conversations/${directConversationId}/messages`;
+  assert.equal((await call(empty, `/api/dm/conversations/${directConversationId}`)).response.status, 404);
+  assert.equal((await call(empty, directMessagesPath)).response.status, 404);
+  assert.equal((await call(empty, directMessagesPath, {
+    method: "POST", body: JSON.stringify({ body: "Mensagem de fora." }),
+  })).response.status, 404);
+  assert.equal((await call(alice, directMessagesPath, {
+    method: "POST", body: JSON.stringify({ body: "   " }),
+  })).response.status, 400);
+  assert.equal((await call(alice, directMessagesPath, {
+    method: "POST", body: JSON.stringify({ body: "x".repeat(1001) }),
+  })).response.status, 400);
+  const sentDirectMessage = await call(alice, directMessagesPath, {
+    method: "POST", body: JSON.stringify({ body: "Oi, Bob!" }),
+  });
+  assert.equal(sentDirectMessage.response.status, 201);
+  assert.equal(sentDirectMessage.data.message.sender.id, alice.user.id);
+  assert.equal(sentDirectMessage.data.message.isMine, true);
+  const bobInbox = await call(bob, "/api/dm/conversations");
+  assert.equal(bobInbox.data.conversations[0].unreadCount, 1);
+  const bobDirectMessages = await call(bob, directMessagesPath);
+  assert.equal(bobDirectMessages.response.status, 200);
+  assert.equal(bobDirectMessages.data.messages[0].body, "Oi, Bob!");
+  assert.equal(bobDirectMessages.data.messages[0].isMine, false);
+  assert.equal((await call(bob, "/api/dm/conversations")).data.conversations[0].unreadCount, 0);
+  assert.equal((await call(alice, `/api/dm/conversations/${directConversationId}`)).data.conversation.peer.id, bob.user.id);
+
   const profileImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmL8AAAAASUVORK5CYII=";
   const profileUpdate = await call(alice, "/api/profile", {
     method: "PATCH",

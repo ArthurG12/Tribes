@@ -1385,6 +1385,203 @@ export async function listTribeMembers(userId, tribeId) {
   }));
 }
 
+export async function searchDirectMessageUsers(userId, query, limit = 20) {
+  const { rows } = await pool.query(
+    `SELECT u.id, u.display_name,
+            EXISTS (SELECT 1 FROM user_profile_images image
+                    WHERE image.user_id = u.id AND image.is_deleted = FALSE) AS has_avatar
+     FROM users u
+     WHERE u.id <> $1 AND u.display_name ILIKE $2
+     ORDER BY u.display_name ASC, u.id ASC
+     LIMIT $3`,
+    [userId, `%${query}%`, limit]
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.display_name,
+    avatarUrl: row.has_avatar ? `/api/users/${row.id}/avatar` : null,
+  }));
+}
+
+export async function createOrGetDirectConversation(userId, recipientId) {
+  if (userId === recipientId) return null;
+  const { rows } = await pool.query(
+    `INSERT INTO direct_conversations (user_low_id, user_high_id)
+     SELECT LEAST($1::uuid, $2::uuid), GREATEST($1::uuid, $2::uuid)
+     WHERE EXISTS (SELECT 1 FROM users WHERE id = $2)
+     ON CONFLICT (user_low_id, user_high_id)
+     DO UPDATE SET user_low_id = EXCLUDED.user_low_id
+     RETURNING id`,
+    [userId, recipientId]
+  );
+  return rows[0] ? { id: rows[0].id } : null;
+}
+
+export async function getDirectConversation(userId, conversationId) {
+  const { rows } = await pool.query(
+    `SELECT conversation.id,
+            peer.id AS peer_id, peer.display_name AS peer_name,
+            EXISTS (SELECT 1 FROM user_profile_images image
+                    WHERE image.user_id = peer.id AND image.is_deleted = FALSE) AS peer_has_avatar
+     FROM direct_conversations conversation
+     JOIN users peer ON peer.id = CASE WHEN conversation.user_low_id = $1
+                                       THEN conversation.user_high_id
+                                       ELSE conversation.user_low_id END
+     WHERE conversation.id = $2
+       AND ($1 = conversation.user_low_id OR $1 = conversation.user_high_id)`,
+    [userId, conversationId]
+  );
+  const row = rows[0];
+  return row ? {
+    id: row.id,
+    peer: {
+      id: row.peer_id,
+      name: row.peer_name,
+      avatarUrl: row.peer_has_avatar ? `/api/users/${row.peer_id}/avatar` : null,
+    },
+  } : null;
+}
+
+export async function listDirectConversations(userId, limit = 100) {
+  const { rows } = await pool.query(
+    `SELECT conversation.id,
+            peer.id AS peer_id, peer.display_name AS peer_name,
+            EXISTS (SELECT 1 FROM user_profile_images image
+                    WHERE image.user_id = peer.id AND image.is_deleted = FALSE) AS peer_has_avatar,
+            latest.body AS last_message_body,
+            latest.created_at AS last_message_at,
+            (SELECT COUNT(*)::int
+             FROM direct_messages unread
+             WHERE unread.conversation_id = conversation.id
+               AND unread.sender_id = peer.id
+               AND unread.created_at > COALESCE(
+                 CASE WHEN conversation.user_low_id = $1 THEN conversation.user_low_read_at
+                      ELSE conversation.user_high_read_at END,
+                 '-infinity'::timestamptz
+               )) AS unread_count
+     FROM direct_conversations conversation
+     JOIN users peer ON peer.id = CASE WHEN conversation.user_low_id = $1
+                                       THEN conversation.user_high_id
+                                       ELSE conversation.user_low_id END
+     LEFT JOIN LATERAL (
+       SELECT message.body, message.created_at
+       FROM direct_messages message
+       WHERE message.conversation_id = conversation.id
+       ORDER BY message.created_at DESC, message.id DESC
+       LIMIT 1
+     ) latest ON TRUE
+     WHERE conversation.user_low_id = $1 OR conversation.user_high_id = $1
+     ORDER BY latest.created_at DESC NULLS LAST, conversation.created_at DESC
+     LIMIT $2`,
+    [userId, limit]
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    peer: {
+      id: row.peer_id,
+      name: row.peer_name,
+      avatarUrl: row.peer_has_avatar ? `/api/users/${row.peer_id}/avatar` : null,
+    },
+    lastMessage: row.last_message_body === null ? null : {
+      body: row.last_message_body,
+      createdAt: row.last_message_at,
+    },
+    unreadCount: row.unread_count,
+  }));
+}
+
+export async function listDirectMessages(userId, conversationId, limit = 100) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows: conversations } = await client.query(
+      `SELECT user_low_id, user_high_id
+       FROM direct_conversations
+       WHERE id = $1 AND ($2 = user_low_id OR $2 = user_high_id)
+       FOR UPDATE`,
+      [conversationId, userId]
+    );
+    const conversation = conversations[0];
+    if (!conversation) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+    const readColumn = conversation.user_low_id === userId ? "user_low_read_at" : "user_high_read_at";
+    await client.query(`UPDATE direct_conversations SET ${readColumn} = CURRENT_TIMESTAMP WHERE id = $1`, [conversationId]);
+    const { rows } = await client.query(
+      `SELECT message.id, message.body, message.created_at,
+              (message.sender_id = $1) AS is_mine,
+              sender.id AS sender_id, sender.display_name AS sender_name,
+              EXISTS (SELECT 1 FROM user_profile_images image
+                      WHERE image.user_id = sender.id AND image.is_deleted = FALSE) AS sender_has_avatar
+       FROM direct_messages message
+       JOIN users sender ON sender.id = message.sender_id
+       WHERE message.conversation_id = $2
+       ORDER BY message.created_at DESC, message.id DESC
+       LIMIT $3`,
+      [userId, conversationId, limit]
+    );
+    await client.query("COMMIT");
+    return rows.reverse().map(toDirectMessage);
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function createDirectMessage(userId, conversationId, body) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rowCount } = await client.query(
+      `SELECT 1 FROM direct_conversations
+       WHERE id = $1 AND ($2 = user_low_id OR $2 = user_high_id)
+       FOR SHARE`,
+      [conversationId, userId]
+    );
+    if (!rowCount) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+    const { rows } = await client.query(
+      `INSERT INTO direct_messages (conversation_id, sender_id, body)
+       VALUES ($1, $2, $3)
+       RETURNING id, body, created_at`,
+      [conversationId, userId, body]
+    );
+    const { rows: senders } = await client.query(
+      `SELECT u.id AS sender_id, u.display_name AS sender_name,
+              EXISTS (SELECT 1 FROM user_profile_images image
+                      WHERE image.user_id = u.id AND image.is_deleted = FALSE) AS sender_has_avatar
+       FROM users u WHERE u.id = $1`,
+      [userId]
+    );
+    await client.query("COMMIT");
+    return toDirectMessage({ ...rows[0], ...senders[0], is_mine: true });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+function toDirectMessage(row) {
+  return {
+    id: row.id,
+    body: row.body,
+    createdAt: row.created_at,
+    isMine: row.is_mine === true,
+    sender: {
+      id: row.sender_id,
+      name: row.sender_name,
+      avatarUrl: row.sender_has_avatar ? `/api/users/${row.sender_id}/avatar` : null,
+    },
+  };
+}
+
 export async function listTribeMessages(userId, tribeId, limit = 100) {
   const { rows } = await pool.query(
     `SELECT message.id, message.body, message.created_at, message.edited_at,

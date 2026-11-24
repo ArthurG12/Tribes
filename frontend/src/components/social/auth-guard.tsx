@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { SocialHeader } from "@/components/social/social-header";
 
-const MOBILE_NAVIGATION_PATHS = ["/feed", "/tribos", "/minhas-tribos", "/eventos", "/perfil"];
+const MOBILE_NAVIGATION_PATHS = ["/feed", "/tribos", "/minhas-tribos", "/mensagens", "/eventos", "/perfil"];
 
 export interface CurrentUser {
   id: string;
