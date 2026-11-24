@@ -480,6 +480,28 @@ export async function handleSocialRequest(request, response, url) {
       if (query.length > 100) throw invalid("A busca deve ter até 100 caracteres.");
       const tribeId = url.searchParams.get("tribeId") || undefined;
       if (tribeId) requireUuid(tribeId, "Tribo");
+      const from = url.searchParams.get("from");
+      const to = url.searchParams.get("to");
+      const attending = url.searchParams.get("attending");
+      if (from !== null || to !== null || attending !== null) {
+        const validUtcTimestamp = (value) => {
+          if (!value || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value)) return false;
+          const date = new Date(value);
+          return Number.isFinite(date.getTime()) && date.toISOString() === value;
+        };
+        if (!validUtcTimestamp(from) || !validUtcTimestamp(to) || Date.parse(to) <= Date.parse(from) || attending !== "true") {
+          throw invalid("Informe um intervalo válido e solicite apenas eventos com presença confirmada.");
+        }
+        sendJson(response, 200, {
+          events: await listUpcomingEvents(user.id, null, {
+            from,
+            to,
+            tribeId,
+            attendingOnly: true,
+          }),
+        });
+        return true;
+      }
       sendJson(response, 200, { events: await listUpcomingEvents(user.id, 100, { query, tribeId }) });
       return true;
     }

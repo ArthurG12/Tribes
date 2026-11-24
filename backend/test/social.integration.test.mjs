@@ -726,9 +726,22 @@ integrationTest("authenticated social feed, event attendance, likes, comments an
   assert.deepEqual((await call(alice, attendancePath, { method: "POST" })).data, {
     attendeesCount: 1, attendingByMe: false, waitlistedByMe: true, waitlistCount: 1,
   });
+  const januaryCalendarQuery = new URLSearchParams({
+    from: "2027-01-01T00:00:00.000Z",
+    to: "2027-02-01T00:00:00.000Z",
+    attending: "true",
+  });
+  const bobCalendar = await call(bob, `/api/events?${januaryCalendarQuery}`);
+  assert.equal(bobCalendar.response.status, 200);
+  assert.deepEqual(bobCalendar.data.events.map((event) => event.id), [eventId]);
+  const aliceCalendarWhileWaitlisted = await call(alice, `/api/events?${januaryCalendarQuery}`);
+  assert.deepEqual(aliceCalendarWhileWaitlisted.data.events, []);
+  assert.equal((await call(alice, "/api/events?from=2027-02-01T00%3A00%3A00.000Z&to=2027-01-01T00%3A00%3A00.000Z&attending=true")).response.status, 400);
   assert.deepEqual((await call(bob, attendancePath, { method: "DELETE" })).data, {
     attendeesCount: 1, attendingByMe: false, waitlistedByMe: false, waitlistCount: 0,
   });
+  const promotedCalendar = await call(alice, `/api/events?${januaryCalendarQuery}`);
+  assert.deepEqual(promotedCalendar.data.events.map((event) => event.id), [eventId]);
   assert.equal((await call(empty, attendancePath, { method: "POST" })).response.status, 404);
   assert.equal((await call(alice, `/api/content/${postId}/attendance`, { method: "POST" })).response.status, 404);
   const feedWithAttendance = await call(alice, `/api/feed?tribeId=${tribeOne.id}&limit=50`);

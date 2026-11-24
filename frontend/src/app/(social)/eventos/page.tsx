@@ -1,229 +1,209 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, Clock3, MapPin, Users, LoaderCircle, Search, Download } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { EventLocationMap } from "@/components/social/event-location-picker";
-import { EventLocationActions } from "@/components/social/event-location-actions";
-import { apiRequest, formatDateTime, type Tribe } from "@/lib/social-types";
+import { CalendarDays, ChevronLeft, ChevronRight, LoaderCircle } from "lucide-react";
+import { apiRequest } from "@/lib/social-types";
 
-type EventItem = {
+type CalendarEvent = {
   id: string;
-  body: string;
   title: string;
   startsAt: string;
   endsAt: string | null;
-  location: string;
-  lat: number | null;
-  lon: number | null;
-  cost: string | null;
-  maxAttendees: number | null;
-  tribe: { id: string; name: string };
-  authorName: string;
-  attendeesCount: number;
-  waitlistCount: number;
-  attendingByMe: boolean;
-  waitlistedByMe: boolean;
 };
 
-function dateKey(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Data indisponível";
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(date);
+const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+function dateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-function escapeIcs(value: string) {
-  return value.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+function monthDays(month: Date) {
+  const first = new Date(month.getFullYear(), month.getMonth(), 1);
+  const leadingDays = (first.getDay() + 6) % 7;
+  const numberOfDays = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const numberOfCells = Math.ceil((leadingDays + numberOfDays) / 7) * 7;
+
+  return Array.from({ length: numberOfCells }, (_, index) =>
+    new Date(month.getFullYear(), month.getMonth(), index - leadingDays + 1),
+  );
 }
 
-function toIcsDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+function eventDatesByDay(events: CalendarEvent[], month: Date) {
+  const firstOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
+  const lastOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+  const eventsByDay = new Map<string, CalendarEvent[]>();
+
+  for (const event of events) {
+    const startsAt = new Date(event.startsAt);
+    const endsAt = new Date(event.endsAt ?? event.startsAt);
+    if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) continue;
+
+    const firstEventDay = new Date(startsAt.getFullYear(), startsAt.getMonth(), startsAt.getDate());
+    const lastEventDay = new Date(endsAt.getFullYear(), endsAt.getMonth(), endsAt.getDate());
+    const cursor = firstEventDay < firstOfMonth ? firstOfMonth : firstEventDay;
+    const end = lastEventDay > lastOfMonth ? lastOfMonth : lastEventDay;
+
+    while (cursor <= end) {
+      const key = dateKey(cursor);
+      eventsByDay.set(key, [...(eventsByDay.get(key) ?? []), event]);
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+
+  return eventsByDay;
 }
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [tribes, setTribes] = useState<Tribe[]>([]);
-  const [query, setQuery] = useState("");
-  const [selectedTribe, setSelectedTribe] = useState("all");
+  const [month, setMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pendingEvent, setPendingEvent] = useState<string | null>(null);
   const [error, setError] = useState("");
-
-  async function loadEvents(search = query, tribeId = selectedTribe) {
-    const params = new URLSearchParams();
-    if (search.trim()) params.set("q", search.trim());
-    if (tribeId !== "all") params.set("tribeId", tribeId);
-    const result = await apiRequest<{ events: EventItem[] }>(`/api/events?${params.toString()}`);
-    setEvents(result.events);
-  }
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      apiRequest<{ events: EventItem[] }>("/api/events"),
-      apiRequest<{ tribes: Tribe[] }>("/api/tribes?mine=true"),
-    ])
-      .then(([eventResult, tribeResult]) => {
-        if (!active) return;
-        setEvents(eventResult.events);
-        setTribes(tribeResult.tribes);
+    const from = new Date(month.getFullYear(), month.getMonth(), 1);
+    const to = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+    const params = new URLSearchParams({
+      from: from.toISOString(),
+      to: to.toISOString(),
+      attending: "true",
+    });
+
+    apiRequest<{ events: CalendarEvent[] }>(`/api/events?${params.toString()}`)
+      .then((result) => { if (active) setEvents(result.events); })
+      .catch((loadError) => {
+        if (active) setError(loadError instanceof Error ? loadError.message : "Não foi possível carregar os eventos.");
       })
-      .catch((err) => { if (active) setError(err instanceof Error ? err.message : "Não foi possível carregar os eventos."); })
       .finally(() => { if (active) setLoading(false); });
+
     return () => { active = false; };
-  }, []);
+  }, [month]);
 
-  async function toggleAttendance(event: EventItem) {
-    if (pendingEvent) return;
-    setPendingEvent(event.id);
-    setError("");
-    try {
-      const result = await apiRequest<{
-        attendeesCount: number;
-        attendingByMe: boolean;
-        waitlistedByMe: boolean;
-        waitlistCount: number;
-      }>(`/api/content/${event.id}/attendance`, {
-        method: event.attendingByMe || event.waitlistedByMe ? "DELETE" : "POST",
-      });
-      setEvents((current) => current.map((item) => item.id === event.id ? { ...item, ...result } : item));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível atualizar sua presença.");
-    } finally {
-      setPendingEvent(null);
-    }
-  }
+  const days = useMemo(() => monthDays(month), [month]);
+  const daysByEvent = useMemo(() => eventDatesByDay(events, month), [events, month]);
+  const monthLabel = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(month);
+  const monthHeading = monthLabel.charAt(0).toLocaleUpperCase("pt-BR") + monthLabel.slice(1);
+  const todayKey = dateKey(new Date());
 
-  const visibleEvents = events;
-  const mappedEvents = visibleEvents.filter((event) => event.lat !== null && event.lon !== null);
-
-  function exportCalendar() {
-    const lines = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//Tribes//Agenda//PT-BR",
-      "CALSCALE:GREGORIAN",
-      ...visibleEvents.flatMap((event) => {
-        const start = toIcsDate(event.startsAt);
-        const end = event.endsAt ? toIcsDate(event.endsAt) : null;
-        if (!start) return [];
-        return [
-          "BEGIN:VEVENT",
-          `UID:${event.id}@tribes`,
-          `DTSTAMP:${toIcsDate(new Date().toISOString())}`,
-          `DTSTART:${start}`,
-          ...(end ? [`DTEND:${end}`] : []),
-          `SUMMARY:${escapeIcs(event.title)}`,
-          `DESCRIPTION:${escapeIcs(event.body)}`,
-          `LOCATION:${escapeIcs(event.location)}`,
-          `CATEGORIES:${escapeIcs(event.tribe.name)}`,
-          "END:VEVENT",
-        ];
-      }),
-      "END:VCALENDAR",
-    ];
-    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "tribes-eventos.ics";
-    anchor.click();
-    URL.revokeObjectURL(url);
-  }
-
-  async function applyFilters() {
+  function selectMonth(nextMonth: Date) {
+    setMonth(nextMonth);
     setLoading(true);
+    setEvents([]);
     setError("");
-    try {
-      await loadEvents();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível filtrar os eventos.");
-    } finally {
-      setLoading(false);
-    }
+  }
+
+  function moveMonth(offset: number) {
+    selectMonth(new Date(month.getFullYear(), month.getMonth() + offset, 1));
+  }
+
+  function goToCurrentMonth() {
+    const now = new Date();
+    selectMonth(new Date(now.getFullYear(), now.getMonth(), 1));
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6 sm:space-y-6 sm:px-6 sm:py-8">
-      <section className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+    <main className="mx-auto w-full min-w-0 max-w-6xl space-y-5 px-3 py-5 pb-24 sm:space-y-6 sm:px-6 sm:py-8">
+      <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Agenda da comunidade</p>
-          <h1 className="mt-2 font-heading text-2xl font-extrabold sm:text-3xl">Próximos eventos</h1>
-          <p className="mt-1 max-w-lg text-sm leading-relaxed text-muted-foreground">Tudo que vai acontecer nas tribos das quais você participa.</p>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Sua agenda</p>
+          <h1 className="mt-2 font-heading text-2xl font-extrabold sm:text-3xl">Calendário de eventos</h1>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Eventos em que você confirmou presença nas suas tribos.</p>
         </div>
-        <Button variant="outline" className="w-full sm:w-auto" onClick={exportCalendar} disabled={!visibleEvents.length}>
-          <Download className="size-4" />Exportar calendário
-        </Button>
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card p-1.5 sm:justify-end">
+          <button
+            type="button"
+            aria-label="Mês anterior"
+            onClick={() => moveMonth(-1)}
+            className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <h2 aria-live="polite" className="min-w-36 text-center font-heading text-base font-bold sm:min-w-44 sm:text-lg">
+            {monthHeading}
+          </h2>
+          <button
+            type="button"
+            aria-label="Próximo mês"
+            onClick={() => moveMonth(1)}
+            className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronRight className="size-5" />
+          </button>
+          <button
+            type="button"
+            onClick={goToCurrentMonth}
+            className="ml-1 rounded-lg px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Hoje
+          </button>
+        </div>
       </section>
-      <section className="grid min-w-0 gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_220px_auto] sm:items-end sm:p-5">
-        <div className="space-y-2">
-          <label htmlFor="event-search" className="text-sm font-semibold">Pesquisar eventos</label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input id="event-search" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void applyFilters(); }} placeholder="Nome, local ou descrição" className="h-10 w-full rounded-xl border border-input bg-background pl-9 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="event-tribe" className="text-sm font-semibold">Tribo</label>
-          <select id="event-tribe" value={selectedTribe} onChange={(event) => setSelectedTribe(event.target.value)} className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm">
-            <option value="all">Todas as tribos</option>
-            {tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>)}
-          </select>
-        </div>
-        <Button className="w-full sm:w-auto" onClick={() => void applyFilters()} disabled={loading}>Filtrar</Button>
-      </section>
+
       {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
-      {loading ? <div className="flex justify-center py-12"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : visibleEvents.length ? (
-        <div className="space-y-4">
-          {mappedEvents.length > 0 && (
-            <section className="space-y-2 rounded-2xl border border-border bg-card p-4 sm:p-5">
-              <h2 className="font-heading text-lg font-bold">Locais exatos dos eventos</h2>
-              <EventLocationMap
-                points={mappedEvents.map((event) => ({ id: event.id, lat: event.lat!, lon: event.lon!, formatted: `${event.title} · ${event.location}` }))}
-                className="h-72"
-              />
-            </section>
-          )}
-          {visibleEvents.map((event) => (
-            <article key={event.id} className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <Badge className="bg-primary/10 text-primary"><CalendarDays className="size-3" />{dateKey(event.startsAt)}</Badge>
-                <span className="text-xs text-muted-foreground">por {event.authorName}</span>
+
+      <section aria-label={`Calendário de ${monthLabel}`} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div role="grid" aria-label={`Eventos de ${monthLabel}`} aria-busy={loading} className="min-w-0">
+          <div role="row" className="grid grid-cols-7 border-b border-border bg-muted/40">
+            {WEEKDAYS.map((weekday) => (
+              <div key={weekday} role="columnheader" className="py-2.5 text-center text-[10px] font-bold uppercase tracking-wide text-muted-foreground sm:py-3 sm:text-xs">
+                {weekday}
               </div>
-              <h2 className="mt-3 font-heading text-xl font-bold">{event.title}</h2>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{event.body}</p>
-              <div className="mt-4 flex min-w-0 flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4 text-primary" />{formatDateTime(event.startsAt)}{event.endsAt ? ` – ${formatDateTime(event.endsAt)}` : ""}</span>
-                <span className="inline-flex min-w-0 items-start gap-1.5 break-words"><MapPin className="size-4 shrink-0 text-primary" /><span className="min-w-0 break-words">{event.location}</span></span>
-                {event.cost && <span>{event.cost}</span> }
-                <span className="inline-flex items-center gap-1.5"><Users className="size-4 text-primary" />{event.attendeesCount}{event.maxAttendees ? `/${event.maxAttendees}` : ""} confirmados</span>
-                {event.waitlistCount > 0 && <span>{event.waitlistCount} na lista de espera</span>}
-              </div>
-              <div className="mt-3">
-                <EventLocationActions location={event.location} lat={event.lat} lon={event.lon} />
-              </div>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-                <span className="text-xs font-semibold text-muted-foreground">{event.tribe.name}</span>
-                <div className="flex w-full min-w-0 flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
-                  <Link href={`/feed?focus=${event.id}`} className="text-center text-sm font-semibold text-primary hover:underline sm:text-left">Ver no feed</Link>
-                  <Button className="w-full sm:w-auto" size="sm" variant={event.attendingByMe ? "outline" : "default"} disabled={pendingEvent !== null} onClick={() => void toggleAttendance(event)}>
-                    {pendingEvent === event.id ? <LoaderCircle className="size-4 animate-spin" /> : null}
-                    {event.attendingByMe ? "Cancelar presença" : event.waitlistedByMe ? "Sair da espera" : event.maxAttendees && event.attendeesCount >= event.maxAttendees ? "Entrar na lista de espera" : "Confirmar presença"}
-                  </Button>
-                </div>
-              </div>
-            </article>
+            ))}
+          </div>
+          {Array.from({ length: Math.ceil(days.length / 7) }, (_, weekIndex) => (
+            <div key={weekIndex} role="row" className="grid grid-cols-7">
+              {days.slice(weekIndex * 7, weekIndex * 7 + 7).map((day) => {
+                const key = dateKey(day);
+                const isCurrentMonth = day.getMonth() === month.getMonth();
+                const isToday = key === todayKey;
+                const dayEvents = daysByEvent.get(key) ?? [];
+                const accessibleDate = new Intl.DateTimeFormat("pt-BR", { dateStyle: "full" }).format(day);
+
+                return (
+                  <div
+                    key={key}
+                    role="gridcell"
+                    aria-label={`${accessibleDate}${dayEvents.length ? `, ${dayEvents.length} ${dayEvents.length === 1 ? "evento" : "eventos"}` : ""}`}
+                    aria-current={isToday ? "date" : undefined}
+                    className={`min-h-24 min-w-0 border-b border-r border-border p-1.5 sm:min-h-36 sm:p-2.5 ${isCurrentMonth ? "bg-card" : "bg-muted/20"}`}
+                  >
+                    <span className={`inline-flex size-6 items-center justify-center rounded-full text-[11px] font-semibold sm:size-7 sm:text-xs ${isToday ? "bg-primary text-primary-foreground" : isCurrentMonth ? "text-foreground" : "text-muted-foreground/60"}`}>
+                      {day.getDate()}
+                    </span>
+                    <div className="mt-1 max-h-20 space-y-1 overflow-y-auto sm:mt-2 sm:max-h-24">
+                      {dayEvents.map((event) => (
+                        <Link
+                          key={event.id}
+                          href={`/feed?focus=${event.id}`}
+                          title={event.title}
+                          className="block break-words rounded-md bg-primary/10 px-1 py-1 text-[9px] font-semibold leading-tight text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-1.5 sm:text-xs"
+                        >
+                          {event.title}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ))}
         </div>
-      ) : (
-        <section className="rounded-3xl border border-dashed border-border bg-card px-4 py-10 text-center sm:px-5 sm:py-12">
-          <CalendarDays className="mx-auto size-8 text-primary" />
-          <h2 className="mt-3 font-heading text-xl font-bold">Nenhum evento encontrado</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Tente mudar a pesquisa ou o filtro de tribo.</p>
+        {loading && (
+          <div className="flex items-center justify-center gap-2 border-t border-border px-4 py-3 text-sm text-muted-foreground" role="status">
+            <LoaderCircle className="size-4 animate-spin text-primary" />Carregando eventos…
+          </div>
+        )}
+      </section>
+
+      {!loading && !error && events.length === 0 && (
+        <section className="rounded-2xl border border-dashed border-border bg-card px-4 py-8 text-center sm:py-10">
+          <CalendarDays className="mx-auto size-7 text-primary" />
+          <h2 className="mt-3 font-heading text-lg font-bold">Nenhum evento confirmado neste mês</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Quando você confirmar presença em um evento, ele aparecerá aqui.</p>
         </section>
       )}
     </main>

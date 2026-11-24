@@ -1493,7 +1493,7 @@ export async function deleteExpiredTribeMessages() {
   return rowCount;
 }
 
-export async function listUpcomingEvents(userId, limit = 100, { query = "", tribeId } = {}) {
+export async function listUpcomingEvents(userId, limit = 100, { query = "", tribeId, from, to, attendingOnly = false } = {}) {
   const normalizedQuery = query.trim();
   const { rows } = await pool.query(
     `SELECT f.id, f.body, e.title, e.starts_at, e.ends_at, e.location, e.location_lat, e.location_lon, e.cost, e.max_attendees,
@@ -1505,13 +1505,17 @@ export async function listUpcomingEvents(userId, limit = 100, { query = "", trib
      FROM feed_items f JOIN tribe_events e ON e.content_id = f.id
      JOIN tribes t ON t.id = f.tribe_id JOIN users u ON u.id = f.author_id
      JOIN tribe_memberships m ON m.tribe_id = f.tribe_id AND m.user_id = $1 AND m.status = 'active'
-     WHERE e.starts_at >= CURRENT_TIMESTAMP
-       AND ($3::uuid IS NULL OR f.tribe_id = $3)
-       AND ($4::text IS NULL OR (
-         f.body ILIKE $4 OR e.title ILIKE $4 OR e.location ILIKE $4 OR t.name ILIKE $4
-       ))
-     ORDER BY e.starts_at ASC, f.id ASC LIMIT $2`,
-    [userId, limit, tribeId ?? null, normalizedQuery ? `%${normalizedQuery}%` : null]
+      WHERE (($3::timestamptz IS NULL AND e.starts_at >= CURRENT_TIMESTAMP)
+          OR ($3::timestamptz IS NOT NULL AND e.starts_at < $4 AND COALESCE(e.ends_at, e.starts_at) >= $3))
+        AND ($5::uuid IS NULL OR f.tribe_id = $5)
+        AND ($6::text IS NULL OR (
+          f.body ILIKE $6 OR e.title ILIKE $6 OR e.location ILIKE $6 OR t.name ILIKE $6
+        ))
+        AND (NOT $7::boolean OR EXISTS (
+          SELECT 1 FROM event_attendees a WHERE a.content_id = f.id AND a.user_id = $1
+        ))
+       ORDER BY e.starts_at ASC, f.id ASC LIMIT COALESCE($2::integer, 2147483647)`,
+    [userId, limit, from ?? null, to ?? null, tribeId ?? null, normalizedQuery ? `%${normalizedQuery}%` : null, attendingOnly]
   );
   return rows.map((row) => ({
     id: row.id, body: row.body, title: row.title, startsAt: row.starts_at, endsAt: row.ends_at,
