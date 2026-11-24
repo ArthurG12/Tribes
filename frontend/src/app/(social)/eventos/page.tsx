@@ -2,14 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight, LoaderCircle } from "lucide-react";
-import { apiRequest } from "@/lib/social-types";
+import { CalendarDays, ChevronLeft, ChevronRight, Clock3, LoaderCircle, MapPin } from "lucide-react";
+import { apiRequest, formatDateTime } from "@/lib/social-types";
 
 type CalendarEvent = {
   id: string;
   title: string;
   startsAt: string;
   endsAt: string | null;
+  location: string;
+  tribe: { id: string; name: string };
 };
 
 const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -143,8 +145,6 @@ export default function EventsPage() {
         </div>
       </section>
 
-      {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
-
       <section aria-label={`Calendário de ${monthLabel}`} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <div role="grid" aria-label={`Eventos de ${monthLabel}`} aria-busy={loading} className="min-w-0">
           <div role="row" className="grid grid-cols-7 border-b border-border bg-muted/40">
@@ -174,18 +174,26 @@ export default function EventsPage() {
                     <span className={`inline-flex size-6 items-center justify-center rounded-full text-[11px] font-semibold sm:size-7 sm:text-xs ${isToday ? "bg-primary text-primary-foreground" : isCurrentMonth ? "text-foreground" : "text-muted-foreground/60"}`}>
                       {day.getDate()}
                     </span>
-                    <div className="mt-1 max-h-20 space-y-1 overflow-y-auto sm:mt-2 sm:max-h-24">
-                      {dayEvents.map((event) => (
-                        <Link
-                          key={event.id}
-                          href={`/feed?focus=${event.id}`}
-                          title={event.title}
-                          className="block break-words rounded-md bg-primary/10 px-1 py-1 text-[9px] font-semibold leading-tight text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-1.5 sm:text-xs"
-                        >
-                          {event.title}
-                        </Link>
-                      ))}
-                    </div>
+                    {dayEvents.length > 0 && (
+                      <div className="mt-1 flex flex-wrap items-center gap-0.5 sm:mt-2 sm:gap-1">
+                        {dayEvents.map((event) => (
+                          <button
+                            key={event.id}
+                            type="button"
+                            aria-label={`Ir para o evento ${event.title}`}
+                            title={event.title}
+                            onClick={() => {
+                              const eventLink = document.getElementById(`monthly-event-${event.id}`);
+                              eventLink?.scrollIntoView({ behavior: "smooth", block: "center" });
+                              if (eventLink instanceof HTMLAnchorElement) eventLink.focus({ preventScroll: true });
+                            }}
+                            className="inline-flex size-6 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <CalendarDays className="size-4" aria-hidden="true" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -199,13 +207,53 @@ export default function EventsPage() {
         )}
       </section>
 
-      {!loading && !error && events.length === 0 && (
-        <section className="rounded-2xl border border-dashed border-border bg-card px-4 py-8 text-center sm:py-10">
-          <CalendarDays className="mx-auto size-7 text-primary" />
-          <h2 className="mt-3 font-heading text-lg font-bold">Nenhum evento confirmado neste mês</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Quando você confirmar presença em um evento, ele aparecerá aqui.</p>
-        </section>
-      )}
+      <section aria-labelledby="monthly-events-heading" className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="monthly-events-heading" className="font-heading text-xl font-bold">Eventos do mês</h2>
+          {!loading && !error && events.length > 0 && (
+            <span className="text-sm text-muted-foreground">{events.length} {events.length === 1 ? "evento" : "eventos"}</span>
+          )}
+        </div>
+
+        {error ? (
+          <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>
+        ) : loading ? (
+          <p role="status" className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-5 text-sm text-muted-foreground">
+            <LoaderCircle className="size-4 animate-spin text-primary" />Carregando eventos…
+          </p>
+        ) : events.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card px-4 py-8 text-center sm:py-10">
+            <CalendarDays className="mx-auto size-7 text-primary" />
+            <h3 className="mt-3 font-heading text-lg font-bold">Nenhum evento confirmado neste mês</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Quando você confirmar presença em um evento, ele aparecerá aqui.</p>
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {events.map((event) => (
+              <li key={event.id}>
+                <Link
+                  id={`monthly-event-${event.id}`}
+                  href={`/feed?focus=${event.id}`}
+                  className="group block rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5"
+                >
+                  <h3 className="font-heading font-bold transition-colors group-hover:text-primary">{event.title}</h3>
+                  <div className="mt-2 flex flex-col gap-1.5 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-x-5">
+                    <p className="inline-flex items-start gap-2">
+                      <Clock3 className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <span>{formatDateTime(event.startsAt)}{event.endsAt ? ` – ${formatDateTime(event.endsAt)}` : ""}</span>
+                    </p>
+                    <p className="inline-flex items-start gap-2">
+                      <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <span>{event.location}</span>
+                    </p>
+                    <p className="text-xs sm:self-center">Tribo: {event.tribe.name}</p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </main>
   );
 }
