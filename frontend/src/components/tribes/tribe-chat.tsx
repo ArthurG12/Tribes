@@ -218,14 +218,14 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
               if (element) messageCardsRef.current.set(message.id, element);
               else messageCardsRef.current.delete(message.id);
             }}
-            className="flex min-w-0 items-start gap-2.5"
+            className="flex w-full min-w-0 flex-col items-start gap-1.5 sm:flex-row sm:gap-2.5"
           >
-            <UserAvatar name={message.author.name} avatarUrl={message.author.avatarUrl} />
-            <div className="min-w-0 flex-1 rounded-2xl bg-card px-3 py-2.5 shadow-xs">
-              <div className="flex min-w-0 items-start justify-between gap-2">
-                <p className="min-w-0 break-words text-sm font-semibold [overflow-wrap:anywhere]">{message.author.name}</p>
+            <UserAvatar name={message.author.name} avatarUrl={message.author.avatarUrl} className="size-8 sm:size-10" />
+            <div className="w-full min-w-0 rounded-2xl bg-card px-3 py-2.5 shadow-xs sm:flex-1">
+              <div className="flex min-w-0 items-center justify-between gap-2">
+                <p className="min-w-0 max-w-28 flex-1 truncate whitespace-nowrap text-sm font-semibold" title={message.author.name}>{message.author.name}</p>
                 <div className="flex shrink-0 items-center gap-1">
-                  <time className="text-xs text-muted-foreground" dateTime={message.createdAt}>
+                  <time className="whitespace-nowrap text-xs text-muted-foreground" dateTime={message.createdAt}>
                     {messageTime.format(new Date(message.createdAt))}{message.editedAt ? " · editada" : ""}
                   </time>
                   {message.isMine && <div className="relative">
