@@ -400,7 +400,17 @@ export async function getSessionUser(token) {
      WHERE s.token_hash = $1 AND s.expires_at > CURRENT_TIMESTAMP`,
     [digestSessionToken(token)]
   );
-  return rows[0] ? toUser(rows[0]) : null;
+  if (!rows[0]) return null;
+  try {
+    await pool.query(
+      `UPDATE users SET last_seen_at = CURRENT_TIMESTAMP
+       WHERE id = $1 AND (last_seen_at IS NULL OR last_seen_at < CURRENT_TIMESTAMP - INTERVAL '5 minutes')`,
+      [rows[0].id]
+    );
+  } catch (error) {
+    console.error("Falha ao atualizar atividade da conta:", error);
+  }
+  return toUser(rows[0]);
 }
 
 export async function deleteSession(token) {

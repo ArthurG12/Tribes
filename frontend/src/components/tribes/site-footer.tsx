@@ -12,7 +12,7 @@ export function SiteFooter() {
         <nav aria-label="Links do rodapé" className="flex flex-wrap justify-center gap-5 text-xs text-muted-foreground">
           <Link href="/faq" className="transition-colors hover:text-foreground">Dúvidas</Link>
           <Link href="/criadores" className="transition-colors hover:text-foreground">Criadores</Link>
-          <Link href="/metricas" className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"><BarChart3 className="size-3.5" /> Métricas MVP</Link>
+          <Link href="/metricas" className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"><BarChart3 className="size-3.5" /> Métricas</Link>
         </nav>
       </div>
     </footer>

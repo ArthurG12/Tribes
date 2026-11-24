@@ -4,6 +4,7 @@ import { MAX_IMAGE_DATA_URL_SIZE, parseImage } from "./images.mjs";
 import { getObjectStorage } from "./object-storage.mjs";
 import { wakeEmailQueueWorker } from "./email-queue-worker.mjs";
 import { registrationMessageForDelivery } from "./registration-message.mjs";
+import { recordAnalyticsEvent } from "./analytics-store.mjs";
 import {
   addComment,
   createTribeMessage,
@@ -226,6 +227,18 @@ export async function handleSocialRequest(request, response, url) {
         throw error;
       }
       if (!user) throw invalid("Este link é inválido, expirou ou já foi usado. Solicite um novo link.");
+      const analyticsToken = readCookie(request, "tribes_analytics");
+      if (analyticsToken) {
+        try {
+          await recordAnalyticsEvent({
+            sessionToken: analyticsToken,
+            event: "registration_complete",
+            userId: user.id,
+          });
+        } catch (error) {
+          console.error("Falha ao registrar conclusão de cadastro nas métricas:", error);
+        }
+      }
       return sendJson(response, 201, withUser(user), { "Set-Cookie": sessionCookie(sessionToken) }), true;
     }
 

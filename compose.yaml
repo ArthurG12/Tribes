@@ -29,6 +29,7 @@ services:
       PORT: 4000
       DATABASE_URL: postgres://tribes:tribes_dev_password@database:5432/tribes
       FRONTEND_URL: http://localhost:4317
+      METRICS_ADMIN_EMAILS: ${METRICS_ADMIN_EMAILS:-}
       MAPS_API: ${MAPS_API:-}
       EMAIL_PROVIDER: mailhog
       SMTP_URL: smtp://mailhog:1025

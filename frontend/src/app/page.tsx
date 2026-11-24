@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/tribes/navbar";
@@ -12,6 +13,10 @@ import { SiteFooter } from "@/components/tribes/site-footer";
 
 export default function TribesLandingPage() {
   const router = useRouter();
+
+  useEffect(() => {
+    void trackMvpEvent({ event: "page_view", pagePath: "/" });
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -32,7 +37,7 @@ export default function TribesLandingPage() {
                 Pessoas com os mesmos interesses, atividades que você gosta e encontros de verdade.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Button size="lg" className="h-12 rounded-full px-7 text-base font-semibold" nativeButton={false} render={<Link href="/cadastro" />}>
+                <Button size="lg" className="h-12 rounded-full px-7 text-base font-semibold" nativeButton={false} onClick={() => void trackMvpEvent({ event: "hero_cta_click" })} render={<Link href="/cadastro" />}>
                   Começar agora <ArrowRight className="size-4" />
                 </Button>
                 <Button variant="outline" size="lg" className="h-12 rounded-full px-6 text-base font-semibold" nativeButton={false} render={<Link href="/explorar" />}>
@@ -50,7 +55,7 @@ export default function TribesLandingPage() {
             <TribeExplorer
               compact
               onSelectTribeForSignup={() => { router.push("/cadastro"); }}
-              onExplorerInteract={(interest) => { void trackMvpEvent({ event: "explorer_interaction", interests: interest ? [interest] : undefined }); }}
+              onExplorerInteract={(interest) => { void trackMvpEvent({ event: "explorer_interaction", category: interest }); }}
             />
             <div className="mt-2 text-center">
               <Button variant="outline" className="rounded-full" nativeButton={false} render={<Link href="/explorar" />}>Ver todas as tribos <ArrowRight className="size-4" /></Button>

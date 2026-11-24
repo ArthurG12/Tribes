@@ -11,8 +11,8 @@ Landing Page de validação (Smoke Test + Protótipo Interativo) para a rede soc
    - **Membros Exploradores (B2C Gratuito)**
    - **Organizadores de Comunidades (Freemium / Tribes Organizador Pro)**
    - **Points & Espaços Parceiros Verificados (B2B Local — cafés, ludotecas, arenas, livrarias)**
-5. **Captura de Lista de Espera (`#lista-espera`)**: coleta perfil, cidade/região, interesses e principal dor enfrentada, recomendando tribos compatíveis imediatamente após o envio.
-6. **Painel de Métricas de Validação do MVP (`/metricas`)**: acompanhamento de sessões visitantes, interações no protótipo, cliques em planos, taxa de conversão, demanda por interesse/segmento e exportação CSV de cadastros locais de demonstração.
+5. **Cadastro de contas**: criação por link enviado ao e-mail e ativação da conta após confirmação.
+6. **Painel de Métricas (`/metricas`)**: usuários ativos DAU/WAU/MAU, cadastros, funil anônimo da landing page e atividade real do produto, com acesso administrativo restrito.
 7. **Área autenticada da rede social**: feed cronológico de publicações e eventos das tribos do usuário, imagens em publicações, busca e participação em tribos, criação de comunidades, curtidas e comentários.
 
 ## Organização do projeto
@@ -23,7 +23,7 @@ Landing Page de validação (Smoke Test + Protótipo Interativo) para a rede soc
 - PostgreSQL roda como o serviço `database` do Compose e persiste os dados da aplicação no volume `postgres_data`.
 - Imagens de publicações e avatares são armazenadas em um bucket S3 privado; PostgreSQL guarda referências, MIME e tamanho. Em desenvolvimento, o serviço RustFS fornece armazenamento S3 local no volume `rustfs_data`.
 - A Landing Page continua em `/` para visitantes. Cadastro e login levam à área autenticada, que oferece feed, busca e criação de tribos.
-- Contas, sessões, tribos, participações, publicações/eventos, curtidas e comentários são persistidos no PostgreSQL. O cadastro da lista de espera continua separado e seus dados pessoais permanecem apenas no `localStorage` do navegador.
+- Contas, sessões, tribos, participações, publicações/eventos, curtidas e comentários são persistidos no PostgreSQL. O painel usa agregados anônimos para visitantes e atividade autenticada para usuários ativos; não expõe dados pessoais.
 
 ## Tecnologias
 
@@ -40,11 +40,17 @@ Landing Page de validação (Smoke Test + Protótipo Interativo) para a rede soc
 docker compose up
 ```
 
-O Compose inicia frontend, backend, PostgreSQL, MailHog e RustFS. As portas locais são `4317` (frontend), `8026` (MailHog), `9000` (API S3 do RustFS) e `9001` (console RustFS). O bucket privado `tribes-media` é criado automaticamente com credenciais exclusivas de desenvolvimento. O Next.js encaminha as chamadas `/api/*` para a API. Acesse `http://localhost:4317` para a Landing Page; usuários podem criar conta em `/cadastro` ou entrar em `/entrar`. No cadastro, a pessoa informa o e-mail e recebe um link; ao abri-lo, define o nome e a senha, e entra automaticamente no feed. No login, o link **Esqueci minha senha** envia instruções por e-mail para contas cadastradas e informa quando o e-mail não está cadastrado; após escolher a nova senha pelo link, a pessoa também entra automaticamente no feed. Em desenvolvimento, veja os e-mails capturados em `http://localhost:8026`. Após autenticar, a aplicação abre `/feed`, com atalhos para explorar e criar tribos. O painel de validação continua em `/metricas`. As alterações no frontend e no backend são refletidas durante o desenvolvimento.
+O Compose inicia frontend, backend, PostgreSQL, MailHog e RustFS. As portas locais são `4317` (frontend), `8026` (MailHog), `9000` (API S3 do RustFS) e `9001` (console RustFS). O bucket privado `tribes-media` é criado automaticamente com credenciais exclusivas de desenvolvimento. O Next.js encaminha as chamadas `/api/*` para a API. Acesse `http://localhost:4317` para a Landing Page; usuários podem criar conta em `/cadastro` ou entrar em `/entrar`. No cadastro, a pessoa informa o e-mail e recebe um link; ao abri-lo, define o nome e a senha, e entra automaticamente no feed. No login, o link **Esqueci minha senha** envia instruções por e-mail para contas cadastradas e informa quando o e-mail não está cadastrado; após escolher a nova senha pelo link, a pessoa também entra automaticamente no feed. Em desenvolvimento, veja os e-mails capturados em `http://localhost:8026`. Após autenticar, a aplicação abre `/feed`, com atalhos para explorar e criar tribos. O painel de métricas fica em `/metricas`. As alterações no frontend e no backend são refletidas durante o desenvolvimento.
 
 Para habilitar o autocompletar e os mapas dos locais de eventos, copie `.env.example` para `.env` na raiz e preencha `MAPS_API` com uma chave Geoapify. Em produção, configure `MAPS_API` no serviço backend; a API entrega a chave ao frontend em runtime para carregar sugestões e tiles. Como ela será usada pelo navegador, restrinja-a por domínio e pelas APIs permitidas no painel Geoapify. Sem a chave, os locais ainda podem ser digitados manualmente, mas mapas e autocompletar ficam indisponíveis.
 
 O backend carrega `backend/.env` quando o arquivo existe. Para conectar uma instância local ao R2 real, copie `backend/.env.example` para `backend/.env` e preencha as credenciais. Sem esse arquivo, o Compose usa RustFS e credenciais de desenvolvimento. `.env` é ignorado pelo Git e excluído do contexto Docker.
+
+### Painel de métricas em produção
+
+O painel `/metricas` e `GET /api/admin/metrics` exigem uma sessão autenticada e um e-mail autorizado no backend. Configure `METRICS_ADMIN_EMAILS` no serviço backend com uma lista separada por vírgulas (por exemplo, `admin@exemplo.com,produto@exemplo.com`). Cada pessoa precisa criar e confirmar a própria conta; a allowlist concede o acesso e pode ser alterada sem modificar o código. No Compose local, defina a variável em `.env` na raiz.
+
+Eventos públicos são recebidos em `POST /api/analytics/events`; a API aceita somente tipos/categorias predefinidos, aplica limite de requisições e não devolve totais. O identificador first-party aleatório expira em 24 horas e é armazenado apenas como hash; registros anônimos antigos são eliminados após 100 dias. Atividade autenticada atualiza `users.last_seen_at` no máximo a cada cinco minutos. O painel apresenta DAU (24h), WAU (7d), MAU (30d), cadastros, aquisição e ações reais do produto. A migração inicial estabelece um novo baseline: os contadores antigos, que incluem dados de demonstração, não são usados nem apagados.
 
 Por padrão, `EMAIL_PROVIDER=mailhog` envia os e-mails ao MailHog local, disponível em `http://localhost:8026`. Para testar com o Resend, configure somente no `backend/.env`:
 

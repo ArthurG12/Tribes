@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { trackMvpEvent } from "@/lib/mvp-tracker";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -20,11 +21,16 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [registrationRequested, setRegistrationRequested] = useState(false);
   const registering = mode === "register";
 
+  useEffect(() => {
+    if (registering) void trackMvpEvent({ event: "page_view", pagePath: "/cadastro" });
+  }, [registering]);
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setSubmitting(true);
     try {
+      if (registering) void trackMvpEvent({ event: "registration_start" });
       const response = await fetch(`/api/auth/${registering ? "register" : "login"}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
