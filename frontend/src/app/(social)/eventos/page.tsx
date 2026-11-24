@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight, Clock3, LoaderCircle, MapPin } from "lucide-react";
+import { Beer, CalendarDays, ChevronLeft, ChevronRight, Clock3, LoaderCircle, MapPin } from "lucide-react";
 import { apiRequest, formatDateTime } from "@/lib/social-types";
 
 type CalendarEvent = {
@@ -189,7 +189,7 @@ export default function EventsPage() {
                             }}
                             className="inline-flex size-6 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
-                            <CalendarDays className="size-4" aria-hidden="true" />
+                            <Beer className="size-4" aria-hidden="true" />
                           </button>
                         ))}
                       </div>

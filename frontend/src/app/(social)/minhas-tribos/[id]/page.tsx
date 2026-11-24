@@ -69,7 +69,7 @@ export default function EditMyTribePage() {
         body: JSON.stringify({ name, description, category, format, city, neighborhood }),
       });
       setTribe(result.tribe);
-      router.push("/minhas-tribos");
+      router.push(`/tribos/${id}`);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Não foi possível salvar as alterações.");
     } finally {
@@ -129,7 +129,7 @@ export default function EditMyTribePage() {
                 <Trash2 className="size-4" />Excluir tribo
               </Button>
               <div className="flex flex-wrap justify-end gap-2">
-                <Button type="button" variant="outline" nativeButton={false} render={<Link href="/minhas-tribos" />}>Cancelar</Button>
+                <Button type="button" variant="outline" nativeButton={false} render={<Link href={`/tribos/${id}`} />}>Cancelar</Button>
                 <Button type="submit" disabled={saving || name.trim().length < 2 || description.trim().length < 2 || city.trim().length < 2}>
                   {saving ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
                   {saving ? "Salvando..." : "Salvar alterações"}
