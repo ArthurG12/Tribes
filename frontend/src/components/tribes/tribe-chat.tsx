@@ -197,7 +197,7 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
   }
 
   return (
-    <section className="rounded-3xl border border-border bg-card p-5 sm:p-7" aria-labelledby="tribe-chat-title">
+    <section className="w-full min-w-0 max-w-full rounded-3xl border border-border bg-card p-3 sm:p-7" aria-labelledby="tribe-chat-title">
       <div className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><MessageCircle className="size-5" /></span>
         <div>
@@ -208,7 +208,7 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
 
       {error && <p role="alert" className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
 
-      <div ref={messagesContainerRef} className="mt-4 max-h-[26rem] min-h-36 space-y-3 overflow-y-auto rounded-2xl border border-border bg-muted/30 p-3 sm:p-4" aria-live="polite" aria-label="Mensagens recentes">
+      <div ref={messagesContainerRef} className="mt-4 w-full min-w-0 max-h-[26rem] min-h-36 space-y-3 overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-muted/30 p-2 sm:p-4" aria-live="polite" aria-label="Mensagens recentes">
         {loading ? (
           <div className="flex min-h-28 items-center justify-center"><LoaderCircle className="size-5 animate-spin text-primary" /></div>
         ) : messages.length ? messages.map((message) => (
@@ -223,7 +223,7 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
             <UserAvatar name={message.author.name} avatarUrl={message.author.avatarUrl} />
             <div className="min-w-0 flex-1 rounded-2xl bg-card px-3 py-2.5 shadow-xs">
               <div className="flex min-w-0 items-start justify-between gap-2">
-                <p className="break-words text-sm font-semibold">{message.author.name}</p>
+                <p className="min-w-0 break-words text-sm font-semibold [overflow-wrap:anywhere]">{message.author.name}</p>
                 <div className="flex shrink-0 items-center gap-1">
                   <time className="text-xs text-muted-foreground" dateTime={message.createdAt}>
                     {messageTime.format(new Date(message.createdAt))}{message.editedAt ? " · editada" : ""}
@@ -306,7 +306,7 @@ export function TribeChat({ tribeId }: { tribeId: string }) {
                     {pendingMessage === message.id && <LoaderCircle className="size-4 animate-spin" />}Salvar
                   </Button>
                 </div>
-              </div> : <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{message.body}</p>}
+              </div> : <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed [overflow-wrap:anywhere]">{message.body}</p>}
               {confirmDelete === message.id && <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
                 <p className="text-sm">Apagar esta mensagem permanentemente?</p>
                 <div className="flex gap-2">
