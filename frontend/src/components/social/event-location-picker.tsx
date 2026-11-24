@@ -147,7 +147,7 @@ export function EventLocationMap({ points, className = "" }: { points: EventMapP
   }, [mapReady, points]);
 
   return (
-    <div className={`relative h-56 w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`}>
+    <div className={`relative isolate h-56 w-full overflow-hidden rounded-xl border border-border bg-muted ${className}`}>
       {mapsApiKey ? (
         <div ref={containerRef} aria-label="Mapa de localização dos eventos" role="region" className="event-location-map h-full w-full" />
       ) : (
