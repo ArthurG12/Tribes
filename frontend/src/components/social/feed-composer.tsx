@@ -29,6 +29,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
   const { user } = useCurrentUser();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [tribeId, setTribeId] = useState("");
+  const [tribePickerOpen, setTribePickerOpen] = useState(false);
   const [body, setBody] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState("");
@@ -46,9 +47,8 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
   const [eventCost, setEventCost] = useState("");
   const [eventCapacity, setEventCapacity] = useState("");
 
-  const selectedTribeId = tribeId && tribes.some((tribe) => tribe.id === tribeId)
-    ? tribeId
-    : tribes[0]?.id ?? "";
+  const selectedTribe = tribes.find((tribe) => tribe.id === tribeId);
+  const selectedTribeId = selectedTribe?.id ?? "";
 
   function resizeTextarea() {
     const element = textareaRef.current;
@@ -93,7 +93,12 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
 
   async function submitContent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selectedTribeId || !body.trim()) return;
+    if (!selectedTribeId) {
+      setComposerError("Selecione uma tribo antes de publicar.");
+      setTribePickerOpen(true);
+      return;
+    }
+    if (!body.trim()) return;
     if (eventMode) {
       const startsAt = new Date(eventStartsAt);
       const endsAt = eventEndsAt ? new Date(eventEndsAt) : null;
@@ -138,6 +143,8 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
       }
 
       setBody("");
+      setTribeId("");
+      setTribePickerOpen(false);
       setPollOptions(["", ""]);
       setPollMultiple(false);
       setImage(null);
@@ -249,15 +256,52 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
               </button>
             </div>
 
-            <select aria-label="Tribo onde publicar" value={selectedTribeId} onChange={(event) => setTribeId(event.target.value)} required disabled={!tribes.length || creating}
-              className="h-9 min-w-0 max-w-full flex-1 rounded-full border border-input bg-background px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:max-w-56 sm:flex-none">
-              {tribes.length ? tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>) : <option value="">Sem tribos</option>}
-            </select>
+            <div className="ml-auto flex shrink-0 flex-col items-stretch gap-2">
+              <div className="relative">
+                <div id="composer-tribe-options" hidden={!tribePickerOpen || !tribes.length} role="group" aria-label="Escolha uma tribo para publicar" className="absolute bottom-full right-0 z-30 mb-2 max-h-64 w-64 max-w-[calc(100vw-3rem)] overflow-y-auto rounded-xl border border-border bg-background p-3 shadow-lg">
+                  <div className="flex flex-wrap gap-2">
+                    {tribes.map((tribe) => <button
+                      key={tribe.id}
+                      type="button"
+                      aria-pressed={selectedTribeId === tribe.id}
+                      disabled={creating}
+                      onClick={() => {
+                        setTribeId(tribe.id);
+                        setTribePickerOpen(false);
+                        setComposerError("");
+                      }}
+                      className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors hover:border-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 ${selectedTribeId === tribe.id ? "border-primary bg-primary/10 text-primary" : "border-input bg-card"}`}
+                    >
+                      {tribe.name}
+                    </button>)}
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  aria-label={selectedTribe ? `Tribo selecionada: ${selectedTribe.name}. Alterar tribo` : "Selecionar tribo para publicar (obrigatório)"}
+                  aria-expanded={tribePickerOpen}
+                  aria-controls="composer-tribe-options"
+                  disabled={!tribes.length || creating}
+                  onClick={() => {
+                    setTribePickerOpen((open) => !open);
+                    setComposerError("");
+                  }}
+                  className={`rounded-full px-5 ${tribePickerOpen || selectedTribe ? "ring-2 ring-primary/30" : ""}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-flame-kindling size-5" aria-hidden="true">
+                    <path d="M12 2c1 3 2.5 3.5 3.5 4.5A5 5 0 0 1 17 10a5 5 0 1 1-10 0c0-.3 0-.6.1-.9a2 2 0 1 0 3.3-2C8 4.5 11 2 12 2Z" />
+                    <path d="m5 22 14-4" />
+                    <path d="m5 18 14 4" />
+                  </svg>
+                  Selecione a Tribo
+                </Button>
+              </div>
 
-            <Button type="submit" disabled={creating || !tribes.length || !body.trim() || pollInvalid} className="ml-auto rounded-full px-5">
-              {creating ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
-              {eventMode ? "Publicar evento" : pollMode ? "Publicar enquete" : "Publicar"}
-            </Button>
+              <Button type="submit" disabled={creating || !tribes.length || !selectedTribeId || !body.trim() || pollInvalid} className="rounded-full px-5">
+                {creating ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
+                {eventMode ? "Publicar evento" : pollMode ? "Publicar enquete" : "Publicar"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
