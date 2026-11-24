@@ -1,9 +1,11 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { SocialHeader } from "@/components/social/social-header";
+
+const MOBILE_NAVIGATION_PATHS = ["/feed", "/tribos", "/minhas-tribos", "/eventos", "/perfil"];
 
 export interface CurrentUser {
   id: string;
@@ -40,6 +42,51 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const touchStart = useRef<{ x: number; y: number; startedAt: number } | null>(null);
+
+  function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    if (event.touches.length !== 1) {
+      touchStart.current = null;
+      return;
+    }
+
+    const target = event.target;
+    if (!(target instanceof Element) || target.closest("a, button, input, textarea, select, [role='button'], [contenteditable='true'], [data-no-swipe]")) {
+      touchStart.current = null;
+      return;
+    }
+
+    for (let element: HTMLElement | null = target as HTMLElement; element && element !== event.currentTarget; element = element.parentElement) {
+      const style = window.getComputedStyle(element);
+      if ((style.overflowX === "auto" || style.overflowX === "scroll") && element.scrollWidth > element.clientWidth) {
+        touchStart.current = null;
+        return;
+      }
+    }
+
+    const touch = event.touches[0];
+    touchStart.current = { x: touch.clientX, y: touch.clientY, startedAt: Date.now() };
+  }
+
+  function handleTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start || !window.matchMedia("(max-width: 1023px)").matches) return;
+
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 64 || Math.abs(deltaX) < Math.abs(deltaY) * 1.3 || Date.now() - start.startedAt > 800) return;
+
+    const currentIndex = MOBILE_NAVIGATION_PATHS.findIndex((path) => pathname === path || pathname.startsWith(`${path}/`));
+    if (currentIndex < 0) return;
+
+    const nextIndex = currentIndex + (deltaX < 0 ? 1 : -1);
+    const nextPath = MOBILE_NAVIGATION_PATHS[nextIndex];
+    if (nextPath) router.push(nextPath);
+  }
 
   useEffect(() => {
     let active = true;
@@ -71,7 +118,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background">
       <CurrentUserContext.Provider value={{ user, setUser }}>
         <SocialHeader user={user} />
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-9">{children}</div>
+        <div
+          className="mx-auto max-w-6xl px-4 pt-6 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-9 lg:pb-9"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={() => { touchStart.current = null; }}
+        >
+          {children}
+        </div>
       </CurrentUserContext.Provider>
     </div>
   );

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Camera, Check, LoaderCircle, MapPin, Plus, Save, Trash2, UserRound, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Camera, Check, LoaderCircle, LogOut, MapPin, Plus, Save, Trash2, UserRound, X } from "lucide-react";
 import { useCurrentUser, type CurrentUser } from "@/components/social/auth-guard";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ const INTEREST_SUGGESTIONS = ["Música", "Cinema", "Leitura", "Tecnologia", "Gam
 
 export default function ProfileSettingsPage() {
   const { user, setUser } = useCurrentUser();
+  const router = useRouter();
   const [name, setName] = useState(user.name);
   const [aboutMe, setAboutMe] = useState(user.aboutMe);
   const [city, setCity] = useState(user.city ?? "");
@@ -112,6 +114,11 @@ export default function ProfileSettingsPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/");
   }
 
   return (
@@ -233,7 +240,10 @@ export default function ProfileSettingsPage() {
 
         {error && <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
         {saved && <p role="status" className="flex items-center gap-2 text-sm font-medium text-primary"><Check className="size-4" />Perfil atualizado.</p>}
-        <div className="flex justify-end border-t border-border pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+          <Button type="button" variant="ghost" onClick={() => void logout()} className="text-muted-foreground hover:text-destructive">
+            <LogOut className="size-4" />Sair da conta
+          </Button>
           <Button type="submit" disabled={saving || name.trim().length < 2} className="rounded-xl">
             {saving ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
             {saving ? "Salvando..." : "Salvar alterações"}
