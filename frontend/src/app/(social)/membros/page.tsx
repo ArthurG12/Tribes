@@ -25,7 +25,7 @@ export default function MembersPage() {
   const [cityFilter, setCityFilter] = useState("all");
   const [interestFilter, setInterestFilter] = useState("all");
   const [loadingTribes, setLoadingTribes] = useState(true);
-  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [loadingMembers, setLoadingMembers] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -40,7 +40,6 @@ export default function MembersPage() {
   useEffect(() => {
     if (!tribeId) return;
     let active = true;
-    setLoadingMembers(true);
     apiRequest<{ members: Member[] }>(`/api/tribes/${tribeId}/members`)
       .then(({ members: result }) => { if (active) setMembers(result); })
       .catch((err) => { if (active) setError(err instanceof Error ? err.message : "Não foi possível carregar os membros."); })
@@ -74,7 +73,7 @@ export default function MembersPage() {
       </section>
       {loadingTribes ? <div className="flex justify-center py-12"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : tribes.length ? (
         <>
-          <select aria-label="Selecionar tribo" value={tribeId} onChange={(event) => { setTribeId(event.target.value); setCityFilter("all"); setInterestFilter("all"); setMembers([]); }} className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm">
+          <select aria-label="Selecionar tribo" value={tribeId} onChange={(event) => { setTribeId(event.target.value); setCityFilter("all"); setInterestFilter("all"); setMembers([]); setLoadingMembers(true); }} className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm">
             {tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>)}
           </select>
           <div className="relative">
