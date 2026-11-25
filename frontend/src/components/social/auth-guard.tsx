@@ -32,7 +32,7 @@ export function useCurrentUser() {
 export function AuthLoadingState() {
   return (
     <div className="flex min-h-screen items-center justify-center text-primary">
-      <Image src="/tribes-emblem.png" alt="Carregando Tribes" width={32} height={32} className="size-8 animate-pulse object-contain" />
+      <Image src="/tribes-emblem.png" alt="Carregando Tribes" width={32} height={32} className="size-8 animate-pulse object-contain" loading="eager" />
     </div>
   );
 }
@@ -110,23 +110,28 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return () => { active = false; };
   }, [pathname, router]);
 
-  if (!loaded || !user) {
-    return <AuthLoadingState />;
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      <CurrentUserContext.Provider value={{ user, setUser }}>
-        <SocialHeader user={user} />
-        <div
-          className="mx-auto max-w-6xl px-4 pt-6 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-9 lg:pb-9"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={() => { touchStart.current = null; }}
-        >
-          {children}
-        </div>
-      </CurrentUserContext.Provider>
+      {user && (
+        <CurrentUserContext.Provider value={{ user, setUser }}>
+          <SocialHeader user={user} />
+        </CurrentUserContext.Provider>
+      )}
+      <div
+        hidden={!loaded || !user}
+        aria-hidden={!loaded || !user}
+        className="mx-auto max-w-6xl px-4 pt-6 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-9 lg:pb-9"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => { touchStart.current = null; }}
+      >
+        {user ? (
+          <CurrentUserContext.Provider value={{ user, setUser }}>
+            {children}
+          </CurrentUserContext.Provider>
+        ) : children}
+      </div>
+      {(!loaded || !user) && <AuthLoadingState />}
     </div>
   );
 }
