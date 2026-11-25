@@ -148,7 +148,15 @@ export default function EventsPage() {
         </div>
       </section>
 
-      <section className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">\n        <label htmlFor="events-tribe-filter" className="text-sm font-semibold">Filtrar eventos por tribo</label>\n        <select id="events-tribe-filter" value={selectedTribe} onChange={(event) => setSelectedTribe(event.target.value)} className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm sm:max-w-xs">\n          <option value="all">Todas as tribos</option>\n          {tribeOptions.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>)}\n        </select>\n      </section>\n\n      <section aria-label={`Calendário de ${monthLabel}`} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <section className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+        <label htmlFor="events-tribe-filter" className="text-sm font-semibold">Filtrar eventos por tribo</label>
+        <select id="events-tribe-filter" value={selectedTribe} onChange={(event) => setSelectedTribe(event.target.value)} className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm sm:max-w-xs">
+          <option value="all">Todas as tribos</option>
+          {tribeOptions.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>)}
+        </select>
+      </section>
+
+      <section aria-label={`Calendário de ${monthLabel}`} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <div role="grid" aria-label={`Eventos de ${monthLabel}`} aria-busy={loading} className="min-w-0">
           <div role="row" className="grid grid-cols-7 border-b border-border bg-muted/40">
             {WEEKDAYS.map((weekday) => (
