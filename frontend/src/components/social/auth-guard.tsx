@@ -18,6 +18,17 @@ export interface CurrentUser {
   avatarUrl: string | null;
 }
 
+const EMPTY_CURRENT_USER: CurrentUser = {
+  id: "",
+  name: "",
+  email: "",
+  aboutMe: "",
+  city: "",
+  interests: [],
+  profileVisibility: { aboutMe: "private", city: "private", interests: "private" },
+  avatarUrl: null,
+};
+
 const CurrentUserContext = createContext<{
   user: CurrentUser;
   setUser: React.Dispatch<React.SetStateAction<CurrentUser | null>>;
@@ -125,11 +136,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         onTouchEnd={handleTouchEnd}
         onTouchCancel={() => { touchStart.current = null; }}
       >
-        {user ? (
-          <CurrentUserContext.Provider value={{ user, setUser }}>
-            {children}
-          </CurrentUserContext.Provider>
-        ) : children}
+        <CurrentUserContext.Provider value={{ user: user ?? EMPTY_CURRENT_USER, setUser }}>
+          {children}
+        </CurrentUserContext.Provider>
       </div>
       {(!loaded || !user) && <AuthLoadingState />}
     </div>
