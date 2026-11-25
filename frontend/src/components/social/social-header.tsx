@@ -97,8 +97,8 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
         </div>
       </div>
     </header>
-    <nav aria-label="Navegação inferior" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-border/80 bg-background/95 px-1 pt-2 pb-2 shadow-md backdrop-blur-md lg:hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)" }}>
-      {nav.map((item) => {
+    <nav aria-label="Navegação inferior" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-border/80 bg-background/95 px-1 pt-2 pb-2 shadow-md backdrop-blur-md lg:hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)" }}>
+      {nav.filter((item) => item.href !== "/minhas-tribos").map((item) => {
         const Icon = item.icon;
         const active = isActive(item.href);
         return (
