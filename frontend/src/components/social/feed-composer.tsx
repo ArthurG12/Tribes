@@ -272,7 +272,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
           {composerError && <p role="alert" className="mt-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{composerError}</p>}
 
           <div className="mt-3 flex flex-nowrap items-center gap-1.5 border-t border-border pt-3">
-            <div className="flex shrink-0 items-center gap-0">
+            <div className="relative -left-2 flex shrink-0 items-center gap-0">
               <label htmlFor="composer-image" title="Adicionar imagem" className={`${toolButton} cursor-pointer`}>
                 <ImagePlus className="size-5" />
                 <span className="sr-only">Adicionar imagem</span>
@@ -286,7 +286,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
               </button>
             </div>
 
-            <div className="ml-auto flex w-fit min-w-0 justify-end">
+            <div className="relative -left-2 ml-auto flex w-fit min-w-0 justify-end">
               <div ref={tribePickerRef} className="relative w-[150px] max-w-[45vw] min-w-0">
                 <div id="composer-tribe-options" hidden={!tribePickerOpen || !tribes.length} role="group" aria-label="Escolha uma tribo para publicar" className="absolute bottom-full right-0 z-30 mb-2 max-h-64 w-64 max-w-[calc(100vw-3rem)] overflow-y-auto rounded-xl border border-border bg-background p-3 shadow-lg">
                   <div className="flex flex-wrap gap-2">
