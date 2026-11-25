@@ -209,7 +209,11 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
     >
       <div className="flex items-start gap-3">
         <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-11" />
-        <div className="min-w-0 flex-1">
+        <div className="relative min-w-0 flex-1">
+          <Button type="submit" disabled={creating || !tribes.length || !selectedTribeId || !body.trim() || pollInvalid} className="absolute right-0 top-0 z-10 h-8 min-h-8 gap-1 rounded-full px-2 text-[11px] leading-none sm:h-9 sm:min-h-9 sm:px-3 sm:text-xs">
+            {creating ? <LoaderCircle className="size-3.5 shrink-0 animate-spin sm:size-4" /> : <Send className="size-3.5 shrink-0 sm:size-4" />}
+            <span>Publicar</span>
+          </Button>
           <textarea
             ref={textareaRef}
             aria-label="Escreva sua publicação"
@@ -219,7 +223,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
             maxLength={5000}
             disabled={creating}
             onChange={(event) => { setBody(event.target.value); resizeTextarea(); }}
-            className="block min-h-12 w-full resize-none border-0 bg-transparent py-2 text-lg leading-snug text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+            className="block min-h-12 w-full resize-none border-0 bg-transparent py-2 pr-24 text-lg leading-snug text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
           />
 
           {eventMode && <div className="mt-2 grid min-w-0 gap-2 sm:grid-cols-2">
@@ -322,10 +326,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
                 </Button>
               </div>
 
-              <Button type="submit" disabled={creating || !tribes.length || !selectedTribeId || !body.trim() || pollInvalid} className="h-8 min-h-8 w-full min-w-0 gap-1 rounded-full px-1 text-[11px] leading-none sm:h-9 sm:min-h-9 sm:px-2 sm:text-xs md:px-3">
-                {creating ? <LoaderCircle className="size-3.5 shrink-0 animate-spin sm:size-4" /> : <Send className="size-3.5 shrink-0 sm:size-4" />}
-                <span className="min-w-0 truncate">{eventMode ? "Publicar evento" : pollMode ? "Publicar enquete" : "Publicar"}</span>
-              </Button>
+              
             </div>
           </div>
         </div>
