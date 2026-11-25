@@ -102,9 +102,9 @@ export function SocialHeader({ user }: { user: CurrentUser }) {
         const Icon = item.icon;
         const active = isActive(item.href);
         return (
-          <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 text-[8px] font-semibold leading-tight transition-colors sm:text-[9px] ${active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
+          <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 min-h-14 text-[9px] font-semibold leading-[10px] transition-colors sm:text-[10px] ${active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
             <span className="relative"><Icon className="size-5 shrink-0" />{item.href === "/mensagens" && unreadDirectMessages > 0 && <span className="absolute -right-2 -top-1 size-2 rounded-full bg-primary" aria-label={`${unreadDirectMessages} mensagens não lidas`} />}</span>
-            <span className="max-w-full truncate">{item.href === "/tribos" ? "Explorar" : item.label}</span>
+            <span className="max-w-full text-center whitespace-normal break-words">{item.href === "/tribos" ? "Explorar tribos" : item.label}</span>
           </Link>
         );
       })}
