@@ -64,6 +64,7 @@ export default function EventsPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedTribe, setSelectedTribe] = useState("all");
 
   useEffect(() => {
     let active = true;
@@ -85,8 +86,10 @@ export default function EventsPage() {
     return () => { active = false; };
   }, [month]);
 
+  const tribeOptions = useMemo(() => { const unique = new Map(events.map((event) => [event.tribe.id, event.tribe])); return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")); }, [events]);
+  const filteredEvents = useMemo(() => selectedTribe === "all" ? events : events.filter((event) => event.tribe.id === selectedTribe), [events, selectedTribe]);
   const days = useMemo(() => monthDays(month), [month]);
-  const daysByEvent = useMemo(() => eventDatesByDay(events, month), [events, month]);
+  const daysByEvent = useMemo(() => eventDatesByDay(filteredEvents, month), [filteredEvents, month]);
   const monthLabel = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(month);
   const monthHeading = monthLabel.charAt(0).toLocaleUpperCase("pt-BR") + monthLabel.slice(1);
   const todayKey = dateKey(new Date());
@@ -145,7 +148,7 @@ export default function EventsPage() {
         </div>
       </section>
 
-      <section aria-label={`Calendário de ${monthLabel}`} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <section className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">\n        <label htmlFor="events-tribe-filter" className="text-sm font-semibold">Filtrar eventos por tribo</label>\n        <select id="events-tribe-filter" value={selectedTribe} onChange={(event) => setSelectedTribe(event.target.value)} className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm sm:max-w-xs">\n          <option value="all">Todas as tribos</option>\n          {tribeOptions.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>)}\n        </select>\n      </section>\n\n      <section aria-label={`Calendário de ${monthLabel}`} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <div role="grid" aria-label={`Eventos de ${monthLabel}`} aria-busy={loading} className="min-w-0">
           <div role="row" className="grid grid-cols-7 border-b border-border bg-muted/40">
             {WEEKDAYS.map((weekday) => (
@@ -210,8 +213,8 @@ export default function EventsPage() {
       <section aria-labelledby="monthly-events-heading" className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 id="monthly-events-heading" className="font-heading text-xl font-bold">Eventos do mês</h2>
-          {!loading && !error && events.length > 0 && (
-            <span className="text-sm text-muted-foreground">{events.length} {events.length === 1 ? "evento" : "eventos"}</span>
+          {!loading && !error && filteredEvents.length > 0 && (
+            <span className="text-sm text-muted-foreground">{filteredEvents.length} {filteredEvents.length === 1 ? "evento" : "eventos"}</span>
           )}
         </div>
 
@@ -221,7 +224,7 @@ export default function EventsPage() {
           <p role="status" className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-5 text-sm text-muted-foreground">
             <LoaderCircle className="size-4 animate-spin text-primary" />Carregando eventos…
           </p>
-        ) : events.length === 0 ? (
+        ) : filteredEvents.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card px-4 py-8 text-center sm:py-10">
             <CalendarDays className="mx-auto size-7 text-primary" />
             <h3 className="mt-3 font-heading text-lg font-bold">Nenhum evento confirmado neste mês</h3>
@@ -229,7 +232,7 @@ export default function EventsPage() {
           </div>
         ) : (
           <ul className="space-y-3">
-            {events.map((event) => (
+            {filteredEvents.map((event) => (
               <li key={event.id}>
                 <Link
                   id={`monthly-event-${event.id}`}
