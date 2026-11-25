@@ -266,7 +266,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
               </button>
             </div>
 
-            <div className="ml-auto grid w-full min-w-0 grid-cols-2 items-stretch gap-2 sm:flex sm:w-auto sm:shrink-0 sm:flex-col">
+            <div className="ml-auto grid w-full min-w-0 grid-cols-2 items-stretch gap-2 sm:flex sm:w-auto sm:shrink-0 sm:flex-row">
               <div className="relative min-w-0 sm:flex-none">
                 <div id="composer-tribe-options" hidden={!tribePickerOpen || !tribes.length} role="group" aria-label="Escolha uma tribo para publicar" className="absolute bottom-full right-0 z-30 mb-2 max-h-64 w-64 max-w-[calc(100vw-3rem)] overflow-y-auto rounded-xl border border-border bg-background p-3 shadow-lg">
                   <div className="flex flex-wrap gap-2">
