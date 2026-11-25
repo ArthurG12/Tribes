@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -59,7 +60,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-primary/15 selection:text-primary">
         <ThemeProvider>
-          <RouteStateReset>{children}</RouteStateReset>
+          <Suspense fallback={<div className="min-h-screen" aria-hidden="true" />}>
+            <RouteStateReset>{children}</RouteStateReset>
+          </Suspense>
         </ThemeProvider>
       </body>
     </html>
