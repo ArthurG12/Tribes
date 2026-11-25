@@ -35,6 +35,8 @@ export default function FeedPage() {
       return;
     }
     const tribeId = params.get("tribeId");
+    // URL parameters initialize the feed filter on direct navigation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (tribeId) setSelectedTribe(tribeId);
   }, [router]);
 
@@ -59,7 +61,6 @@ export default function FeedPage() {
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("focus")) return;
     let active = true;
-    setLoading(true);
     apiRequest<{ tribes: Tribe[] }>("/api/tribes?mine=true")
       .then(({ tribes: joined }) => {
         if (!active) return;
