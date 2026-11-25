@@ -211,7 +211,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
         <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-11" />
         <div className="relative min-w-0 flex-1">
           <div className="mb-1 flex justify-end">
-            <Button type="submit" disabled={creating || !tribes.length || !selectedTribeId || !body.trim() || pollInvalid} className="h-8 min-h-8 gap-1 rounded-full px-3 text-xs leading-none sm:h-9 sm:min-h-9 sm:px-3 sm:text-xs">
+            <Button type="submit" disabled={creating || !tribes.length || !selectedTribeId || !body.trim() || pollInvalid} className="h-8 min-h-8 gap-1 rounded-full px-2.5 text-[11px] leading-none sm:px-2.5 sm:text-[11px]">
             {creating ? <LoaderCircle className="size-3.5 shrink-0 animate-spin sm:size-4" /> : <Send className="size-3.5 shrink-0 sm:size-4" />}
             <span>Publicar</span>
             </Button>
@@ -317,7 +317,7 @@ export function FeedComposer({ tribes, onPublished }: FeedComposerProps) {
                     setTribePickerOpen((open) => !open);
                     setComposerError("");
                   }}
-                  className={`h-8 min-h-8 w-full min-w-0 gap-1 rounded-full px-1 text-[11px] leading-none sm:h-9 sm:min-h-9 sm:px-2 sm:text-xs md:px-3 ${tribePickerOpen || selectedTribe ? "ring-2 ring-primary/30" : ""}`}
+                  className={`h-8 min-h-8 w-full min-w-0 gap-1 rounded-full px-1.5 text-[11px] leading-none sm:px-1.5 sm:text-[11px] ${tribePickerOpen || selectedTribe ? "ring-2 ring-primary/30" : ""}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-flame-kindling size-4 shrink-0 sm:size-4" aria-hidden="true">
                     <path d="M12 2c1 3 2.5 3.5 3.5 4.5A5 5 0 0 1 17 10a5 5 0 1 1-10 0c0-.3 0-.6.1-.9a2 2 0 1 0 3.3-2C8 4.5 11 2 12 2Z" />
