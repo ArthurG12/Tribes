@@ -11,7 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { INTEREST_CATEGORIES } from "@/lib/tribes-data";
 import { apiRequest } from "@/lib/social-types";
 
-type Municipality = { nome: string; microrregiao?: { mesorregiao?: { UF?: { sigla?: string } } } };\n\nexport default function NewTribePage() {
+type Municipality = { nome: string; microrregiao?: { mesorregiao?: { UF?: { sigla?: string } } } };
+
+export default function NewTribePage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
