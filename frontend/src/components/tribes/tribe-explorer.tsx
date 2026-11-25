@@ -91,6 +91,8 @@ export function TribeExplorer({
     const format = params.get("formato");
     const query = params.get("busca");
     const sort = params.get("ordem");
+    // URL query parameters initialize explorer controls on direct navigation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (category === "todos" || INTEREST_CATEGORIES.some(item => item.id === category)) setSelectedCategory(category as "todos" | InterestId);
     if (format === "Presencial" || format === "Híbrido" || format === "Online") setSelectedFormat(format);
     if (query) setSearchQuery(query);

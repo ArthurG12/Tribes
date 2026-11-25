@@ -23,7 +23,6 @@ export default function ProfileSettingsPage() {
   const [city, setCity] = useState(user.city ?? "");
   const [citySelected, setCitySelected] = useState(Boolean(user.city));
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
-  const [cityLoading, setCityLoading] = useState(false);
   const [cityError, setCityError] = useState("");
   const [interests, setInterests] = useState<string[]>(user.interests ?? []);
   const [profileVisibility, setProfileVisibility] = useState(user.profileVisibility ?? { aboutMe: "public", city: "public", interests: "public" });
@@ -48,7 +47,6 @@ export default function ProfileSettingsPage() {
 
   useEffect(() => {
     let active = true;
-    setCityLoading(true);
     fetch("https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome")
       .then((response) => {
         if (!response.ok) throw new Error("Não foi possível consultar o IBGE.");
@@ -56,7 +54,7 @@ export default function ProfileSettingsPage() {
       })
       .then((data) => { if (active) setMunicipalities(data); })
       .catch(() => { if (active) setCityError("Não foi possível carregar as cidades. Confira sua conexão e tente novamente."); })
-      .finally(() => { if (active) setCityLoading(false); });
+      ;
     return () => { active = false; };
   }, []);
 

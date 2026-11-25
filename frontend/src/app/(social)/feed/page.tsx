@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bookmark, ChevronDown, Filter, LoaderCircle, Search, Users, X } from "lucide-react";
+import { Bookmark, ChevronDown, Filter, LoaderCircle, Plus, Search, Users, X } from "lucide-react";
 import { FeedComposer } from "@/components/social/feed-composer";
 import { FeedItemCard } from "@/components/social/feed-item-card";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,8 @@ export default function FeedPage() {
       return;
     }
     const tribeId = params.get("tribeId");
+    // URL parameters initialize the feed filter on direct navigation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (tribeId) setSelectedTribe(tribeId);
   }, [router]);
 
@@ -59,7 +61,6 @@ export default function FeedPage() {
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("focus")) return;
     let active = true;
-    setLoading(true);
     apiRequest<{ tribes: Tribe[] }>("/api/tribes?mine=true")
       .then(({ tribes: joined }) => {
         if (!active) return;
@@ -99,10 +100,19 @@ export default function FeedPage() {
         </div>
       </section>
 
-      <FeedComposer
-        tribes={tribes}
-        onPublished={() => fetchPage(undefined, true)}
-      />
+      <div className="hidden sm:block">
+        <FeedComposer
+          tribes={tribes}
+          onPublished={() => fetchPage(undefined, true)}
+        />
+      </div>
+      <Link
+        href="/publicar"
+        aria-label="Criar publicação"
+        className="fixed bottom-24 right-5 z-30 inline-flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:hidden"
+      >
+        <Plus className="size-7" />
+      </Link>
       <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
         <div className="space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

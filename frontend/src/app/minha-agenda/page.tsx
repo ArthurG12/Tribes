@@ -19,6 +19,8 @@ export default function MyAgendaPage() {
       const value = window.localStorage.getItem(STORAGE_KEY);
       const parsed: unknown = value ? JSON.parse(value) : [];
       if (Array.isArray(parsed)) {
+        // Read localStorage after mount to keep server/client hydration deterministic.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedIds(parsed.filter((item): item is string => typeof item === "string"));
       }
     } catch {

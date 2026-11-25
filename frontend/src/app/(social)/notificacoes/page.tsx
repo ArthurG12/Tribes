@@ -54,6 +54,8 @@ export default function NotificationsPage() {
     }
   }, []);
 
+  // Initial fetch synchronizes this page with the notifications API.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void load(); }, [load]);
 
   async function markRead(id: string) {
