@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { RouteStateReset } from "@/components/navigation/route-state-reset";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-heading-sans",
@@ -53,7 +54,9 @@ export default function RootLayout({
         {`try { if (localStorage.getItem("tribes-theme") === "dark") document.documentElement.classList.add("dark"); } catch {}`}
       </Script>
       <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-primary/15 selection:text-primary">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <RouteStateReset>{children}</RouteStateReset>
+        </ThemeProvider>
       </body>
     </html>
   );
