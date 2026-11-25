@@ -38,9 +38,7 @@ export default function MembersPage() {
   }, []);
 
   useEffect(() => {
-    setCityFilter("all");
-    setInterestFilter("all");
-    if (!tribeId) { setMembers([]); return; }
+    if (!tribeId) return;
     let active = true;
     setLoadingMembers(true);
     apiRequest<{ members: Member[] }>(`/api/tribes/${tribeId}/members`)
@@ -76,7 +74,7 @@ export default function MembersPage() {
       </section>
       {loadingTribes ? <div className="flex justify-center py-12"><LoaderCircle className="size-6 animate-spin text-primary" /></div> : tribes.length ? (
         <>
-          <select aria-label="Selecionar tribo" value={tribeId} onChange={(event) => setTribeId(event.target.value)} className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm">
+          <select aria-label="Selecionar tribo" value={tribeId} onChange={(event) => { setTribeId(event.target.value); setCityFilter("all"); setInterestFilter("all"); setMembers([]); }} className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm">
             {tribes.map((tribe) => <option key={tribe.id} value={tribe.id}>{tribe.name}</option>)}
           </select>
           <div className="relative">
