@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, LoaderCircle, Users } from "lucide-react";
+import { ArrowLeft, LoaderCircle, MapPin, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,12 +18,17 @@ export default function NewTribePage() {
   const [category, setCategory] = useState(INTEREST_CATEGORIES[0].label);
   const [format, setFormat] = useState<"Presencial" | "Híbrido" | "Online">("Presencial");
   const [city, setCity] = useState("");
+  const [citySelected, setCitySelected] = useState(false);
+  const [municipalities, setMunicipalities] = useState<{nome:string}[]>([]);
+  useEffect(() => { let active=true; fetch("https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome").then(r=>r.json()).then(data=>{if(active)setMunicipalities(data)}).catch(()=>undefined); return ()=>{active=false}; }, []);
+  const citySuggestions = useMemo(() => municipalities.filter(item => item.nome.toLocaleLowerCase("pt-BR").includes(city.trim().toLocaleLowerCase("pt-BR"))).slice(0,8), [city,municipalities]);
   const [neighborhood, setNeighborhood] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!citySelected) { setError("Escolha uma cidade na lista de sugestões."); return; }
     setSubmitting(true);
     setError("");
     try {
@@ -36,6 +41,7 @@ export default function NewTribePage() {
       setCategory(INTEREST_CATEGORIES[0].label);
       setFormat("Presencial");
       setCity("");
+      setCitySelected(false);
       setNeighborhood("");
       router.replace("/minhas-tribos");
     } catch (submitError) {
@@ -58,7 +64,7 @@ export default function NewTribePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5"><Label htmlFor="tribe-category">Interesse</Label><select id="tribe-category" value={category} onChange={(event) => setCategory(event.target.value)} className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm">{INTEREST_CATEGORIES.map((interest) => <option key={interest.id} value={interest.label}>{interest.label}</option>)}</select></div>
             <div className="space-y-1.5"><Label htmlFor="tribe-format">Formato</Label><select id="tribe-format" value={format} onChange={(event) => setFormat(event.target.value as typeof format)} className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"><option>Presencial</option><option>Híbrido</option><option>Online</option></select></div>
-            <div className="space-y-1.5"><Label htmlFor="tribe-city">Cidade</Label><Input id="tribe-city" value={city} onChange={(event) => setCity(event.target.value)} minLength={2} maxLength={100} placeholder="Ex.: Belo Horizonte" required /></div>
+            <div className="space-y-1.5"><Label htmlFor="tribe-city" className="flex items-center gap-2"><MapPin className="size-4 text-primary" />Cidade</Label><Input id="tribe-city" list="tribe-city-options" value={city} onChange={(event) => { setCity(event.target.value); setCitySelected(municipalities.some(item => item.nome === event.target.value)); }} placeholder="Digite sua cidade..." required /><datalist id="tribe-city-options">{citySuggestions.map(item => <option key={item.nome} value={item.nome} />)}</datalist></div>
             <div className="space-y-1.5"><Label htmlFor="tribe-neighborhood">Bairro (opcional)</Label><Input id="tribe-neighborhood" value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)} maxLength={100} placeholder="Ex.: Pampulha" /></div>
           </div>
           {error && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
