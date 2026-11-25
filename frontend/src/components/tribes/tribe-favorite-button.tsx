@@ -8,6 +8,8 @@ import { FAVORITES_KEY, readStringList } from "@/lib/user-preferences";
 export function TribeFavoriteButton({ tribeId, compact = false }: { tribeId: string; compact?: boolean }) {
   const [favorite, setFavorite] = useState(false);
   const [ready, setReady] = useState(false);
+  // Load browser preferences after mount to keep server-rendered output deterministic.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setFavorite(readStringList(FAVORITES_KEY).includes(tribeId)); setReady(true); }, [tribeId]);
   function toggle() {
     const current = readStringList(FAVORITES_KEY);
