@@ -40,6 +40,8 @@ function TribeDetailContent() {
     let active = true;
     const sample = SAMPLE_TRIBES.find((item) => item.id === id);
     if (sample) {
+      // Seed sample-tribe data after client navigation.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSampleTribe(sample);
       setTribe({
         id: sample.id,
